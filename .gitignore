@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Build / tooling outputs
+dist/
+.output/
+.vinxi/
+.nitro/
+.tanstack/
+.turbo/
+.wrangler/
+coverage/
+*.tsbuildinfo
+dist-ssr/
+__unconfig*
+
+# Logs / debug
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Supabase local
+supabase/.branches
+supabase/.temp
+
+# Misc
+.cache/
+.eslintcache
+todos.json

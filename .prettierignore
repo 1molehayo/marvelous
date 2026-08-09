@@ -1,0 +1,12 @@
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+.node_modules
+.output
+.nitro
+.tanstack
+dist
+coverage
+src/routeTree.gen.ts
+supabase/.temp
+supabase/.branches

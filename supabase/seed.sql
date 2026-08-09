@@ -1,0 +1,2 @@
+-- Phase 1: no business schema yet.
+-- Add fictional/test seed data in later phases after migrations exist.

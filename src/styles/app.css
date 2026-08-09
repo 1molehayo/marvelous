@@ -1,0 +1,108 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+/*
+  Significa Foundations CSS baseline (light-first).
+  Wedding-specific palette/typography tokens arrive in Phase 2.
+*/
+@theme {
+  /* Typography */
+  --font-ui: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-sans: var(--font-ui);
+  --text-2xs: 0.625rem;
+
+  /* Colors — light-first (no OS dark takeover for the wedding site) */
+  --color-background: oklch(100% 0 0);
+  --color-background-secondary: oklch(96% 0 0);
+
+  --color-foreground: oklch(0% 0 0);
+  --color-foreground-secondary: oklch(45% 0 0);
+
+  --color-accent: var(--color-foreground);
+  --color-accent-foreground: var(--color-background);
+
+  --color-border: oklch(94% 0 0);
+
+  --color-ring: color-mix(in oklab, var(--color-accent) 30%, transparent);
+
+  --color-error: oklch(63.7% 0.237 25.331);
+  --color-warning: oklch(79.5% 0.184 86.047);
+  --color-success: oklch(69.6% 0.17 162.48);
+  --color-info: oklch(62.3% 0.214 259.815);
+
+  /* Border radius */
+  --radius: 0.125rem;
+  --radius-bump: 1;
+  --radius-xs: calc(var(--radius) * 1 * var(--radius-bump));
+  --radius-sm: calc(var(--radius) * 2 * var(--radius-bump));
+  --radius-md: calc(var(--radius) * 3 * var(--radius-bump));
+  --radius-lg: calc(var(--radius) * 4 * var(--radius-bump));
+  --radius-xl: calc(var(--radius) * 6 * var(--radius-bump));
+  --radius-2xl: calc(var(--radius) * 8 * var(--radius-bump));
+  --radius-3xl: calc(var(--radius) * 12 * var(--radius-bump));
+  --radius-4xl: calc(var(--radius) * 16 * var(--radius-bump));
+
+  --inset: calc(var(--radius) * 1.5 * var(--radius-bump));
+
+  --ring-width: 4px;
+  --corner-shape: squircle;
+
+  /* Shadows */
+  --shadow-*: initial;
+  --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.03);
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.02), 0 2px 4px oklch(0 0 0 / 0.02);
+  --shadow-md: 0 2px 3px oklch(0 0 0 / 0.02), 0 3px 6px oklch(0 0 0 / 0.02);
+  --shadow-lg:
+    0 2px 4px oklch(0 0 0 / 0.02), 0 4px 8px oklch(0 0 0 / 0.02),
+    0 8px 16px oklch(0 0 0 / 0.02);
+
+  /* Easings */
+  --ease-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --ease-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+}
+
+/* prettier-ignore */
+@utility mix-with-* {
+  --color-mix-with: --value(--color-*, [*]);
+}
+
+/* prettier-ignore */
+@utility border-mix-* {
+  border-color: color-mix(
+    in oklab,
+    --value(--color-*, [*]),
+    var(--color-mix-with, var(--color-foreground)) calc(--modifier(integer) * 1%)
+  );
+}
+
+/* prettier-ignore */
+@utility bg-mix-* {
+  background-color: color-mix(
+    in oklab,
+    --value(--color-*, [*]),
+    var(--color-mix-with, var(--color-foreground)) calc(--modifier(integer) * 1%)
+  );
+}
+
+* {
+  corner-shape: var(--corner-shape);
+}
+
+.rounded-full {
+  corner-shape: round;
+}
+
+@supports (corner-shape: squircle) {
+  :root {
+    --radius-bump: 1.6;
+  }
+}
+
+body {
+  font-family: var(--font-ui);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
