@@ -66,7 +66,8 @@ npx supabase status
 npx supabase stop
 ```
 
-Copy local URL/anon/service keys from `supabase status` into `.env` when you begin using the clients (Phase 3+).
+Copy local URL + publishable/secret keys (or local CLI equivalents) into `.env` when you begin using the clients (Phase 3+).
+Use the new **publishable** / **secret** API keys (not the legacy anon / service_role keys).
 
 - Config: `supabase/config.toml`
 - Migrations: `supabase/migrations/` (empty in Phase 1 — no business schema yet)
