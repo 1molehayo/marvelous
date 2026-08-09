@@ -2,7 +2,7 @@
 
 Custom wedding website and lightweight admin dashboard for Marvelous & Lillian.
 
-Built as a single **TanStack Start** (React + TypeScript) application. Production hosting is **Vercel** (existing GitHub → Vercel integration). Data/auth/storage will use **Supabase**; transactional email will use **Resend** in a later phase.
+Built as a single **TanStack Start** (React + TypeScript) application. Production hosting is **Vercel** (existing GitHub → Vercel integration). Data/auth/storage use **Supabase**; transactional email will use **Resend** in a later phase.
 
 > **Product principle:** a wedding date is optional. The site must remain fully usable with `weddingDate = null`. Never invent a placeholder date.
 
@@ -12,12 +12,17 @@ Built as a single **TanStack Start** (React + TypeScript) application. Productio
 - TanStack Start (SSR + server functions) + Nitro (Vercel-compatible)
 - Tailwind CSS v4 + Significa Foundations primitives (admin)
 - Public themes: Celeste, Botanica, Rosewater, Nocturne (each light + dark)
-- Typography: Cormorant Garamond + Inter (Ournuptials-matched)
-- Supabase local CLI project (schema in later phases)
+- Typography: Cormorant Garamond + Inter
+- Supabase (Postgres, Auth, Storage) + RLS
 - Vitest, ESLint, Prettier, mise (Node 22.22.1 / pnpm 10.28.0)
 - GitHub Actions CI (no deploy job — Vercel handles production)
 
-Design showcase: `/design`
+Useful routes:
+
+- `/` — public coming-soon
+- `/design` — design showcase
+- `/admin/login` — admin sign-in
+- `/admin` — protected overview (Phase 3 stub)
 
 ## Prerequisites
 
@@ -33,20 +38,13 @@ Pinned toolchain (see `mise.toml` and `package.json`):
 ## Local setup
 
 ```bash
-# Install and activate the pinned Node + pnpm versions
 mise install
 mise trust  # first time in this repo
-
-# Confirm versions
-node -v   # v22.22.1
-pnpm -v   # 10.28.0
-
 pnpm install
 cp .env.example .env
+# fill Supabase keys (local or cloud)
 pnpm dev
 ```
-
-If you already have mise’s shell hook enabled (`mise activate`), entering the project directory will select the pinned tools automatically after `mise install`.
 
 App: [http://localhost:3000](http://localhost:3000)
 
@@ -59,28 +57,55 @@ pnpm test
 pnpm build
 ```
 
-## Local Supabase
+## Supabase
 
-Supabase CLI uses Docker for the local stack. From the repo root:
+### Environment variables
+
+| Name | Where | Purpose |
+|------|--------|---------|
+| `VITE_SUPABASE_URL` | browser + server | Project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | browser + server | Publishable key (`sb_publishable_…`) |
+| `SUPABASE_SECRET_KEY` | **server only** | Secret key (`sb_secret_…`) for privileged ops (first-login admin profile) |
+
+Never put the secret key in a `VITE_` variable. Mark it Sensitive in Vercel.
+
+### Local stack
 
 ```bash
 npx supabase start
-npx supabase status
-npx supabase stop
+npx supabase db reset   # applies migrations + seed
+npx supabase status     # copy URL + keys into .env
 ```
 
-Copy local URL + publishable/secret keys (or local CLI equivalents) into `.env` when you begin using the clients (Phase 3+).
-Use the new **publishable** / **secret** API keys (not the legacy anon / service_role keys).
+Local Auth has `enable_signup = false`. Create admins via Studio:
 
-- Config: `supabase/config.toml`
-- Migrations: `supabase/migrations/` (empty in Phase 1 — no business schema yet)
-- Seed: `supabase/seed.sql` (placeholder only)
+1. Open local Studio URL from `supabase status`
+2. **Authentication → Users → Add user**
+3. Create with email + password (auto-confirm)
+4. Sign in at `/admin/login`
+5. On first login the app creates `admin_profiles` and links the user to the seeded wedding
 
-Do not commit secrets. Keep `.env` local; only `.env.example` is tracked.
+### Production
+
+1. Ensure Vercel has the three Supabase env vars (Production)
+2. Apply migrations to the cloud project, e.g. `npx supabase db push` (linked project) or run the SQL in `supabase/migrations/` via the SQL editor
+3. In Supabase Dashboard → **Authentication → Providers / Settings**: disable public sign-ups
+4. **Authentication → Users → Add user** for each admin
+5. Sign in at `https://your-domain/admin/login`
+
+### Security model (Phase 3)
+
+- Public self-signup disabled (local config + production setting)
+- Admin routes gated in `beforeLoad` via `getAdminSession()`
+- Server functions use cookie session (`@supabase/ssr`)
+- Privileged profile bootstrap uses `SUPABASE_SECRET_KEY` only on the server
+- RLS: authenticated admins can read/update `weddings` / `admin_profiles`
+- Storage bucket `photos` is private; admin-only object policies (upload UX in Phase 6)
+- `wedding_date` is nullable from the first migration
 
 ## Docker (portable runtime)
 
-Production deploys natively on Vercel. The `Dockerfile` provides a reproducible Node/Nitro runtime for local or portable use:
+Production deploys natively on Vercel. The `Dockerfile` is for reproducible Node/Nitro runs:
 
 ```bash
 docker build -t marvelous .
@@ -89,37 +114,32 @@ docker run --rm -p 3000:3000 marvelous
 
 ## Deployment
 
-Expected flow:
-
 1. Feature branch → push → GitHub Actions CI
 2. Pull request / review
 3. Merge to `main`
 4. Existing Vercel Git integration deploys production automatically
 
-CI intentionally does **not** deploy, to avoid double-deploying with Vercel.
-
 ## Project layout
 
 ```text
 src/
-  routes/           # File-based routes (__root, home)
-  components/ui/    # Reserved for Foundations primitives (Phase 2+)
-  lib/utils.ts      # Foundations cn/cva helpers
-  styles/app.css    # Tailwind + Foundations @theme baseline
-supabase/           # Local Supabase project
-.github/workflows/  # CI only
+  routes/admin/     # login + protected overview
+  lib/supabase/     # browser / server / admin clients
+  lib/auth/         # session server functions
+  components/ui/    # Foundations primitives
+supabase/
+  migrations/       # schema history
+  seed.sql          # fictional wedding row
 ```
 
 ## Implementation phases
 
-Work proceeds **one phase at a time**. Phase 1 is bootstrap/infrastructure only.
-
 | Phase | Focus |
 |------:|-------|
-| 1 | Bootstrap, local infra, CI (current) |
+| 1 | Bootstrap, local infra, CI |
 | 2 | Design foundation / wedding tokens |
-| 3 | Supabase schema + admin auth |
-| 4 | Admin dashboard shell |
+| 3 | Supabase schema + admin auth (current) |
+| 4 | Admin dashboard shell / settings editing |
 | 5 | Public wedding website |
 | 6–12 | Story/photos, guests, RSVP, registry, date publish, email, launch |
 

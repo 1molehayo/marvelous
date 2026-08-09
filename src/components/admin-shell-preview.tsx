@@ -10,7 +10,7 @@ export function AdminShellPreview() {
       data-surface="admin"
       className="border-border overflow-hidden rounded-2xl border shadow-sm"
     >
-      <div className="grid min-h-[28rem] md:grid-cols-[14rem_1fr]">
+      <div className="grid min-h-112 md:grid-cols-[14rem_1fr]">
         <aside className="bg-sidebar text-sidebar-foreground flex flex-col gap-6 p-4">
           <div>
             <p className="font-serif text-xl italic">Marvelous</p>
