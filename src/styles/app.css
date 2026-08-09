@@ -1,37 +1,41 @@
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource-variable/cormorant-garamond/wght.css';
+@import '@fontsource-variable/cormorant-garamond/wght-italic.css';
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 
 /*
-  Significa Foundations CSS baseline (light-first).
-  Wedding-specific palette/typography tokens arrive in Phase 2.
+  Foundations @theme baseline + wedding public/admin tokens.
+  Public themes: data-theme + data-mode on <html>
+  Admin surfaces: data-surface="admin"
 */
+
 @theme {
-  /* Typography */
-  --font-ui: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
-    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-ui: 'Inter Variable', Inter, ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-ui);
+  --font-serif:
+    'Cormorant Garamond Variable', 'Cormorant Garamond', Georgia, serif;
   --text-2xs: 0.625rem;
 
-  /* Colors — light-first (no OS dark takeover for the wedding site) */
-  --color-background: oklch(100% 0 0);
-  --color-background-secondary: oklch(96% 0 0);
-
-  --color-foreground: oklch(0% 0 0);
-  --color-foreground-secondary: oklch(45% 0 0);
-
-  --color-accent: var(--color-foreground);
-  --color-accent-foreground: var(--color-background);
-
-  --color-border: oklch(94% 0 0);
-
+  --color-background: var(--theme-background);
+  --color-background-secondary: var(--theme-background-secondary);
+  --color-foreground: var(--theme-foreground);
+  --color-foreground-secondary: var(--theme-foreground-secondary);
+  --color-accent: var(--theme-accent);
+  --color-accent-foreground: var(--theme-accent-foreground);
+  --color-border: var(--theme-border);
   --color-ring: color-mix(in oklab, var(--color-accent) 30%, transparent);
+  --color-highlight: var(--theme-highlight);
+  --color-surface: var(--theme-surface);
+  --color-sidebar: var(--theme-sidebar);
+  --color-sidebar-foreground: var(--theme-sidebar-foreground);
 
   --color-error: oklch(63.7% 0.237 25.331);
   --color-warning: oklch(79.5% 0.184 86.047);
   --color-success: oklch(69.6% 0.17 162.48);
   --color-info: oklch(62.3% 0.214 259.815);
+  --color-white: oklch(100% 0 0);
 
-  /* Border radius */
   --radius: 0.125rem;
   --radius-bump: 1;
   --radius-xs: calc(var(--radius) * 1 * var(--radius-bump));
@@ -42,13 +46,10 @@
   --radius-2xl: calc(var(--radius) * 8 * var(--radius-bump));
   --radius-3xl: calc(var(--radius) * 12 * var(--radius-bump));
   --radius-4xl: calc(var(--radius) * 16 * var(--radius-bump));
-
   --inset: calc(var(--radius) * 1.5 * var(--radius-bump));
-
   --ring-width: 4px;
   --corner-shape: squircle;
 
-  /* Shadows */
   --shadow-*: initial;
   --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.03);
   --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.02), 0 2px 4px oklch(0 0 0 / 0.02);
@@ -57,9 +58,161 @@
     0 2px 4px oklch(0 0 0 / 0.02), 0 4px 8px oklch(0 0 0 / 0.02),
     0 8px 16px oklch(0 0 0 / 0.02);
 
-  /* Easings */
   --ease-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
   --ease-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+}
+
+/* ---------- Shared wedding neutrals ---------- */
+:root {
+  --navy: #1a2744;
+  --navy-deep: #0f1729;
+  --ivory: #faf8f4;
+  --cream: #f5f0e5;
+  --champagne: #c4a574;
+  --powder: #9bb8d4;
+  --powder-deep: #6f93b8;
+  --naples: #e8c97a;
+  --sage: #8fa88a;
+  --moss: #6f8b6a;
+  --blush: #e8c4c4;
+  --dusty-rose: #c99393;
+  --admin-ink: #2a2520;
+  --admin-sidebar: #1e1b18;
+  --admin-gold: #b08d57;
+}
+
+/* Default / Celeste light */
+:root,
+html[data-theme='celeste'][data-mode='light'],
+html[data-theme='celeste']:not([data-mode]) {
+  --theme-background: var(--ivory);
+  --theme-background-secondary: var(--cream);
+  --theme-surface: #ffffff;
+  --theme-foreground: var(--navy);
+  --theme-foreground-secondary: color-mix(in oklab, var(--navy) 62%, white);
+  --theme-accent: var(--powder-deep);
+  --theme-accent-foreground: #ffffff;
+  --theme-highlight: var(--champagne);
+  --theme-border: color-mix(in oklab, var(--champagne) 45%, white);
+  --theme-sidebar: var(--navy);
+  --theme-sidebar-foreground: var(--ivory);
+}
+
+html[data-theme='celeste'][data-mode='dark'] {
+  --theme-background: var(--navy-deep);
+  --theme-background-secondary: var(--navy);
+  --theme-surface: color-mix(in oklab, var(--navy) 88%, black);
+  --theme-foreground: var(--ivory);
+  --theme-foreground-secondary: color-mix(in oklab, var(--ivory) 70%, transparent);
+  --theme-accent: var(--powder);
+  --theme-accent-foreground: var(--navy-deep);
+  --theme-highlight: var(--naples);
+  --theme-border: color-mix(in oklab, var(--powder) 28%, transparent);
+  --theme-sidebar: #080d18;
+  --theme-sidebar-foreground: var(--ivory);
+}
+
+/* Botanica */
+html[data-theme='botanica'][data-mode='light'] {
+  --theme-background: #f7f5ef;
+  --theme-background-secondary: #efe8d8;
+  --theme-surface: #ffffff;
+  --theme-foreground: var(--navy);
+  --theme-foreground-secondary: color-mix(in oklab, var(--navy) 58%, white);
+  --theme-accent: var(--moss);
+  --theme-accent-foreground: #ffffff;
+  --theme-highlight: var(--champagne);
+  --theme-border: color-mix(in oklab, var(--sage) 35%, white);
+  --theme-sidebar: #243028;
+  --theme-sidebar-foreground: #f3f6f1;
+}
+
+html[data-theme='botanica'][data-mode='dark'] {
+  --theme-background: #141c16;
+  --theme-background-secondary: #1d2820;
+  --theme-surface: #1a231c;
+  --theme-foreground: #f2efe6;
+  --theme-foreground-secondary: color-mix(in oklab, #f2efe6 68%, transparent);
+  --theme-accent: var(--sage);
+  --theme-accent-foreground: #142018;
+  --theme-highlight: var(--naples);
+  --theme-border: color-mix(in oklab, var(--sage) 30%, transparent);
+  --theme-sidebar: #0d120f;
+  --theme-sidebar-foreground: #f2efe6;
+}
+
+/* Rosewater */
+html[data-theme='rosewater'][data-mode='light'] {
+  --theme-background: #fbf7f4;
+  --theme-background-secondary: #f3e8e3;
+  --theme-surface: #ffffff;
+  --theme-foreground: var(--navy);
+  --theme-foreground-secondary: color-mix(in oklab, var(--navy) 58%, white);
+  --theme-accent: var(--dusty-rose);
+  --theme-accent-foreground: #ffffff;
+  --theme-highlight: var(--champagne);
+  --theme-border: color-mix(in oklab, var(--blush) 55%, white);
+  --theme-sidebar: #3a2a2c;
+  --theme-sidebar-foreground: #faf4f2;
+}
+
+html[data-theme='rosewater'][data-mode='dark'] {
+  --theme-background: #1a1214;
+  --theme-background-secondary: #2a1c20;
+  --theme-surface: #24181b;
+  --theme-foreground: #faf2ef;
+  --theme-foreground-secondary: color-mix(in oklab, #faf2ef 68%, transparent);
+  --theme-accent: var(--blush);
+  --theme-accent-foreground: #2a1618;
+  --theme-highlight: var(--naples);
+  --theme-border: color-mix(in oklab, var(--dusty-rose) 35%, transparent);
+  --theme-sidebar: #100c0d;
+  --theme-sidebar-foreground: #faf2ef;
+}
+
+/* Nocturne */
+html[data-theme='nocturne'][data-mode='light'] {
+  --theme-background: #f4f6fa;
+  --theme-background-secondary: #e7ecf4;
+  --theme-surface: #ffffff;
+  --theme-foreground: var(--navy-deep);
+  --theme-foreground-secondary: color-mix(in oklab, var(--navy) 60%, white);
+  --theme-accent: var(--navy);
+  --theme-accent-foreground: #ffffff;
+  --theme-highlight: var(--champagne);
+  --theme-border: color-mix(in oklab, var(--navy) 14%, white);
+  --theme-sidebar: var(--navy-deep);
+  --theme-sidebar-foreground: var(--ivory);
+}
+
+html[data-theme='nocturne'][data-mode='dark'] {
+  --theme-background: #0a0e16;
+  --theme-background-secondary: #141b2a;
+  --theme-surface: #121826;
+  --theme-foreground: #f3efe6;
+  --theme-foreground-secondary: color-mix(in oklab, #f3efe6 68%, transparent);
+  --theme-accent: var(--powder);
+  --theme-accent-foreground: var(--navy-deep);
+  --theme-highlight: var(--naples);
+  --theme-border: color-mix(in oklab, var(--powder) 22%, transparent);
+  --theme-sidebar: #05070c;
+  --theme-sidebar-foreground: #f3efe6;
+}
+
+/* Admin surface — Ournuptials-inspired, single mode */
+[data-surface='admin'] {
+  --theme-background: #faf8f4;
+  --theme-background-secondary: #f3efe6;
+  --theme-surface: #ffffff;
+  --theme-foreground: var(--admin-ink);
+  --theme-foreground-secondary: #6b625a;
+  --theme-accent: var(--admin-gold);
+  --theme-accent-foreground: #ffffff;
+  --theme-highlight: var(--admin-gold);
+  --theme-border: #e8e0d0;
+  --theme-sidebar: var(--admin-sidebar);
+  --theme-sidebar-foreground: #f5efe6;
+  font-family: var(--font-ui);
 }
 
 /* prettier-ignore */
@@ -105,4 +258,52 @@ body {
   color: var(--color-foreground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+.public-kicker {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--color-foreground);
+}
+
+.public-display {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+
+.public-section-title {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.1;
+}
+
+.admin-page-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(2rem, 3vw, 2.5rem);
+  line-height: 1.15;
+  color: var(--color-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

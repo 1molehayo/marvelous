@@ -6,15 +6,18 @@ Built as a single **TanStack Start** (React + TypeScript) application. Productio
 
 > **Product principle:** a wedding date is optional. The site must remain fully usable with `weddingDate = null`. Never invent a placeholder date.
 
-## Stack (Phase 1)
+## Stack
 
 - React 19 + TypeScript
 - TanStack Start (SSR + server functions) + Nitro (Vercel-compatible)
-- Tailwind CSS v4
-- Significa Foundations prerequisites (`cva`, `tailwind-merge`, Phosphor icons, token baseline)
-- Supabase local CLI project (no business schema yet)
-- Vitest, ESLint, Prettier
+- Tailwind CSS v4 + Significa Foundations primitives (admin)
+- Public themes: Celeste, Botanica, Rosewater, Nocturne (each light + dark)
+- Typography: Cormorant Garamond + Inter (Ournuptials-matched)
+- Supabase local CLI project (schema in later phases)
+- Vitest, ESLint, Prettier, mise (Node 22.22.1 / pnpm 10.28.0)
 - GitHub Actions CI (no deploy job — Vercel handles production)
+
+Design showcase: `/design`
 
 ## Prerequisites
 
