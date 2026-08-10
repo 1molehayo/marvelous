@@ -14,7 +14,7 @@ export async function getPublicWeddingSettingsHandler(): Promise<PublicWeddingSe
     const result = await admin
       .from('weddings')
       .select(
-        'partner_one_name, partner_two_name, wedding_date, venue_name, venue_location, dress_code, active_public_theme, status',
+        'groom_name, bride_name, wedding_date, venue_name, venue_location, dress_code, active_public_theme, status',
       )
       .order('created_at', { ascending: true })
       .limit(1)
@@ -62,8 +62,8 @@ export async function updateWeddingHandler(
   const updated = await supabase
     .from('weddings')
     .update({
-      partner_one_name: data.partner_one_name,
-      partner_two_name: data.partner_two_name,
+      groom_name: data.groom_name,
+      bride_name: data.bride_name,
       wedding_date: data.wedding_date,
       status: data.status,
       venue_name: data.venue_name,

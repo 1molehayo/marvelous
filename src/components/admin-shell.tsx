@@ -5,16 +5,23 @@ import { Button } from '#/components/ui/button'
 import { Toaster } from '#/components/ui/toaster'
 import { isSuperAdminProfile } from '#/lib/auth/roles'
 import type { AdminSession } from '#/lib/auth/types'
-import { getAdminNavItems } from '#/lib/constants'
+import {
+  PRODUCT_NAME,
+  PRODUCT_SHORT_NAME,
+  PRODUCT_TAGLINE,
+  formatCoupleNames,
+  getAdminNavItems,
+} from '#/lib/constants'
 import { cn } from '#/lib/utils'
 
 function SidebarBrand() {
   return (
     <div className="shrink-0">
-      <p className="font-serif text-xl italic">Marvelous</p>
+      <p className="font-serif text-xl italic">{PRODUCT_SHORT_NAME}</p>
       <p className="text-sidebar-foreground/60 mt-1 text-[0.65rem] tracking-[0.2em] uppercase">
-        Wedding dashboard
+        {PRODUCT_TAGLINE}
       </p>
+      <p className="sr-only">{PRODUCT_NAME}</p>
     </div>
   )
 }
@@ -69,8 +76,10 @@ function SidebarFooter({
     <div className="shrink-0 space-y-3 border-t border-white/10 pt-4">
       <div className="text-sm">
         <p className="font-serif italic">
-          {session.wedding.partner_one_name} &amp;{' '}
-          {session.wedding.partner_two_name}
+          {formatCoupleNames(
+            session.wedding.groom_name,
+            session.wedding.bride_name,
+          )}
         </p>
         <p className="text-sidebar-foreground/60 mt-1 text-xs">{dateLabel}</p>
         <p className="text-sidebar-foreground/60 mt-1 text-xs">
@@ -150,9 +159,11 @@ export function AdminShell({
           {mobileNavOpen ? <X /> : <List />}
         </Button>
         <div className="min-w-0">
-          <p className="font-serif truncate text-lg italic">Marvelous</p>
+          <p className="font-serif truncate text-lg italic">
+            {PRODUCT_SHORT_NAME}
+          </p>
           <p className="text-foreground-secondary truncate text-[0.65rem] tracking-[0.18em] uppercase">
-            Wedding dashboard
+            {PRODUCT_TAGLINE}
           </p>
         </div>
       </div>

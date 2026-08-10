@@ -101,7 +101,7 @@ function BlockEditor({
                   },
                 })
               }
-              placeholder="Leave empty to use couple names"
+              placeholder="Leave empty to use groom & bride names"
             />
           </Field.Control>
         </Field>

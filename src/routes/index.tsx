@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { DynamicBlock } from '#/components/blocks/dynamic-block'
 import { PublicShell } from '#/components/public-shell'
+import { formatCoupleNames } from '#/lib/constants'
 import { getPublicHomeData } from '#/lib/page-blocks/settings'
 
 export const Route = createFileRoute('/')({
@@ -14,7 +15,7 @@ function HomePage() {
   return (
     <PublicShell
       theme={home.active_public_theme}
-      coupleLabel={`${home.partner_one_name} & ${home.partner_two_name}`}
+      coupleLabel={formatCoupleNames(home.groom_name, home.bride_name)}
     >
       <main>
         {home.page_blocks.map((block) => (

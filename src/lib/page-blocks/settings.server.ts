@@ -109,7 +109,7 @@ export async function getPublicHomeDataHandler(): Promise<PublicHomeData> {
     const result = await admin
       .from('weddings')
       .select(
-        'partner_one_name, partner_two_name, wedding_date, venue_name, venue_location, dress_code, active_public_theme, status, page_blocks',
+        'groom_name, bride_name, wedding_date, venue_name, venue_location, dress_code, active_public_theme, status, page_blocks',
       )
       .order('created_at', { ascending: true })
       .limit(1)

@@ -17,8 +17,8 @@ export const WEDDING_STATUS_LABELS: Record<WeddingStatus, string> = {
 }
 
 export type UpdateWeddingInput = {
-  partner_one_name: string
-  partner_two_name: string
+  groom_name: string
+  bride_name: string
   wedding_date: string | null
   status: WeddingStatus
   venue_name: string | null
@@ -102,8 +102,8 @@ export function parseUpdateWeddingInput(data: unknown): UpdateWeddingInput {
   const input = data as Record<string, unknown>
 
   return {
-    partner_one_name: requiredName(input.partner_one_name, 'Partner one name'),
-    partner_two_name: requiredName(input.partner_two_name, 'Partner two name'),
+    groom_name: requiredName(input.groom_name, 'Groom name'),
+    bride_name: requiredName(input.bride_name, 'Bride name'),
     wedding_date: optionalDate(input.wedding_date),
     status: parseStatus(input.status),
     venue_name: optionalText(input.venue_name, 'Venue name'),

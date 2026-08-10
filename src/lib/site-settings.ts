@@ -43,4 +43,4 @@ export const PUBLIC_THEME_META: Record<
 /** Used when the wedding row is unavailable (build / offline). */
 export const FALLBACK_PUBLIC_THEME: PublicThemeId = 'celeste'
 
-export const COLOR_MODE_STORAGE_KEY = 'marvelous-color-mode'
+export const COLOR_MODE_STORAGE_KEY = 'wedding-website-builder-color-mode'

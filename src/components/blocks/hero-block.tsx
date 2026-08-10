@@ -29,11 +29,11 @@ export function HeroBlock({
           </h1>
         ) : (
           <h1 className="public-display text-[clamp(3.5rem,11vw,7.5rem)]">
-            {wedding.partner_one_name}
+            {wedding.groom_name}
             <br />
             <span className="text-highlight">&amp;</span>
             <br />
-            {wedding.partner_two_name}
+            {wedding.bride_name}
           </h1>
         )}
         <div className="bg-highlight mx-auto my-10 h-px w-20" />

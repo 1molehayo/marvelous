@@ -5,8 +5,8 @@ describe('wedding date contract', () => {
   it('allows a wedding record with a null date', () => {
     const wedding: Wedding = {
       id: '00000000-0000-0000-0000-000000000001',
-      partner_one_name: 'Lillian',
-      partner_two_name: 'Marvelous',
+      groom_name: 'Marvelous',
+      bride_name: 'Lillian',
       wedding_date: null,
       status: 'planning',
       venue_name: null,

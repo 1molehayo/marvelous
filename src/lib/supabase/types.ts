@@ -12,8 +12,8 @@ export type AdminRole = 'super_admin' | 'admin'
 
 export type Wedding = {
   id: string
-  partner_one_name: string
-  partner_two_name: string
+  groom_name: string
+  bride_name: string
   wedding_date: string | null
   status: WeddingStatus
   venue_name: string | null
@@ -41,8 +41,8 @@ export type Database = {
       weddings: {
         Row: Wedding
         Insert: Partial<Wedding> & {
-          partner_one_name: string
-          partner_two_name: string
+          groom_name: string
+          bride_name: string
         }
         Update: Partial<Wedding>
       }

@@ -21,8 +21,8 @@ export const Route = createFileRoute('/admin/settings')({
 })
 
 type FormState = {
-  partner_one_name: string
-  partner_two_name: string
+  groom_name: string
+  bride_name: string
   wedding_date: string
   status: WeddingStatus
   venue_name: string
@@ -33,8 +33,8 @@ type FormState = {
 
 function weddingToForm(wedding: Wedding): FormState {
   return {
-    partner_one_name: wedding.partner_one_name,
-    partner_two_name: wedding.partner_two_name,
+    groom_name: wedding.groom_name,
+    bride_name: wedding.bride_name,
     wedding_date: wedding.wedding_date ?? '',
     status: wedding.status,
     venue_name: wedding.venue_name ?? '',
@@ -71,8 +71,8 @@ function AdminWeddingSettingsPage() {
     try {
       const wedding = await updateWedding({
         data: {
-          partner_one_name: form.partner_one_name,
-          partner_two_name: form.partner_two_name,
+          groom_name: form.groom_name,
+          bride_name: form.bride_name,
           wedding_date: form.wedding_date || null,
           status: form.status,
           venue_name: form.venue_name || null,
@@ -110,24 +110,24 @@ function AdminWeddingSettingsPage() {
           </p>
           <div className="grid gap-4 md:grid-cols-2">
             <Field>
-              <Field.Label>Partner one</Field.Label>
+              <Field.Label>Groom</Field.Label>
               <Field.Control>
                 <Input
-                  value={form.partner_one_name}
+                  value={form.groom_name}
                   onChange={(event) =>
-                    setField('partner_one_name', event.target.value)
+                    setField('groom_name', event.target.value)
                   }
                   required
                 />
               </Field.Control>
             </Field>
             <Field>
-              <Field.Label>Partner two</Field.Label>
+              <Field.Label>Bride</Field.Label>
               <Field.Control>
                 <Input
-                  value={form.partner_two_name}
+                  value={form.bride_name}
                   onChange={(event) =>
-                    setField('partner_two_name', event.target.value)
+                    setField('bride_name', event.target.value)
                   }
                   required
                 />

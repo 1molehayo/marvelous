@@ -3,8 +3,8 @@
 -- or via in-app invite (other admins).
 
 insert into public.weddings (
-  partner_one_name,
-  partner_two_name,
+  groom_name,
+  bride_name,
   wedding_date,
   status,
   venue_location,
@@ -12,8 +12,8 @@ insert into public.weddings (
   active_public_theme
 )
 select
-  'Lillian',
   'Marvelous',
+  'Lillian',
   null,
   'planning',
   'Woodridge, Illinois · Chicago',

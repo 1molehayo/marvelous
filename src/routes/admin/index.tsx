@@ -1,6 +1,7 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
+import { formatCoupleNames } from '#/lib/constants'
 import { PUBLIC_THEME_META } from '#/lib/site-settings'
 import { WEDDING_STATUS_LABELS } from '#/lib/wedding/validation'
 import { Route as AdminRoute } from './route'
@@ -44,7 +45,7 @@ function AdminOverviewPage() {
             Couple
           </p>
           <p className="font-serif mt-2 text-2xl italic">
-            {wedding.partner_one_name} &amp; {wedding.partner_two_name}
+            {formatCoupleNames(wedding.groom_name, wedding.bride_name)}
           </p>
         </div>
         <div className="bg-surface border-border rounded-xl border p-5">

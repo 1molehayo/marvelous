@@ -2,7 +2,7 @@ import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { Field } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
-import { ADMIN_PREVIEW_NAV_LABELS } from '#/lib/constants'
+import { ADMIN_PREVIEW_NAV_LABELS, PRODUCT_SHORT_NAME, PRODUCT_TAGLINE } from '#/lib/constants'
 
 /** Static Ournuptials-inspired admin shell for the design showcase (not auth-gated). */
 export function AdminShellPreview() {
@@ -14,9 +14,9 @@ export function AdminShellPreview() {
       <div className="grid min-h-112 md:grid-cols-[14rem_1fr]">
         <aside className="bg-sidebar text-sidebar-foreground flex flex-col gap-6 p-4">
           <div>
-            <p className="font-serif text-xl italic">Marvelous</p>
+            <p className="font-serif text-xl italic">{PRODUCT_SHORT_NAME}</p>
             <p className="text-sidebar-foreground/60 mt-1 text-[0.65rem] tracking-[0.2em] uppercase">
-              Wedding dashboard
+              {PRODUCT_TAGLINE}
             </p>
           </div>
           <nav className="flex flex-col gap-1 text-sm">
@@ -34,7 +34,7 @@ export function AdminShellPreview() {
             ))}
           </nav>
           <div className="mt-auto border-t border-white/10 pt-4 text-sm">
-            <p className="font-serif italic">Lillian &amp; Marvelous</p>
+            <p className="font-serif italic">Marvelous &amp; Lillian</p>
             <p className="text-sidebar-foreground/60 mt-1 text-xs">
               Date to be announced
             </p>

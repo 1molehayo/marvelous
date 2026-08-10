@@ -4,8 +4,8 @@ import { parseUpdateWeddingInput } from './validation'
 describe('parseUpdateWeddingInput', () => {
   it('accepts a full valid payload and trims strings', () => {
     const result = parseUpdateWeddingInput({
-      partner_one_name: '  Lillian ',
-      partner_two_name: ' Marvelous ',
+      groom_name: '  Marvelous ',
+      bride_name: ' Lillian ',
       wedding_date: '2027-06-12',
       status: 'date_confirmed',
       venue_name: '  Garden Hall ',
@@ -15,8 +15,8 @@ describe('parseUpdateWeddingInput', () => {
     })
 
     expect(result).toEqual({
-      partner_one_name: 'Lillian',
-      partner_two_name: 'Marvelous',
+      groom_name: 'Marvelous',
+      bride_name: 'Lillian',
       wedding_date: '2027-06-12',
       status: 'date_confirmed',
       venue_name: 'Garden Hall',
@@ -28,8 +28,8 @@ describe('parseUpdateWeddingInput', () => {
 
   it('allows a null wedding date and empty optional fields', () => {
     const result = parseUpdateWeddingInput({
-      partner_one_name: 'Lillian',
-      partner_two_name: 'Marvelous',
+      groom_name: 'Marvelous',
+      bride_name: 'Lillian',
       wedding_date: '',
       status: 'planning',
       venue_name: '   ',
@@ -47,8 +47,8 @@ describe('parseUpdateWeddingInput', () => {
   it('rejects an invented placeholder-like invalid date', () => {
     expect(() =>
       parseUpdateWeddingInput({
-        partner_one_name: 'Lillian',
-        partner_two_name: 'Marvelous',
+        groom_name: 'Marvelous',
+        bride_name: 'Lillian',
         wedding_date: '2027-13-40',
         status: 'planning',
         venue_name: null,
@@ -62,8 +62,8 @@ describe('parseUpdateWeddingInput', () => {
   it('rejects unknown themes and statuses', () => {
     expect(() =>
       parseUpdateWeddingInput({
-        partner_one_name: 'Lillian',
-        partner_two_name: 'Marvelous',
+        groom_name: 'Marvelous',
+        bride_name: 'Lillian',
         wedding_date: null,
         status: 'draft',
         venue_name: null,
@@ -75,8 +75,8 @@ describe('parseUpdateWeddingInput', () => {
 
     expect(() =>
       parseUpdateWeddingInput({
-        partner_one_name: 'Lillian',
-        partner_two_name: 'Marvelous',
+        groom_name: 'Marvelous',
+        bride_name: 'Lillian',
         wedding_date: null,
         status: 'planning',
         venue_name: null,
