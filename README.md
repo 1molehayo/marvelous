@@ -300,8 +300,8 @@ supabase/
 |     2 | Design foundation / wedding tokens                                |
 |     3 | Supabase schema + admin auth                                      |
 |     4 | Wedding settings editing                                          |
-|    4b | Page blocks CMS (current)                                         |
-|     5 | Public wedding website polish                                     |
+|    4b | Page blocks CMS                                                   |
+|     5 | Public wedding website polish (current)                           |
 |  6–12 | Story/photos, guests, RSVP, registry, date publish, email, launch |
 
 Do not start the next phase until the previous phase is merged and confirmed.

@@ -293,6 +293,70 @@ body {
   line-height: 1.1;
 }
 
+.public-section {
+  padding-block: clamp(4rem, 10vw, 7rem);
+}
+
+.public-hero-atmosphere {
+  background:
+    radial-gradient(
+      120% 80% at 50% -10%,
+      color-mix(in oklab, var(--color-highlight) 22%, transparent),
+      transparent 55%
+    ),
+    linear-gradient(
+      180deg,
+      var(--color-background-secondary) 0%,
+      var(--color-background) 72%
+    );
+}
+
+.public-hero-atmosphere::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      180deg,
+      transparent 62%,
+      color-mix(in oklab, var(--color-background) 85%, transparent) 100%
+    );
+  pointer-events: none;
+}
+
+@keyframes public-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.public-reveal {
+  animation: public-reveal 700ms var(--ease-emphasized-decelerate) both;
+}
+
+.public-reveal-delay-1 {
+  animation: public-reveal 700ms var(--ease-emphasized-decelerate) 120ms both;
+}
+
+.public-reveal-delay-2 {
+  animation: public-reveal 700ms var(--ease-emphasized-decelerate) 220ms both;
+}
+
+.public-image {
+  transition: transform 700ms var(--ease-emphasized-decelerate);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .public-image:hover {
+    transform: scale(1.02);
+  }
+}
+
 .admin-page-title {
   font-family: var(--font-serif);
   font-weight: 500;

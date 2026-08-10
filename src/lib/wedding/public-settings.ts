@@ -52,3 +52,11 @@ export function toPublicSettings(
     status: wedding.status,
   }
 }
+
+/** Guest-facing date label. Never invents a placeholder date. */
+export function formatWeddingDate(date: string | null): string {
+  if (!date) return 'Date to be announced'
+  return new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
+    dateStyle: 'long',
+  })
+}

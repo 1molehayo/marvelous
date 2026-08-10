@@ -16,6 +16,7 @@ function HomePage() {
     <PublicShell
       theme={home.active_public_theme}
       coupleLabel={formatCoupleNames(home.groom_name, home.bride_name)}
+      weddingDate={home.wedding_date}
     >
       <main>
         {home.page_blocks.map((block) => (

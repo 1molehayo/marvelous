@@ -16,31 +16,49 @@ export function DetailsBlock({
     block.fields.showDressCode && wedding.dress_code ? wedding.dress_code : null
 
   if (venueParts.length === 0 && !dressCode) {
-    return null
+    return (
+      <section className="public-section border-border border-t px-6">
+        <div className="public-reveal mx-auto max-w-3xl text-center">
+          <p className="public-kicker mb-4">Details</p>
+          <h2 className="public-section-title">Celebrate with us</h2>
+          <p className="text-foreground-secondary mt-5 text-base leading-relaxed">
+            Venue and dress code will be shared here when they&apos;re ready.
+          </p>
+        </div>
+      </section>
+    )
   }
 
   return (
-    <section className="border-border border-t px-6 py-16 md:py-24">
-      <div className="mx-auto grid max-w-4xl gap-10 md:grid-cols-2">
-        {venueParts.length > 0 ? (
-          <div>
-            <p className="public-kicker mb-3">Venue</p>
-            <p className="font-serif text-3xl italic">{venueParts[0]}</p>
-            {venueParts[1] ? (
-              <p className="text-foreground-secondary mt-2 text-sm">
-                {venueParts[1]}
+    <section className="public-section border-border border-t px-6">
+      <div className="public-reveal mx-auto max-w-4xl">
+        <div className="mb-10 text-center md:mb-14">
+          <p className="public-kicker mb-4">Details</p>
+          <h2 className="public-section-title">Celebrate with us</h2>
+        </div>
+        <div className="grid gap-10 md:grid-cols-2 md:gap-12">
+          {venueParts.length > 0 ? (
+            <div>
+              <p className="public-kicker mb-3">Venue</p>
+              <p className="font-serif text-3xl italic md:text-4xl">
+                {venueParts[0]}
               </p>
-            ) : null}
-          </div>
-        ) : null}
-        {dressCode ? (
-          <div>
-            <p className="public-kicker mb-3">Dress code</p>
-            <p className="text-foreground-secondary whitespace-pre-wrap text-base leading-relaxed">
-              {dressCode}
-            </p>
-          </div>
-        ) : null}
+              {venueParts[1] ? (
+                <p className="text-foreground-secondary mt-3 text-sm leading-relaxed md:text-base">
+                  {venueParts[1]}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+          {dressCode ? (
+            <div>
+              <p className="public-kicker mb-3">Dress code</p>
+              <p className="text-foreground-secondary whitespace-pre-wrap text-base leading-relaxed md:text-lg">
+                {dressCode}
+              </p>
+            </div>
+          ) : null}
+        </div>
       </div>
     </section>
   )
