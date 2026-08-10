@@ -31,6 +31,7 @@ Useful routes:
 - `/admin` — protected overview
 - `/admin/settings` — wedding settings (groom, bride, date, venue, theme)
 - `/admin/pages` — page content blocks (hero, story, image, details)
+- `/admin/guests` — guest list (add/edit/remove; RSVP later)
 - `/admin/admins` — invite/remove admins (super admin only)
 - `/admin/profile` — name, optional phone; email editable for super admin only
 - `/admin/support` — admin → super admin email (hidden for super admin)
@@ -301,8 +302,10 @@ supabase/
 |     3 | Supabase schema + admin auth                                      |
 |     4 | Wedding settings editing                                          |
 |    4b | Page blocks CMS                                                   |
-|     5 | Public wedding website polish                                   |
-|  6–12 | Story/photos, guests, RSVP, registry, date publish, email, launch (next) |
+|     5 | Public wedding website polish                                     |
+|     6 | Guest list admin (current)                                        |
+|     7 | RSVP                                                              |
+|  8–12 | Registry, date publish, guest email, launch                       |
 
 Do not start the next phase until the previous phase is merged and confirmed.
 
