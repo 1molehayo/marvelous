@@ -1,6 +1,6 @@
 /**
- * Site settings stub for Phase 2.
- * Active public theme will be admin-managed in Website settings (Phase 4+).
+ * Public theme catalog + visitor color-mode key.
+ * Active theme is stored on `weddings.active_public_theme` (admin settings).
  */
 
 export const PUBLIC_THEMES = [
@@ -40,7 +40,7 @@ export const PUBLIC_THEME_META: Record<
   },
 }
 
-/** Admin-selected theme for the public website (stub until Phase 4 settings UI). */
-export const ACTIVE_PUBLIC_THEME: PublicThemeId = 'celeste'
+/** Used when the wedding row is unavailable (build / offline). */
+export const FALLBACK_PUBLIC_THEME: PublicThemeId = 'celeste'
 
 export const COLOR_MODE_STORAGE_KEY = 'marvelous-color-mode'

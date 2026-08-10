@@ -8,7 +8,7 @@ import {
 import { useState } from 'react'
 import { AdminShell } from '#/components/admin-shell'
 import { getAdminSession, logoutAdmin } from '#/lib/auth/session'
-import type { AdminSession } from '#/lib/auth/session'
+import type { AdminSession } from '#/lib/auth/types'
 
 export const Route = createFileRoute('/admin')({
   beforeLoad: async ({ location }): Promise<{ session: AdminSession | null }> => {

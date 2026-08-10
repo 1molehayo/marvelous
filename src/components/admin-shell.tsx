@@ -1,12 +1,10 @@
 import { Link } from '@tanstack/react-router'
 import { SignOut } from '@phosphor-icons/react'
 import { Button } from '#/components/ui/button'
-import type { AdminSession } from '#/lib/auth/session'
+import { isSuperAdminProfile } from '#/lib/auth/roles'
+import type { AdminSession } from '#/lib/auth/types'
+import { getAdminNavItems } from '#/lib/constants'
 import { cn } from '#/lib/utils'
-
-const navItems = [
-  { to: '/admin', label: 'Overview', exact: true },
-] as const
 
 export function AdminShell({
   session,
@@ -25,6 +23,8 @@ export function AdminShell({
         { dateStyle: 'long' },
       )
     : 'Date to be announced'
+
+  const navItems = getAdminNavItems(isSuperAdminProfile(session.profile))
 
   return (
     <div data-surface="admin" className="bg-background text-foreground min-h-dvh">
@@ -68,6 +68,11 @@ export function AdminShell({
               <p className="text-sidebar-foreground/60 mt-1 text-xs">
                 {session.user.email}
               </p>
+              {isSuperAdminProfile(session.profile) ? (
+                <p className="text-sidebar-foreground/60 mt-1 text-xs tracking-wide uppercase">
+                  Super admin
+                </p>
+              ) : null}
             </div>
             <Button
               size="sm"

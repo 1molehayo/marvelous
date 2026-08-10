@@ -6,6 +6,8 @@ export type WeddingStatus =
 
 export type PublicThemeId = 'celeste' | 'botanica' | 'rosewater' | 'nocturne'
 
+export type AdminRole = 'super_admin' | 'admin'
+
 export type Wedding = {
   id: string
   partner_one_name: string
@@ -24,6 +26,8 @@ export type AdminProfile = {
   id: string
   wedding_id: string
   display_name: string | null
+  email: string | null
+  role: AdminRole
   created_at: string
   updated_at: string
 }
@@ -45,6 +49,8 @@ export type Database = {
           id: string
           wedding_id: string
           display_name?: string | null
+          email?: string | null
+          role?: AdminRole
         }
         Update: Partial<AdminProfile>
       }

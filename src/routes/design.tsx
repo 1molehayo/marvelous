@@ -8,21 +8,19 @@ import { Field } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
 import { applyColorMode, persistColorMode } from '#/lib/color-mode'
-import {
-  ACTIVE_PUBLIC_THEME,
-  PUBLIC_THEME_META,
-  PUBLIC_THEMES,
-} from '#/lib/site-settings'
+import { PUBLIC_THEME_META, PUBLIC_THEMES } from '#/lib/site-settings'
 import type { ColorMode, PublicThemeId } from '#/lib/site-settings'
+import { COLOR_MODES } from '#/lib/constants'
 import { cn } from '#/lib/utils'
+import { Route as RootRoute } from './__root'
 
 export const Route = createFileRoute('/design')({
   component: DesignShowcasePage,
 })
 
 function DesignShowcasePage() {
-  const [previewTheme, setPreviewTheme] =
-    useState<PublicThemeId>(ACTIVE_PUBLIC_THEME)
+  const { publicTheme: activeTheme } = RootRoute.useLoaderData()
+  const [previewTheme, setPreviewTheme] = useState<PublicThemeId>(activeTheme)
   const [previewMode, setPreviewMode] = useState<ColorMode>('light')
 
   useEffect(() => {
@@ -32,21 +30,19 @@ function DesignShowcasePage() {
 
   useEffect(() => {
     return () => {
-      document.documentElement.dataset.theme = ACTIVE_PUBLIC_THEME
+      document.documentElement.dataset.theme = activeTheme
     }
-  }, [])
+  }, [activeTheme])
 
   return (
-    <PublicShell>
+    <PublicShell theme={activeTheme}>
       <main className="mx-auto max-w-5xl space-y-16 px-4 py-12 md:px-6 md:py-16">
         <header className="space-y-4">
           <p className="public-kicker">Phase 2</p>
           <h1 className="public-section-title">Design foundation</h1>
           <p className="text-foreground-secondary max-w-2xl text-base leading-relaxed">
-            Public themes (admin-selected later), light/dark for visitors, and
-            Foundations primitives for the admin dashboard. Preview below does
-            not persist theme selection — only light/dark toggle on the public
-            site does.
+            Public themes are chosen in admin Wedding settings. Visitors only
+            toggle light/dark. Preview below does not persist theme selection.
           </p>
         </header>
 
@@ -65,7 +61,7 @@ function DesignShowcasePage() {
             ))}
           </div>
           <div className="flex flex-wrap gap-2">
-            {(['light', 'dark'] as const).map((mode) => (
+            {COLOR_MODES.map((mode) => (
               <Button
                 key={mode}
                 size="sm"
@@ -152,12 +148,11 @@ function DesignShowcasePage() {
             'border-border text-foreground-secondary rounded-xl border border-dashed p-4 text-sm',
           )}
         >
-          Active production theme stub:{' '}
+          Active public theme from wedding settings:{' '}
           <strong className="text-foreground">
-            {PUBLIC_THEME_META[ACTIVE_PUBLIC_THEME].name}
-          </strong>{' '}
-          (`ACTIVE_PUBLIC_THEME` in site-settings). Admin picker arrives in
-          Phase 4.
+            {PUBLIC_THEME_META[activeTheme].name}
+          </strong>
+          . Change it under Admin → Wedding settings.
         </section>
       </main>
     </PublicShell>

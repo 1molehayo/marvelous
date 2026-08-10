@@ -1,6 +1,6 @@
--- Fictional/local seed only. Never put real secrets or production passwords here.
--- Auth users are created in the Supabase Dashboard (Auth → Users → Add user).
--- On first login, the app links that user to admin_profiles automatically.
+-- Fictional/local seed only. Never put real secrets here.
+-- Admins sign in with email + OTP. Auth users are created on OTP request (super admin)
+-- or via in-app invite (other admins).
 
 insert into public.weddings (
   partner_one_name,

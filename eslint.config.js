@@ -22,6 +22,7 @@ export default [
       '.output/**',
       'dist/**',
       'coverage/**',
+      'supabase/.temp/**',
     ],
   },
 ]

@@ -1,5 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { Badge } from '#/components/ui/badge'
+import { Button } from '#/components/ui/button'
+import { PUBLIC_THEME_META } from '#/lib/site-settings'
+import { WEDDING_STATUS_LABELS } from '#/lib/wedding/validation'
 import { Route as AdminRoute } from './route'
 
 export const Route = createFileRoute('/admin/')({
@@ -21,11 +24,15 @@ function AdminOverviewPage() {
         <div>
           <h1 className="admin-page-title">Overview</h1>
           <p className="text-foreground-secondary mt-2 text-sm">
-            Secure admin access is live. Full dashboard editing arrives in Phase
-            4.
+            Wedding facts live here. Reorderable page blocks come in Phase 4b.
           </p>
         </div>
-        <Badge variant="info">{wedding.status.replaceAll('_', ' ')}</Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="info">{WEDDING_STATUS_LABELS[wedding.status]}</Badge>
+          <Button asChild size="sm" variant="outline">
+            <Link to="/admin/settings">Edit settings</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -52,7 +59,9 @@ function AdminOverviewPage() {
           <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
             Public theme
           </p>
-          <p className="mt-2 text-lg capitalize">{wedding.active_public_theme}</p>
+          <p className="mt-2 text-lg">
+            {PUBLIC_THEME_META[wedding.active_public_theme].name}
+          </p>
         </div>
         <div className="bg-surface border-border rounded-xl border p-5">
           <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">

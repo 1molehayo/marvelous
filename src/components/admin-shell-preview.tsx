@@ -2,6 +2,7 @@ import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { Field } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
+import { ADMIN_PREVIEW_NAV_LABELS } from '#/lib/constants'
 
 /** Static Ournuptials-inspired admin shell for the design showcase (not auth-gated). */
 export function AdminShellPreview() {
@@ -19,16 +20,7 @@ export function AdminShellPreview() {
             </p>
           </div>
           <nav className="flex flex-col gap-1 text-sm">
-            {[
-              'Overview',
-              'Guests',
-              'RSVPs',
-              'Story',
-              'Photos',
-              'Guest photos',
-              'Registry',
-              'Website',
-            ].map((item, index) => (
+            {ADMIN_PREVIEW_NAV_LABELS.map((item, index) => (
               <div
                 key={item}
                 className={
@@ -58,7 +50,8 @@ export function AdminShellPreview() {
           <div className="bg-surface border-border space-y-4 rounded-xl border p-5">
             <p className="text-foreground-secondary text-sm">
               Foundations components with admin tokens (cream surface, dark
-              sidebar, champagne accent). Full settings UI arrives in Phase 4.
+              sidebar, champagne accent). Live settings live under Admin →
+              Wedding settings.
             </p>
             <Field>
               <Field.Label>Active public theme</Field.Label>

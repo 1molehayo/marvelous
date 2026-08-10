@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  ACTIVE_PUBLIC_THEME,
+  FALLBACK_PUBLIC_THEME,
   PUBLIC_THEMES,
   PUBLIC_THEME_META,
 } from './site-settings'
@@ -18,7 +18,7 @@ describe('site settings', () => {
     }
   })
 
-  it('uses a known active public theme stub', () => {
-    expect(PUBLIC_THEMES).toContain(ACTIVE_PUBLIC_THEME)
+  it('uses a known fallback public theme', () => {
+    expect(PUBLIC_THEMES).toContain(FALLBACK_PUBLIC_THEME)
   })
 })

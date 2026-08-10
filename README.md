@@ -19,10 +19,12 @@ Built as a single **TanStack Start** (React + TypeScript) application. Productio
 
 Useful routes:
 
-- `/` — public coming-soon
+- `/` — public coming-soon (names/date/theme from DB)
 - `/design` — design showcase
 - `/admin/login` — admin sign-in
-- `/admin` — protected overview (Phase 3 stub)
+- `/admin` — protected overview
+- `/admin/settings` — wedding settings
+- `/admin/admins` — invite/remove admins (super admin only)
 
 ## Prerequisites
 
@@ -42,11 +44,23 @@ mise install
 mise trust  # first time in this repo
 pnpm install
 cp .env.example .env
-# fill Supabase keys (local or cloud)
+# For local Mailpit OTP: also create `.env.local` with keys from `pnpm status`
+pnpm supabase:start
+pnpm db:reset   # first time / after migration changes
 pnpm dev
 ```
 
-App: [http://localhost:3000](http://localhost:3000)
+App: [http://localhost:3000](http://localhost:3000)  
+Mailpit (local OTP emails): [http://127.0.0.1:54324](http://127.0.0.1:54324)
+
+### Useful pnpm scripts
+
+| Script | What it runs |
+|--------|----------------|
+| `pnpm status` | `supabase status` (API URL, keys, Mailpit) |
+| `pnpm supabase:start` | Start local Supabase |
+| `pnpm supabase:stop` | Stop local Supabase |
+| `pnpm db:reset` | Reset DB + apply migrations/seed |
 
 ### Quality checks
 
@@ -77,28 +91,40 @@ npx supabase db reset   # applies migrations + seed
 npx supabase status     # copy URL + keys into .env
 ```
 
-Local Auth has `enable_signup = false`. Create admins via Studio:
+Local Auth has `enable_signup = false`.
 
-1. Open local Studio URL from `supabase status`
-2. **Authentication → Users → Add user**
-3. Create with email + password (auto-confirm)
-4. Sign in at `/admin/login`
-5. On first login the app creates `admin_profiles` and links the user to the seeded wedding
+**Local Mailpit auth** (when `.env.local` points at `127.0.0.1`):
 
-### Production
+Only these emails can request an OTP:
 
-1. Ensure Vercel has the three Supabase env vars (Production)
-2. Apply migrations to the cloud project, e.g. `npx supabase db push` (linked project) or run the SQL in `supabase/migrations/` via the SQL editor
-3. In Supabase Dashboard → **Authentication → Providers / Settings**: disable public sign-ups
-4. **Authentication → Users → Add user** for each admin
-5. Sign in at `https://your-domain/admin/login`
+| Email | Role |
+|-------|------|
+| `superadmin@supabase.com` | Super admin |
+| `admin@supabase.com` | Admin |
 
-### Security model (Phase 3)
+1. `pnpm supabase:start` then `pnpm db:reset` (first time / after migrations)
+2. `pnpm dev` — login badge should say **Local · Mailpit**
+3. Sign in with one of the emails above → copy OTP from [Mailpit](http://127.0.0.1:54324)
+
+**Production / cloud auth** (`.env` cloud URL, no local override):
+
+1. Super admin is hardcoded: `omilabuolusegun@gmail.com`
+2. First login bootstraps that email as `super_admin`
+3. Invite other admins from **Admin → Admins** (they use real email + OTP)
+4. Enable the Email provider in the Supabase Dashboard
+5. (Recommended) configure custom SMTP so OTP emails deliver reliably
+
+### Security model
 
 - Public self-signup disabled (local config + production setting)
+- Admin sign-in is **email + 6-digit OTP** (no passwords for admins)
 - Admin routes gated in `beforeLoad` via `getAdminSession()`
+- Roles: `super_admin` (sole hardcoded email) vs `admin`
+- Only super admin can invite/remove admins (`/admin/admins`)
+- Regular admins can edit wedding settings / content CRUD
+- OTP is only sent to authorized emails (super admin or invited)
 - Server functions use cookie session (`@supabase/ssr`)
-- Privileged profile bootstrap uses `SUPABASE_SECRET_KEY` only on the server
+- Privileged ops use `SUPABASE_SECRET_KEY` only on the server
 - RLS: authenticated admins can read/update `weddings` / `admin_profiles`
 - Storage bucket `photos` is private; admin-only object policies (upload UX in Phase 6)
 - `wedding_date` is nullable from the first migration
@@ -119,13 +145,25 @@ docker run --rm -p 3000:3000 marvelous
 3. Merge to `main`
 4. Existing Vercel Git integration deploys production automatically
 
+### Wedding settings (Phase 4)
+
+Admins can edit structured wedding facts at `/admin/settings`:
+
+- Partner names
+- Optional wedding date (`null` = date to be announced)
+- Status, venue name/location, dress code
+- Active public theme (Celeste / Botanica / Rosewater / Nocturne)
+
+The public site reads names, date, and theme from the `weddings` row. Reorderable **page blocks** (story, image sections, etc.) are Phase **4b**, not part of settings.
+
 ## Project layout
 
 ```text
 src/
-  routes/admin/     # login + protected overview
+  routes/admin/     # login, overview, wedding settings
   lib/supabase/     # browser / server / admin clients
   lib/auth/         # session server functions
+  lib/wedding/      # public settings + updateWedding
   components/ui/    # Foundations primitives
 supabase/
   migrations/       # schema history
@@ -138,8 +176,9 @@ supabase/
 |------:|-------|
 | 1 | Bootstrap, local infra, CI |
 | 2 | Design foundation / wedding tokens |
-| 3 | Supabase schema + admin auth (current) |
-| 4 | Admin dashboard shell / settings editing |
+| 3 | Supabase schema + admin auth |
+| 4 | Wedding settings editing (current) |
+| 4b | Page blocks CMS (reorderable sections) |
 | 5 | Public wedding website |
 | 6–12 | Story/photos, guests, RSVP, registry, date publish, email, launch |
 

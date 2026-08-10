@@ -6,10 +6,19 @@ import {
 
 /** Server-only privileged client. Never import from browser code. */
 export function createAdminSupabaseClient() {
-  return createClient(getSupabaseUrl(), getSupabaseSecretKey(), {
+  const url = getSupabaseUrl()
+  const secretKey = getSupabaseSecretKey()
+
+  return createClient(url, secretKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
+    },
+    global: {
+      // Ensure PostgREST treats this as the privileged role.
+      headers: {
+        Authorization: `Bearer ${secretKey}`,
+      },
     },
   })
 }

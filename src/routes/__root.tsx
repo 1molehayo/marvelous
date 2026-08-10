@@ -1,10 +1,16 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
+import { NotFoundPage } from '#/components/not-found'
 import { COLOR_MODE_INIT_SCRIPT } from '#/lib/color-mode'
-import { ACTIVE_PUBLIC_THEME } from '#/lib/site-settings'
+import { getPublicWeddingSettings } from '#/lib/wedding/settings'
 
 import appCss from '../styles/app.css?url'
 
 export const Route = createRootRoute({
+  loader: async () => {
+    const wedding = await getPublicWeddingSettings()
+    return { publicTheme: wedding.active_public_theme }
+  },
+  notFoundComponent: NotFoundPage,
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
@@ -25,8 +31,10 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const { publicTheme } = Route.useLoaderData()
+
   return (
-    <html lang="en" data-theme={ACTIVE_PUBLIC_THEME} data-mode="light">
+    <html lang="en" data-theme={publicTheme} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{ __html: COLOR_MODE_INIT_SCRIPT }}
