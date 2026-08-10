@@ -1,3 +1,5 @@
+import type { PageBlock } from '#/lib/page-blocks/types'
+
 export type WeddingStatus =
   | 'planning'
   | 'date_confirmed'
@@ -18,6 +20,7 @@ export type Wedding = {
   venue_location: string | null
   dress_code: string | null
   active_public_theme: PublicThemeId
+  page_blocks: PageBlock[]
   created_at: string
   updated_at: string
 }

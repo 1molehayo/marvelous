@@ -2,8 +2,10 @@ import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Button } from '#/components/ui/button'
 import { Field } from '#/components/ui/field'
-import { Input, inputStyle } from '#/components/ui/input'
+import { Input } from '#/components/ui/input'
+import { Select } from '#/components/ui/select'
 import { Textarea } from '#/components/ui/textarea'
+import { toast } from '#/components/ui/toaster'
 import { PUBLIC_THEME_META, PUBLIC_THEMES } from '#/lib/site-settings'
 import type { PublicThemeId } from '#/lib/site-settings'
 import type { Wedding, WeddingStatus } from '#/lib/supabase/types'
@@ -12,7 +14,6 @@ import {
   WEDDING_STATUS_LABELS,
   WEDDING_STATUSES,
 } from '#/lib/wedding/validation'
-import { cn } from '#/lib/utils'
 import { Route as AdminRoute } from './route'
 
 export const Route = createFileRoute('/admin/settings')({
@@ -54,8 +55,6 @@ function AdminWeddingSettingsPage() {
   const [form, setForm] = useState<FormState>(() =>
     weddingToForm(session.wedding),
   )
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const setField = <TKey extends keyof FormState>(
@@ -67,8 +66,6 @@ function AdminWeddingSettingsPage() {
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
-    setError(null)
-    setSuccess(null)
     setIsSubmitting(true)
 
     try {
@@ -85,10 +82,10 @@ function AdminWeddingSettingsPage() {
         },
       })
       setForm(weddingToForm(wedding))
-      setSuccess('Wedding settings saved.')
+      toast.success('Wedding settings saved.')
       await router.invalidate()
     } catch (err) {
-      setError(
+      toast.error(
         err instanceof Error ? err.message : 'Unable to save wedding settings.',
       )
     } finally {
@@ -97,12 +94,12 @@ function AdminWeddingSettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <h1 className="admin-page-title">Wedding settings</h1>
         <p className="text-foreground-secondary mt-2 text-sm">
-          Couple details, venue, dress code, public theme, and status. Page
-          blocks (reorderable sections) arrive in Phase 4b.
+          Couple details, venue, dress code, public theme, and status. Edit page
+          sections under Page content.
         </p>
       </div>
 
@@ -162,8 +159,7 @@ function AdminWeddingSettingsPage() {
           <Field>
             <Field.Label>Status</Field.Label>
             <Field.Control>
-              <select
-                className={cn(inputStyle())}
+              <Select
                 value={form.status}
                 onChange={(event) =>
                   setField('status', event.target.value as WeddingStatus)
@@ -174,7 +170,7 @@ function AdminWeddingSettingsPage() {
                     {WEDDING_STATUS_LABELS[status]}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field.Control>
           </Field>
         </div>
@@ -222,8 +218,7 @@ function AdminWeddingSettingsPage() {
           <Field>
             <Field.Label>Active theme</Field.Label>
             <Field.Control>
-              <select
-                className={cn(inputStyle())}
+              <Select
                 value={form.active_public_theme}
                 onChange={(event) =>
                   setField(
@@ -237,7 +232,7 @@ function AdminWeddingSettingsPage() {
                     {PUBLIC_THEME_META[themeId].name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field.Control>
             <Field.Description>
               {PUBLIC_THEME_META[form.active_public_theme].description} Visitors
@@ -245,17 +240,6 @@ function AdminWeddingSettingsPage() {
             </Field.Description>
           </Field>
         </div>
-
-        {error ? (
-          <p className="text-error text-sm" role="alert">
-            {error}
-          </p>
-        ) : null}
-        {success ? (
-          <p className="text-success text-sm" role="status">
-            {success}
-          </p>
-        ) : null}
 
         <Button type="submit" isLoading={isSubmitting}>
           Save settings

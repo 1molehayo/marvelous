@@ -8,6 +8,7 @@ import { Button } from '#/components/ui/button'
 import { Field } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
 import { Badge } from '#/components/ui/badge'
+import { toast } from '#/components/ui/toaster'
 import { isSuperAdminProfile } from '#/lib/auth/roles'
 import {
   inviteAdmin,
@@ -33,8 +34,6 @@ function AdminAdminsPage() {
   const [admins, setAdmins] = useState<AdminListItem[]>(initialAdmins)
   const [email, setEmail] = useState('')
   const [displayName, setDisplayName] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
   const [isInviting, setIsInviting] = useState(false)
   const [removingId, setRemovingId] = useState<string | null>(null)
 
@@ -44,8 +43,6 @@ function AdminAdminsPage() {
 
   const onInvite = async (event: React.FormEvent) => {
     event.preventDefault()
-    setError(null)
-    setSuccess(null)
     setIsInviting(true)
     try {
       await inviteAdmin({
@@ -56,34 +53,36 @@ function AdminAdminsPage() {
       })
       setEmail('')
       setDisplayName('')
-      setSuccess(
+      toast.success(
         'Admin invited. They can sign in at /admin/login with email + OTP.',
       )
       await router.invalidate()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to invite admin.')
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to invite admin.',
+      )
     } finally {
       setIsInviting(false)
     }
   }
 
   const onRemove = async (adminId: string) => {
-    setError(null)
-    setSuccess(null)
     setRemovingId(adminId)
     try {
       await removeAdmin({ data: { adminId } })
-      setSuccess('Admin removed.')
+      toast.success('Admin removed.')
       await router.invalidate()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to remove admin.')
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to remove admin.',
+      )
     } finally {
       setRemovingId(null)
     }
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <h1 className="admin-page-title">Admins</h1>
         <p className="text-foreground-secondary mt-2 text-sm">
@@ -167,17 +166,6 @@ function AdminAdminsPage() {
           ))}
         </ul>
       </div>
-
-      {error ? (
-        <p className="text-error text-sm" role="alert">
-          {error}
-        </p>
-      ) : null}
-      {success ? (
-        <p className="text-success text-sm" role="status">
-          {success}
-        </p>
-      ) : null}
     </div>
   )
 }

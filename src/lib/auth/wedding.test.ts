@@ -13,6 +13,7 @@ describe('wedding date contract', () => {
       venue_location: 'Chicago',
       dress_code: 'Formal attire',
       active_public_theme: 'celeste',
+      page_blocks: [],
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }

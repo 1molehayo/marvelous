@@ -24,13 +24,16 @@ function AdminOverviewPage() {
         <div>
           <h1 className="admin-page-title">Overview</h1>
           <p className="text-foreground-secondary mt-2 text-sm">
-            Wedding facts live here. Reorderable page blocks come in Phase 4b.
+            Wedding facts and public page blocks are editable from the sidebar.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="info">{WEDDING_STATUS_LABELS[wedding.status]}</Badge>
           <Button asChild size="sm" variant="outline">
             <Link to="/admin/settings">Edit settings</Link>
+          </Button>
+          <Button asChild size="sm" variant="outline">
+            <Link to="/admin/pages">Page content</Link>
           </Button>
         </div>
       </div>

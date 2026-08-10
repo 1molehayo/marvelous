@@ -9,6 +9,7 @@ import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { Field } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
+import { Toaster, toast } from '#/components/ui/toaster'
 
 function isLocalSupabaseUrl(url: string | undefined) {
   if (!url) return false
@@ -34,27 +35,25 @@ function AdminLoginPage() {
   const [step, setStep] = useState<'email' | 'otp'>('email')
   const [email, setEmail] = useState('')
   const [token, setToken] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [info, setInfo] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const localAuth = isLocalSupabaseUrl(import.meta.env.VITE_SUPABASE_URL)
 
   const onRequestCode = async (event: React.FormEvent) => {
     event.preventDefault()
-    setError(null)
-    setInfo(null)
     setIsSubmitting(true)
     try {
       const result = await requestAdminOtp({ data: { email } })
       setEmail(result.email)
       setStep('otp')
-      setInfo(
+      toast.success(
         localAuth
           ? 'Code sent. Open Mailpit at http://127.0.0.1:54324'
           : 'Check your email for a 6-digit code.',
       )
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to send code.')
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to send code.',
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -62,14 +61,14 @@ function AdminLoginPage() {
 
   const onVerifyCode = async (event: React.FormEvent) => {
     event.preventDefault()
-    setError(null)
-    setInfo(null)
     setIsSubmitting(true)
     try {
       await verifyAdminOtp({ data: { email, token } })
       await navigate({ to: '/admin' })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to verify code.')
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to verify code.',
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -80,6 +79,7 @@ function AdminLoginPage() {
       data-surface="admin"
       className="bg-background text-foreground flex min-h-dvh items-center justify-center px-4 py-12"
     >
+      <Toaster />
       <div className="bg-surface border-border w-full max-w-md space-y-6 rounded-2xl border p-6 shadow-sm md:p-8">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -113,12 +113,6 @@ function AdminLoginPage() {
               </Field.Control>
             </Field>
 
-            {error ? (
-              <p className="text-error text-sm" role="alert">
-                {error}
-              </p>
-            ) : null}
-
             <Button type="submit" className="w-full" isLoading={isSubmitting}>
               Send code
             </Button>
@@ -149,17 +143,6 @@ function AdminLoginPage() {
               </Field.Description>
             </Field>
 
-            {info ? (
-              <p className="text-foreground-secondary text-sm" role="status">
-                {info}
-              </p>
-            ) : null}
-            {error ? (
-              <p className="text-error text-sm" role="alert">
-                {error}
-              </p>
-            ) : null}
-
             <Button type="submit" className="w-full" isLoading={isSubmitting}>
               Verify &amp; sign in
             </Button>
@@ -171,8 +154,6 @@ function AdminLoginPage() {
               onClick={() => {
                 setStep('email')
                 setToken('')
-                setError(null)
-                setInfo(null)
               }}
             >
               Use a different email

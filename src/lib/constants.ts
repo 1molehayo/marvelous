@@ -15,7 +15,7 @@ export const ADMIN_PREVIEW_NAV_LABELS = [
 ] as const
 
 export type AdminNavItem = {
-  to: '/admin' | '/admin/settings' | '/admin/admins'
+  to: '/admin' | '/admin/settings' | '/admin/pages' | '/admin/admins'
   label: string
   exact: boolean
 }
@@ -23,6 +23,7 @@ export type AdminNavItem = {
 export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
   { to: '/admin', label: 'Overview', exact: true },
   { to: '/admin/settings', label: 'Wedding settings', exact: false },
+  { to: '/admin/pages', label: 'Page content', exact: false },
 ]
 
 export const ADMIN_SUPER_NAV_ITEMS: readonly AdminNavItem[] = [

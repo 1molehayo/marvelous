@@ -19,11 +19,12 @@ Built as a single **TanStack Start** (React + TypeScript) application. Productio
 
 Useful routes:
 
-- `/` — public coming-soon (names/date/theme from DB)
+- `/` — public home (theme + ordered page blocks from DB)
 - `/design` — design showcase
 - `/admin/login` — admin sign-in
 - `/admin` — protected overview
 - `/admin/settings` — wedding settings
+- `/admin/pages` — page content blocks (hero, story, image, details)
 - `/admin/admins` — invite/remove admins (super admin only)
 
 ## Prerequisites
@@ -154,17 +155,28 @@ Admins can edit structured wedding facts at `/admin/settings`:
 - Status, venue name/location, dress code
 - Active public theme (Celeste / Botanica / Rosewater / Nocturne)
 
-The public site reads names, date, and theme from the `weddings` row. Reorderable **page blocks** (story, image sections, etc.) are Phase **4b**, not part of settings.
+### Page content (Phase 4b)
+
+Admins edit ordered home-page blocks at `/admin/pages`:
+
+- Block types: `hero`, `story`, `image`, `details`
+- Up/down reorder, add/remove, save whole `page_blocks` JSONB array
+- Public `/` renders blocks via `DynamicBlock`
+- Image blocks store a path in the private `photos` bucket; signed URLs are issued for admin preview and public render
+
+After pulling migrations: `pnpm db:reset` (local) or apply the new migration on cloud.
 
 ## Project layout
 
 ```text
 src/
-  routes/admin/     # login, overview, wedding settings
+  routes/admin/     # login, overview, settings, pages, admins
   lib/supabase/     # browser / server / admin clients
   lib/auth/         # session server functions
   lib/wedding/      # public settings + updateWedding
-  components/ui/    # Foundations primitives
+  lib/page-blocks/  # page_blocks types, validation, server fns
+  components/blocks # public DynamicBlock renderers
+  components/ui/    # Foundations primitives (+ toaster)
 supabase/
   migrations/       # schema history
   seed.sql          # fictional wedding row
@@ -177,8 +189,8 @@ supabase/
 | 1 | Bootstrap, local infra, CI |
 | 2 | Design foundation / wedding tokens |
 | 3 | Supabase schema + admin auth |
-| 4 | Wedding settings editing (current) |
-| 4b | Page blocks CMS (reorderable sections) |
+| 4 | Wedding settings editing |
+| 4b | Page blocks CMS (current) |
 | 5 | Public wedding website |
 | 6–12 | Story/photos, guests, RSVP, registry, date publish, email, launch |
 
