@@ -4,7 +4,7 @@ import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
 import type { Guest } from '#/lib/supabase/types'
 
 const GUEST_SELECT =
-  'id, wedding_id, first_name, last_name, email, phone, party_name, plus_ones, notes, created_at, updated_at'
+  'id, wedding_id, first_name, last_name, email, phone, party_name, plus_ones, notes, rsvp_token, rsvp_status, rsvp_responded_at, attending_count, dietary_notes, rsvp_message, created_at, updated_at'
 
 export async function listGuestsHandler(): Promise<Guest[]> {
   const session = await requireWeddingSession()

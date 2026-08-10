@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { ArrowSquareOut } from '@phosphor-icons/react'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { isSuperAdminProfile } from '#/lib/auth/roles'
@@ -105,6 +106,7 @@ function AdminOverviewPage() {
         </div>
         <Button asChild size="sm">
           <a href="/" target="_blank" rel="noreferrer">
+            <ArrowSquareOut />
             Preview site
           </a>
         </Button>

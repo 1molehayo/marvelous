@@ -10,6 +10,8 @@ export type PublicThemeId = 'celeste' | 'botanica' | 'rosewater' | 'nocturne'
 
 export type AdminRole = 'super_admin' | 'admin'
 
+export type RsvpStatus = 'pending' | 'attending' | 'declined'
+
 export type Wedding = {
   id: string
   groom_name: string
@@ -51,6 +53,12 @@ export type Guest = {
   party_name: string | null
   plus_ones: number
   notes: string | null
+  rsvp_token: string
+  rsvp_status: RsvpStatus
+  rsvp_responded_at: string | null
+  attending_count: number | null
+  dietary_notes: string | null
+  rsvp_message: string | null
   created_at: string
   updated_at: string
 }
@@ -93,6 +101,12 @@ export type Database = {
           party_name?: string | null
           plus_ones?: number
           notes?: string | null
+          rsvp_token?: string
+          rsvp_status?: RsvpStatus
+          rsvp_responded_at?: string | null
+          attending_count?: number | null
+          dietary_notes?: string | null
+          rsvp_message?: string | null
         }
         Update: Partial<
           Omit<Guest, 'id' | 'wedding_id' | 'created_at' | 'updated_at'>

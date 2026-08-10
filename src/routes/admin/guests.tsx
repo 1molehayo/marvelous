@@ -1,5 +1,6 @@
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
+import { CopySimple, LinkSimple } from '@phosphor-icons/react'
 import {
   getCoreRowModel,
   getFilteredRowModel,
@@ -8,10 +9,12 @@ import {
 } from '@tanstack/react-table'
 import type { ColumnDef, SortingState } from '@tanstack/react-table'
 import { useEffect, useMemo, useState } from 'react'
+import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
 import { Field } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
+import { Select } from '#/components/ui/select'
 import { SideDrawer } from '#/components/ui/side-drawer'
 import { TableView } from '#/components/ui/table-view'
 import { Textarea } from '#/components/ui/textarea'
@@ -30,6 +33,16 @@ import {
   toGuestFormValues,
 } from '#/lib/guests/schema'
 import type { GuestFormValues } from '#/lib/guests/schema'
+import { updateGuestRsvp } from '#/lib/rsvp/rsvp'
+import {
+  RSVP_STATUS_LABELS,
+  RSVP_STATUSES,
+  adminRsvpFormSchema,
+  maxAttendingForPlusOnes,
+  rsvpStatusBadgeVariant,
+  toAdminRsvpFormValues,
+} from '#/lib/rsvp/schema'
+import type { AdminRsvpFormValues } from '#/lib/rsvp/schema'
 import type { Guest } from '#/lib/supabase/types'
 import { internalError, raiseRouteError } from '#/lib/errors/route-error'
 
@@ -65,6 +78,17 @@ const emptyGuestForm: GuestFormValues = {
   notes: '',
 }
 
+const emptyRsvpForm: AdminRsvpFormValues = {
+  status: 'pending',
+  attendingCount: 0,
+  dietaryNotes: '',
+  message: '',
+}
+
+function guestRsvpPath(token: string) {
+  return `/rsvp/${token}`
+}
+
 function AdminGuestsPage() {
   const initialGuests = Route.useLoaderData()
   const router = useRouter()
@@ -88,6 +112,10 @@ function AdminGuestsPage() {
     () => guests.find((guest) => guest.id === selectedId) ?? null,
     [guests, selectedId],
   )
+
+  const rsvpForm = useForm({
+    defaultValues: emptyRsvpForm,
+  })
 
   const form = useForm({
     defaultValues: emptyGuestForm,
@@ -115,8 +143,41 @@ function AdminGuestsPage() {
           await createGuest({ data: payload })
           toast.success('Guest added.')
         } else if (selectedGuest) {
+          const rsvpValues = rsvpForm.state.values
+          const maxAttending = maxAttendingForPlusOnes(parsed.plusOnes)
+          const rsvpNormalized = {
+            ...rsvpValues,
+            attendingCount:
+              rsvpValues.status === 'attending'
+                ? rsvpValues.attendingCount
+                : 0,
+          }
+          const rsvpParsed = adminRsvpFormSchema.safeParse(rsvpNormalized)
+          if (!rsvpParsed.success) {
+            throw new Error(
+              rsvpParsed.error.issues[0]?.message ?? 'Invalid RSVP details.',
+            )
+          }
+          if (
+            rsvpParsed.data.status === 'attending' &&
+            rsvpParsed.data.attendingCount > maxAttending
+          ) {
+            throw new Error(
+              `Attending count cannot exceed ${maxAttending} for this guest.`,
+            )
+          }
+
           await updateGuest({
             data: { guestId: selectedGuest.id, ...payload },
+          })
+          await updateGuestRsvp({
+            data: {
+              guestId: selectedGuest.id,
+              status: rsvpParsed.data.status,
+              attending_count: rsvpParsed.data.attendingCount,
+              dietary_notes: rsvpParsed.data.dietaryNotes,
+              rsvp_message: rsvpParsed.data.message,
+            },
           })
           toast.success('Guest updated.')
         }
@@ -138,6 +199,7 @@ function AdminGuestsPage() {
     setIsCreating(true)
     setSelectedId(null)
     form.reset(emptyGuestForm)
+    rsvpForm.reset(emptyRsvpForm)
     setDrawerOpen(true)
   }
 
@@ -145,7 +207,18 @@ function AdminGuestsPage() {
     setIsCreating(false)
     setSelectedId(guest.id)
     form.reset(toGuestFormValues(guest))
+    rsvpForm.reset(toAdminRsvpFormValues(guest))
     setDrawerOpen(true)
+  }
+
+  const copyRsvpLink = async (guest: Guest) => {
+    const url = `${window.location.origin}${guestRsvpPath(guest.rsvp_token)}`
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.success('RSVP link copied.')
+    } catch {
+      toast.error('Could not copy link.')
+    }
   }
 
   const columns = useMemo<ColumnDef<Guest>[]>(
@@ -180,6 +253,20 @@ function AdminGuestsPage() {
         meta: { minWidth: 160 },
       },
       {
+        id: 'rsvp',
+        accessorFn: (row) => row.rsvp_status,
+        header: 'RSVP',
+        cell: ({ row }) => (
+          <Badge
+            variant={rsvpStatusBadgeVariant(row.original.rsvp_status)}
+            size="sm"
+          >
+            {RSVP_STATUS_LABELS[row.original.rsvp_status]}
+          </Badge>
+        ),
+        meta: { minWidth: 120 },
+      },
+      {
         id: 'plusOnes',
         accessorFn: (row) => row.plus_ones,
         header: 'Plus-ones',
@@ -191,7 +278,16 @@ function AdminGuestsPage() {
         enableSorting: false,
         header: '',
         cell: ({ row }) => (
-          <div data-row-stop className="flex justify-end">
+          <div data-row-stop className="flex justify-end gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => void copyRsvpLink(row.original)}
+            >
+              <LinkSimple />
+              Link
+            </Button>
             <Button
               type="button"
               size="sm"
@@ -202,7 +298,7 @@ function AdminGuestsPage() {
             </Button>
           </div>
         ),
-        meta: { minWidth: 96, className: 'w-28' },
+        meta: { minWidth: 180, className: 'w-44' },
       },
     ],
     [],
@@ -227,6 +323,7 @@ function AdminGuestsPage() {
         guest.phone ?? '',
         guest.party_name ?? '',
         guest.notes ?? '',
+        RSVP_STATUS_LABELS[guest.rsvp_status],
       ]
         .join(' ')
         .toLowerCase()
@@ -253,13 +350,21 @@ function AdminGuestsPage() {
     }
   }
 
+  const attendingSummary = guests.reduce(
+    (sum, guest) =>
+      guest.rsvp_status === 'attending' ? sum + (guest.attending_count ?? 0) : sum,
+    0,
+  )
+  const pendingCount = guests.filter((g) => g.rsvp_status === 'pending').length
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="admin-page-title">Guests</h1>
           <p className="text-foreground-secondary mt-2 text-sm">
-            Build your guest list here. RSVP tracking comes in the next phase.
+            Manage the guest list and RSVP responses. Share each guest’s private
+            link until email invites ship.
           </p>
         </div>
         <Button type="button" size="sm" onClick={openCreate}>
@@ -271,6 +376,10 @@ function AdminGuestsPage() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
             {guests.length} guest{guests.length === 1 ? '' : 's'}
+            {' · '}
+            {attendingSummary} attending
+            {' · '}
+            {pendingCount} pending
           </p>
           <Field className="w-full max-w-xs">
             <Field.Label>Search</Field.Label>
@@ -278,7 +387,7 @@ function AdminGuestsPage() {
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Name, email, party…"
+                placeholder="Name, email, RSVP…"
               />
             </Field.Control>
           </Field>
@@ -479,6 +588,123 @@ function AdminGuestsPage() {
                 </>
               )}
             </form.Subscribe>
+
+            {!isCreating && selectedGuest ? (
+              <div className="border-border space-y-4 border-t pt-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
+                    RSVP
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void copyRsvpLink(selectedGuest)}
+                  >
+                    <CopySimple />
+                    Copy link
+                  </Button>
+                </div>
+
+                <rsvpForm.Field name="status">
+                  {(field) => (
+                    <Field>
+                      <Field.Label>Status</Field.Label>
+                      <Field.Control>
+                        <Select
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(event) => {
+                            const next = event.target
+                              .value as AdminRsvpFormValues['status']
+                            field.handleChange(next)
+                            if (next !== 'attending') {
+                              rsvpForm.setFieldValue('attendingCount', 0)
+                            } else if (
+                              rsvpForm.getFieldValue('attendingCount') < 1
+                            ) {
+                              rsvpForm.setFieldValue('attendingCount', 1)
+                            }
+                          }}
+                        >
+                          {RSVP_STATUSES.map((status) => (
+                            <option key={status} value={status}>
+                              {RSVP_STATUS_LABELS[status]}
+                            </option>
+                          ))}
+                        </Select>
+                      </Field.Control>
+                    </Field>
+                  )}
+                </rsvpForm.Field>
+
+                <rsvpForm.Subscribe selector={(state) => state.values.status}>
+                  {(status) =>
+                    status === 'attending' ? (
+                      <rsvpForm.Field name="attendingCount">
+                        {(field) => (
+                          <Field>
+                            <Field.Label>Number attending</Field.Label>
+                            <Field.Control>
+                              <Input
+                                type="number"
+                                min={1}
+                                max={maxAttendingForPlusOnes(
+                                  selectedGuest?.plus_ones ?? 0,
+                                )}
+                                value={String(field.state.value)}
+                                onBlur={field.handleBlur}
+                                onChange={(event) =>
+                                  field.handleChange(
+                                    Number(event.target.value || 0),
+                                  )
+                                }
+                              />
+                            </Field.Control>
+                          </Field>
+                        )}
+                      </rsvpForm.Field>
+                    ) : null
+                  }
+                </rsvpForm.Subscribe>
+
+                <rsvpForm.Field name="dietaryNotes">
+                  {(field) => (
+                    <Field>
+                      <Field.Label>Dietary notes</Field.Label>
+                      <Field.Control>
+                        <Textarea
+                          rows={3}
+                          value={field.state.value ?? ''}
+                          onBlur={field.handleBlur}
+                          onChange={(event) =>
+                            field.handleChange(event.target.value)
+                          }
+                        />
+                      </Field.Control>
+                    </Field>
+                  )}
+                </rsvpForm.Field>
+
+                <rsvpForm.Field name="message">
+                  {(field) => (
+                    <Field>
+                      <Field.Label>Guest message</Field.Label>
+                      <Field.Control>
+                        <Textarea
+                          rows={3}
+                          value={field.state.value ?? ''}
+                          onBlur={field.handleBlur}
+                          onChange={(event) =>
+                            field.handleChange(event.target.value)
+                          }
+                        />
+                      </Field.Control>
+                    </Field>
+                  )}
+                </rsvpForm.Field>
+              </div>
+            ) : null}
           </form>
         </SideDrawer.Content>
         <SideDrawer.Footer className="justify-between">
