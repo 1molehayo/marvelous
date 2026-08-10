@@ -143,7 +143,7 @@ function BlockEditor({
     return (
       <div className="space-y-4">
         <Field invalid={titleInvalid}>
-          <Field.Label>Title</Field.Label>
+          <Field.Label required>Title</Field.Label>
           <Field.Control>
             <Input
               value={block.fields.title}
@@ -159,7 +159,7 @@ function BlockEditor({
           {titleInvalid ? <Field.Error>{fieldErrors.title}</Field.Error> : null}
         </Field>
         <Field invalid={bodyInvalid}>
-          <Field.Label>Body</Field.Label>
+          <Field.Label required>Body</Field.Label>
           <Field.Control>
             <Textarea
               rows={5}
@@ -184,7 +184,7 @@ function BlockEditor({
     return (
       <div className="space-y-4">
         <Field invalid={imageInvalid}>
-          <Field.Label>Image</Field.Label>
+          <Field.Label required>Image</Field.Label>
           <Field.Control>
             <Input
               type="file"

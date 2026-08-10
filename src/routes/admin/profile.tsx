@@ -149,7 +149,7 @@ function AdminProfilePage() {
                       !!error && (field.state.meta.isTouched || submitted)
                     return (
                       <Field invalid={invalid}>
-                        <Field.Label>First name</Field.Label>
+                        <Field.Label required>First name</Field.Label>
                         <Field.Control>
                           <Input
                             value={field.state.value}
@@ -173,7 +173,7 @@ function AdminProfilePage() {
                       !!error && (field.state.meta.isTouched || submitted)
                     return (
                       <Field invalid={invalid}>
-                        <Field.Label>Last name</Field.Label>
+                        <Field.Label required>Last name</Field.Label>
                         <Field.Control>
                           <Input
                             value={field.state.value}
@@ -201,7 +201,7 @@ function AdminProfilePage() {
                     (field.state.meta.isTouched || submitted)
                   return (
                     <Field invalid={invalid}>
-                      <Field.Label>Email</Field.Label>
+                      <Field.Label required={isSuper}>Email</Field.Label>
                       <Field.Control>
                         <Input
                           type="email"
@@ -302,7 +302,7 @@ function AdminProfilePage() {
         onConfirm={onRequestDeletion}
       >
         <Field invalid={!!deleteReasonError}>
-          <Field.Label>Reason</Field.Label>
+          <Field.Label required>Reason</Field.Label>
           <Field.Control>
             <Textarea
               rows={4}

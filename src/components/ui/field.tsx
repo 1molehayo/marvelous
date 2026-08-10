@@ -64,10 +64,16 @@ const Field = ({ invalid, className, children, ...props }: FieldProps) => {
   )
 }
 
+interface FieldLabelProps extends React.ComponentPropsWithRef<'label'> {
+  required?: boolean
+}
+
 const FieldLabel = ({
   className,
+  required,
+  children,
   ...props
-}: React.ComponentPropsWithRef<'label'>) => {
+}: FieldLabelProps) => {
   const { controlId, labelId } = useFieldContext()
   return (
     <label
@@ -75,7 +81,14 @@ const FieldLabel = ({
       id={labelId}
       className={cn('font-medium text-base text-foreground', className)}
       {...props}
-    />
+    >
+      {children}
+      {required ? (
+        <span className="text-error ms-0.5" aria-hidden="true">
+          *
+        </span>
+      ) : null}
+    </label>
   )
 }
 
