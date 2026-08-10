@@ -1,7 +1,10 @@
 import type { PageBlock } from '#/lib/page-blocks/types'
 
 export type WeddingStatus =
-  'planning' | 'date_confirmed' | 'invitations_sent' | 'completed'
+  | 'planning'
+  | 'date_confirmed'
+  | 'invitations_sent'
+  | 'completed'
 
 export type PublicThemeId = 'celeste' | 'botanica' | 'rosewater' | 'nocturne'
 
@@ -25,9 +28,15 @@ export type Wedding = {
 export type AdminProfile = {
   id: string
   wedding_id: string | null
+  /** @deprecated Prefer first_name — kept in sync for legacy reads. */
   display_name: string | null
+  first_name: string | null
+  last_name: string | null
+  phone: string | null
   email: string | null
   role: AdminRole
+  deletion_requested_at: string | null
+  deletion_reason: string | null
   created_at: string
   updated_at: string
 }
@@ -49,8 +58,13 @@ export type Database = {
           id: string
           wedding_id?: string | null
           display_name?: string | null
+          first_name?: string | null
+          last_name?: string | null
+          phone?: string | null
           email?: string | null
           role?: AdminRole
+          deletion_requested_at?: string | null
+          deletion_reason?: string | null
         }
         Update: Partial<AdminProfile>
       }

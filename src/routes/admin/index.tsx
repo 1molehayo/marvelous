@@ -2,6 +2,10 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { isSuperAdminProfile } from '#/lib/auth/roles'
+import {
+  adminFirstName,
+  hasCompleteAdminName,
+} from '#/lib/auth/types'
 import { formatCoupleNames } from '#/lib/constants'
 import { PUBLIC_THEME_META } from '#/lib/site-settings'
 import { WEDDING_STATUS_LABELS } from '#/lib/wedding/validation'
@@ -18,14 +22,16 @@ function AdminOverviewPage() {
     return null
   }
 
-  const { wedding, profile, user } = session
+  const { wedding, profile } = session
   const isSuper = isSuperAdminProfile(profile)
+  const firstName = adminFirstName(profile)
+  const profileIncomplete = !hasCompleteAdminName(profile)
 
   if (!wedding) {
     return (
       <div className="mx-auto max-w-3xl space-y-6">
         <div>
-          <h1 className="admin-page-title">Overview</h1>
+          <h1 className="admin-page-title">Welcome, {firstName}</h1>
           <p className="text-foreground-secondary mt-2 text-sm">
             No wedding is set up yet.
             {isSuper
@@ -33,6 +39,17 @@ function AdminOverviewPage() {
               : ' Complete onboarding to continue.'}
           </p>
         </div>
+
+        {isSuper && profileIncomplete ? (
+          <div className="bg-surface border-border rounded-xl border border-dashed p-4 text-sm">
+            Your profile name looks incomplete.{' '}
+            <Link to="/admin/profile" className="text-accent underline">
+              Update your profile
+            </Link>{' '}
+            so we know what to call you.
+          </div>
+        ) : null}
+
         <div className="bg-surface border-border space-y-4 rounded-xl border border-dashed p-6">
           <p className="font-serif text-2xl italic">Wedding not set up</p>
           <div className="flex flex-wrap gap-2">
@@ -45,9 +62,6 @@ function AdminOverviewPage() {
               </Button>
             ) : null}
           </div>
-          <p className="text-foreground-secondary text-sm">
-            Signed in as {profile.display_name ?? 'Admin'} · {user.email}
-          </p>
         </div>
       </div>
     )
@@ -57,7 +71,7 @@ function AdminOverviewPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="admin-page-title">Overview</h1>
+          <h1 className="admin-page-title">Welcome, {firstName}</h1>
           <p className="text-foreground-secondary mt-2 text-sm">
             Wedding facts and public page blocks are editable from the sidebar.
           </p>
@@ -72,6 +86,16 @@ function AdminOverviewPage() {
           </Button>
         </div>
       </div>
+
+      {isSuper && profileIncomplete ? (
+        <div className="bg-surface border-border rounded-xl border border-dashed p-4 text-sm">
+          Your profile name looks incomplete.{' '}
+          <Link to="/admin/profile" className="text-accent underline">
+            Update your profile
+          </Link>{' '}
+          so we know what to call you.
+        </div>
+      ) : null}
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="bg-surface border-border rounded-xl border p-5">
@@ -100,13 +124,6 @@ function AdminOverviewPage() {
           <p className="mt-2 text-lg">
             {PUBLIC_THEME_META[wedding.active_public_theme].name}
           </p>
-        </div>
-        <div className="bg-surface border-border rounded-xl border p-5">
-          <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
-            Signed in as
-          </p>
-          <p className="mt-2 text-lg">{profile.display_name ?? 'Admin'}</p>
-          <p className="text-foreground-secondary text-sm">{user.email}</p>
         </div>
       </div>
     </div>

@@ -26,6 +26,8 @@ export type AdminNavItem = {
     | '/admin/pages'
     | '/admin/admins'
     | '/admin/onboarding'
+    | '/admin/profile'
+    | '/admin/support'
   label: string
   exact: boolean
 }
@@ -40,26 +42,40 @@ export const ADMIN_SUPER_NAV_ITEMS: readonly AdminNavItem[] = [
   { to: '/admin/admins', label: 'Admins', exact: false },
 ]
 
+export const ADMIN_ACCOUNT_NAV_ITEMS: readonly AdminNavItem[] = [
+  { to: '/admin/profile', label: 'Profile', exact: false },
+]
+
+export const ADMIN_SUPPORT_NAV_ITEM: AdminNavItem = {
+  to: '/admin/support',
+  label: 'Support',
+  exact: false,
+}
+
 export function getAdminNavItems(
   isSuperAdmin: boolean,
   options?: { hasWedding?: boolean },
 ): AdminNavItem[] {
   const hasWedding = options?.hasWedding ?? true
+  const items: AdminNavItem[] = []
 
   if (!hasWedding) {
-    const items: AdminNavItem[] = [
+    items.push(
       { to: '/admin', label: 'Overview', exact: true },
-      { to: '/admin/onboarding', label: 'Set up wedding', exact: false },
-    ]
-    if (isSuperAdmin) {
-      items.push(...ADMIN_SUPER_NAV_ITEMS)
-    }
-    return items
+      { to: '/admin/onboarding', label: 'Wedding settings', exact: false },
+    )
+  } else {
+    items.push(...ADMIN_NAV_ITEMS)
   }
 
-  return isSuperAdmin
-    ? [...ADMIN_NAV_ITEMS, ...ADMIN_SUPER_NAV_ITEMS]
-    : [...ADMIN_NAV_ITEMS]
+  if (isSuperAdmin) {
+    items.push(...ADMIN_SUPER_NAV_ITEMS)
+  } else {
+    items.push(ADMIN_SUPPORT_NAV_ITEM)
+  }
+
+  items.push(...ADMIN_ACCOUNT_NAV_ITEMS)
+  return items
 }
 
 export function formatCoupleNames(groomName: string, brideName: string) {

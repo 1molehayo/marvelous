@@ -1,5 +1,5 @@
 import type { VariantProps } from 'cva'
-import { Slot, Slottable } from '#/components/slot'
+import { Slot } from '#/components/slot'
 import { Spinner } from '#/components/ui/spinner'
 import { cn, cva } from '#/lib/utils'
 
@@ -58,34 +58,33 @@ const Button = ({
   ref,
   ...props
 }: ButtonProps) => {
-  const Comp = asChild ? Slot : 'button'
+  const classes = cn(
+    buttonStyle({ className, variant, size, square }),
+    isLoading && 'text-transparent transition-none',
+  )
+
+  // asChild must slot styles onto the child (e.g. Link) directly.
+  // Wrapping with Slottable/Fragment drops classes and looks like plain text.
+  if (asChild) {
+    return (
+      <Slot className={classes} ref={ref} {...props}>
+        {children}
+      </Slot>
+    )
+  }
 
   return (
-    <Comp
-      className={cn(
-        buttonStyle({ className, variant, size, square }),
-        isLoading && 'text-transparent transition-none',
-      )}
-      ref={ref}
-      type={asChild ? undefined : type}
-      {...props}
-    >
-      <Slottable asChild={asChild} child={children}>
-        {(child) => (
-          <>
-            {child}
-            {isLoading && (
-              <span
-                data-button-spinner
-                className="text-(--button-text-color) absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-              >
-                <Spinner size={size} />
-              </span>
-            )}
-          </>
-        )}
-      </Slottable>
-    </Comp>
+    <button className={classes} ref={ref} type={type} {...props}>
+      {children}
+      {isLoading ? (
+        <span
+          data-button-spinner
+          className="text-(--button-text-color) absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+        >
+          <Spinner size={size} />
+        </span>
+      ) : null}
+    </button>
   )
 }
 

@@ -61,16 +61,17 @@ async function createBootstrapProfile(
 ): Promise<AdminProfile> {
   const admin = createAdminSupabaseClient()
   const normalizedEmail = normalizeAdminEmail(email)
-  const displayName = normalizedEmail.split('@')[0] ?? 'Admin'
 
-  // Do not create a wedding here — onboarding owns that. Super admin may navigate
-  // with wedding_id null; regular admins are forced through onboarding.
+  // Names are required in-app; bootstrap leaves them null so the profile gate runs.
   const inserted = await admin
     .from('admin_profiles')
     .insert({
       id: userId,
       wedding_id: null,
-      display_name: displayName,
+      display_name: null,
+      first_name: null,
+      last_name: null,
+      phone: null,
       email: normalizedEmail,
       role,
     })

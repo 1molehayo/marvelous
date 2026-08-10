@@ -5,6 +5,7 @@ import { Button } from '#/components/ui/button'
 import { Toaster } from '#/components/ui/toaster'
 import { isSuperAdminProfile } from '#/lib/auth/roles'
 import type { AdminSession } from '#/lib/auth/types'
+import { adminFirstName } from '#/lib/auth/types'
 import {
   PRODUCT_NAME,
   PRODUCT_SHORT_NAME,
@@ -86,6 +87,9 @@ function SidebarFooter({
         <p className="text-sidebar-foreground/60 mt-1 text-xs">{dateLabel}</p>
         <p className="text-sidebar-foreground/60 mt-1 text-xs">
           {session.user.email}
+        </p>
+        <p className="text-sidebar-foreground/60 mt-1 text-xs">
+          {adminFirstName(session.profile)}
         </p>
         {isSuperAdminProfile(session.profile) ? (
           <p className="text-sidebar-foreground/60 mt-1 text-xs tracking-wide uppercase">

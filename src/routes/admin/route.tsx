@@ -9,6 +9,7 @@ import { useState } from 'react'
 import { AdminShell } from '#/components/admin-shell'
 import { isSuperAdminProfile } from '#/lib/auth/roles'
 import { getAdminSession, logoutAdmin } from '#/lib/auth/session'
+import { hasCompleteAdminName } from '#/lib/auth/types'
 import type { AdminSession } from '#/lib/auth/types'
 
 export const Route = createFileRoute('/admin')({
@@ -24,12 +25,23 @@ export const Route = createFileRoute('/admin')({
       throw redirect({ to: '/admin/login' })
     }
 
-    const isOnboarding = location.pathname === '/admin/onboarding'
     const isSuper = isSuperAdminProfile(session.profile)
+    const isProfile = location.pathname === '/admin/profile'
+    const isSupport = location.pathname === '/admin/support'
+    const isOnboarding = location.pathname === '/admin/onboarding'
+    const hasName = hasCompleteAdminName(session.profile)
     const hasWedding = Boolean(session.wedding)
 
-    // Regular admins cannot skip onboarding (server routes also enforce wedding).
-    if (!hasWedding && !isSuper && !isOnboarding) {
+    // Name completion beats wedding onboarding for regular admins.
+    if (!isSuper && !hasName && !isProfile) {
+      throw redirect({ to: '/admin/profile' })
+    }
+
+    if (isSuper && isSupport) {
+      throw redirect({ to: '/admin' })
+    }
+
+    if (!hasWedding && !isSuper && !isOnboarding && hasName && !isProfile) {
       throw redirect({ to: '/admin/onboarding' })
     }
 

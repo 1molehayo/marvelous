@@ -32,6 +32,8 @@ Useful routes:
 - `/admin/settings` — wedding settings (groom, bride, date, venue, theme)
 - `/admin/pages` — page content blocks (hero, story, image, details)
 - `/admin/admins` — invite/remove admins (super admin only)
+- `/admin/profile` — name, optional phone; email editable for super admin only
+- `/admin/support` — admin → super admin email (hidden for super admin)
 
 ## Prerequisites
 
@@ -309,6 +311,6 @@ Do not start the next phase until the previous phase is merged and confirmed.
 | Version | Goal                                                                                                                                                                                                                                                                   |
 | ------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 |  **v1** | Single wedding per deploy (this repo). Whitelabel by reconfiguring Supabase / Resend / Vercel / seed + admin content.                                                                                                                                                  |
-|  **v2** | Multi-wedding platform: create many live wedding websites from one product (tenancy, per-wedding domains, shared admin/builder, provisioning). Auth email subjects/templates and super-admin bootstrap must become data-driven instead of per-project dashboard edits. |
+|  **v2** | Multi-wedding platform: create many live wedding websites from one product (tenancy, per-wedding domains, shared admin/builder, provisioning). Auth email subjects/templates and super-admin bootstrap must become data-driven instead of per-project dashboard edits. Also: activity logs, support tickets inbox, **admin suspend**, payment/seat limits. |
 
 Track v2 explicitly so we do not bolt multi-site onto v1 accidentally. Until then, treat each production wedding as its own Supabase + Vercel surface and use the [launch checklist](#whitelabel-launch-checklist-for-a-new-wedding-v1).

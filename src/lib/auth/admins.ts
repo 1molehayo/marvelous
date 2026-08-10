@@ -7,7 +7,11 @@ import type { AdminListItem } from '#/lib/auth/types'
 
 export type { AdminListItem }
 
-function parseInviteInput(data: { email: string; display_name?: string }) {
+function parseInviteInput(data: {
+  email: string
+  first_name: string
+  last_name: string
+}) {
   const email = normalizeAdminEmail(data.email)
   if (!email || !email.includes('@')) {
     throw new Error('A valid email is required.')
@@ -15,9 +19,11 @@ function parseInviteInput(data: { email: string; display_name?: string }) {
   if (isReservedSuperAdminEmail(email)) {
     throw new Error('The super admin account is managed separately.')
   }
-  const displayName =
-    data.display_name?.trim() || email.split('@')[0] || 'Admin'
-  return { email, displayName }
+  const firstName = data.first_name.trim()
+  const lastName = data.last_name.trim()
+  if (!firstName) throw new Error('First name is required.')
+  if (!lastName) throw new Error('Last name is required.')
+  return { email, firstName, lastName }
 }
 
 export const listAdmins = createServerFn({ method: 'GET' }).handler(
@@ -28,8 +34,9 @@ export const listAdmins = createServerFn({ method: 'GET' }).handler(
 )
 
 export const inviteAdmin = createServerFn({ method: 'POST' })
-  .validator((data: { email: string; display_name?: string }) =>
-    parseInviteInput(data),
+  .validator(
+    (data: { email: string; first_name: string; last_name: string }) =>
+      parseInviteInput(data),
   )
   .handler(async ({ data }): Promise<AdminListItem> => {
     const { inviteAdminHandler } = await import('./admins.server')

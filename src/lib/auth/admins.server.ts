@@ -6,12 +6,15 @@ import { requireSuperAdminSession } from '#/lib/auth/session.server'
 import type { AdminListItem } from '#/lib/auth/types'
 import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
 
+const ADMIN_LIST_SELECT =
+  'id, email, first_name, last_name, display_name, role, deletion_requested_at, deletion_reason, created_at'
+
 export async function listAdminsHandler(): Promise<AdminListItem[]> {
   await requireSuperAdminSession()
   const admin = createAdminSupabaseClient()
   const result = await admin
     .from('admin_profiles')
-    .select('id, email, display_name, role, created_at')
+    .select(ADMIN_LIST_SELECT)
     .order('created_at', { ascending: true })
 
   if (result.error) {
@@ -23,7 +26,8 @@ export async function listAdminsHandler(): Promise<AdminListItem[]> {
 
 export async function inviteAdminHandler(input: {
   email: string
-  displayName: string
+  firstName: string
+  lastName: string
 }): Promise<AdminListItem> {
   const session = await requireSuperAdminSession()
   const admin = createAdminSupabaseClient()
@@ -45,11 +49,13 @@ export async function inviteAdminHandler(input: {
     .insert({
       id: userId,
       wedding_id: session.wedding?.id ?? null,
-      display_name: input.displayName,
+      first_name: input.firstName,
+      last_name: input.lastName,
+      display_name: input.firstName,
       email: input.email,
       role: 'admin',
     })
-    .select('id, email, display_name, role, created_at')
+    .select(ADMIN_LIST_SELECT)
     .single()
 
   if (inserted.error) {
