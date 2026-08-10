@@ -76,7 +76,7 @@ export function createDefaultBlock(type: PageBlockType): PageBlock {
         type: 'story',
         fields: {
           title: 'Our story',
-          body: '',
+          body: 'Share how you met.',
         },
       }
     case 'image':

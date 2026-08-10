@@ -26,6 +26,10 @@ import {
   createDefaultBlock,
 } from '#/lib/page-blocks/types'
 import type { PageBlock, PageBlockType } from '#/lib/page-blocks/types'
+import {
+  validatePageBlocksClient,
+  type PageBlockFieldErrors,
+} from '#/lib/page-blocks/validation'
 
 export const Route = createFileRoute('/admin/pages')({
   beforeLoad: ({ context }) => {
@@ -58,9 +62,11 @@ function moveBlock(blocks: PageBlock[], from: number, to: number) {
 function BlockEditor({
   block,
   onChange,
+  fieldErrors,
 }: {
   block: PageBlock
   onChange: (block: PageBlock) => void
+  fieldErrors?: Record<string, string>
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -132,13 +138,16 @@ function BlockEditor({
   }
 
   if (block.type === 'story') {
+    const titleInvalid = !!fieldErrors?.title
+    const bodyInvalid = !!fieldErrors?.body
     return (
       <div className="space-y-4">
-        <Field>
+        <Field invalid={titleInvalid}>
           <Field.Label>Title</Field.Label>
           <Field.Control>
             <Input
               value={block.fields.title}
+              invalid={titleInvalid}
               onChange={(event) =>
                 onChange({
                   ...block,
@@ -147,13 +156,15 @@ function BlockEditor({
               }
             />
           </Field.Control>
+          {titleInvalid ? <Field.Error>{fieldErrors.title}</Field.Error> : null}
         </Field>
-        <Field>
+        <Field invalid={bodyInvalid}>
           <Field.Label>Body</Field.Label>
           <Field.Control>
             <Textarea
               rows={5}
               value={block.fields.body}
+              invalid={bodyInvalid}
               onChange={(event) =>
                 onChange({
                   ...block,
@@ -162,21 +173,24 @@ function BlockEditor({
               }
             />
           </Field.Control>
+          {bodyInvalid ? <Field.Error>{fieldErrors.body}</Field.Error> : null}
         </Field>
       </div>
     )
   }
 
   if (block.type === 'image') {
+    const imageInvalid = !!fieldErrors?.imagePath
     return (
       <div className="space-y-4">
-        <Field>
+        <Field invalid={imageInvalid}>
           <Field.Label>Image</Field.Label>
           <Field.Control>
             <Input
               type="file"
               accept="image/*"
               disabled={isUploading}
+              invalid={imageInvalid}
               onChange={async (event) => {
                 const file = event.target.files?.[0]
                 if (!file) return
@@ -212,9 +226,13 @@ function BlockEditor({
               }}
             />
           </Field.Control>
-          <Field.Description>
-            Stored in the private photos bucket. Preview uses a signed URL.
-          </Field.Description>
+          {imageInvalid ? (
+            <Field.Error>{fieldErrors.imagePath}</Field.Error>
+          ) : (
+            <Field.Description>
+              Stored in the private photos bucket. Preview uses a signed URL.
+            </Field.Description>
+          )}
         </Field>
         {block.fields.imagePath ? (
           <p className="text-foreground-secondary text-xs break-all">
@@ -314,10 +332,12 @@ function AdminPagesPage() {
   )
   const [addType, setAddType] = useState<PageBlockType>('story')
   const [isSaving, setIsSaving] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<PageBlockFieldErrors>({})
 
   useEffect(() => {
     setBlocks(initialBlocks)
     setOpenIds(new Set(initialBlocks.map((block) => block.id)))
+    setFieldErrors({})
   }, [initialBlocks])
 
   const toggleOpen = (id: string) => {
@@ -329,13 +349,42 @@ function AdminPagesPage() {
     })
   }
 
+  const clearBlockFieldError = (blockId: string, field: string) => {
+    setFieldErrors((current) => {
+      const block = current[blockId]
+      if (!block?.[field]) return current
+      const nextBlock = { ...block }
+      delete nextBlock[field]
+      const next = { ...current }
+      if (Object.keys(nextBlock).length === 0) delete next[blockId]
+      else next[blockId] = nextBlock
+      return next
+    })
+  }
+
   const onSave = async () => {
+    const validated = validatePageBlocksClient(blocks)
+    if (!validated.ok) {
+      setFieldErrors(validated.fieldErrors)
+      const invalidIds = Object.keys(validated.fieldErrors)
+      if (invalidIds.length > 0) {
+        setOpenIds((current) => {
+          const next = new Set(current)
+          for (const id of invalidIds) next.add(id)
+          return next
+        })
+      }
+      toast.error(validated.message)
+      return
+    }
+
     setIsSaving(true)
     try {
       const wedding = await updatePageBlocks({
-        data: { page_blocks: blocks },
+        data: { page_blocks: validated.blocks },
       })
       setBlocks(wedding.page_blocks)
+      setFieldErrors({})
       toast.success('Page content saved.')
       await router.invalidate()
     } catch (err) {
@@ -359,6 +408,12 @@ function AdminPagesPage() {
     setOpenIds((current) => {
       const next = new Set(current)
       next.delete(id)
+      return next
+    })
+    setFieldErrors((current) => {
+      if (!current[id]) return current
+      const next = { ...current }
+      delete next[id]
       return next
     })
     toast.success('Block removed. Save to publish.')
@@ -447,13 +502,25 @@ function AdminPagesPage() {
                 <div className="border-border border-t px-4 py-4">
                   <BlockEditor
                     block={block}
-                    onChange={(next) =>
+                    fieldErrors={fieldErrors[block.id]}
+                    onChange={(next) => {
                       setBlocks((current) =>
                         current.map((item) =>
                           item.id === next.id ? next : item,
                         ),
                       )
-                    }
+                      if (next.type === 'story') {
+                        if (next.fields.title.trim()) {
+                          clearBlockFieldError(next.id, 'title')
+                        }
+                        if (next.fields.body.trim()) {
+                          clearBlockFieldError(next.id, 'body')
+                        }
+                      }
+                      if (next.type === 'image' && next.fields.imagePath.trim()) {
+                        clearBlockFieldError(next.id, 'imagePath')
+                      }
+                    }}
                   />
                 </div>
               ) : null}

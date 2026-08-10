@@ -1,4 +1,5 @@
 import { Link, createFileRoute, useRouter } from '@tanstack/react-router'
+import { useForm } from '@tanstack/react-form'
 import { useState } from 'react'
 import { PhoneField } from '#/components/phone-field'
 import { Button } from '#/components/ui/button'
@@ -12,12 +13,19 @@ import {
   requestAccountDeletion,
   updateProfile,
 } from '#/lib/auth/profile'
+import {
+  deletionReasonSchema,
+  profileFormSchema,
+  profileFormSchemaAdmin,
+} from '#/lib/auth/profile-schema'
 import type { CountryCode } from '#/lib/auth/phone'
 import { parseStoredPhone } from '#/lib/auth/phone'
 import {
   adminFirstName,
   hasCompleteAdminName,
 } from '#/lib/auth/types'
+import { fieldErrorMessage } from '#/lib/forms/field-error'
+import { zodFormFieldErrors } from '#/lib/forms/zod-form-errors'
 import { Route as AdminRoute } from './route'
 
 export const Route = createFileRoute('/admin/profile')({
@@ -32,52 +40,68 @@ function AdminProfilePage() {
 
   const isSuper = isSuperAdminProfile(session.profile)
   const needsName = !hasCompleteAdminName(session.profile)
-
-  const [firstName, setFirstName] = useState(
-    session.profile.first_name ?? '',
-  )
-  const [lastName, setLastName] = useState(session.profile.last_name ?? '')
-  const [email, setEmail] = useState(
-    session.profile.email ?? session.user.email ?? '',
-  )
   const initialPhone = parseStoredPhone(session.profile.phone)
-  const [phoneCountry, setPhoneCountry] = useState<CountryCode>(
-    initialPhone.country,
-  )
-  const [phoneNational, setPhoneNational] = useState(
-    initialPhone.nationalNumber,
-  )
+
   const [isSaving, setIsSaving] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteReason, setDeleteReason] = useState('')
+  const [deleteReasonError, setDeleteReasonError] = useState<string | null>(
+    null,
+  )
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const onSave = async (event: React.FormEvent) => {
-    event.preventDefault()
-    setIsSaving(true)
-    try {
-      await updateProfile({
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          phone_country: phoneCountry,
-          phone_national: phoneNational,
-          ...(isSuper ? { email } : {}),
-        },
-      })
-      toast.success('Profile updated.')
-      await router.invalidate()
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Unable to save profile.')
-    } finally {
-      setIsSaving(false)
-    }
-  }
+  const form = useForm({
+    defaultValues: {
+      firstName: session.profile.first_name ?? '',
+      lastName: session.profile.last_name ?? '',
+      email: session.profile.email ?? session.user.email ?? '',
+      phoneCountry: initialPhone.country as string,
+      phoneNational: initialPhone.nationalNumber,
+    },
+    validators: {
+      onSubmit: ({ value }) => {
+        const schema = isSuper ? profileFormSchema : profileFormSchemaAdmin
+        const parsed = schema.safeParse(value)
+        if (parsed.success) return undefined
+        return zodFormFieldErrors(parsed.error)
+      },
+    },
+    onSubmit: async ({ value }) => {
+      setIsSaving(true)
+      try {
+        await updateProfile({
+          data: {
+            first_name: value.firstName,
+            last_name: value.lastName,
+            phone_country: value.phoneCountry,
+            phone_national: value.phoneNational,
+            ...(isSuper ? { email: value.email } : {}),
+          },
+        })
+        toast.success('Profile updated.')
+        await router.invalidate()
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : 'Unable to save profile.',
+        )
+      } finally {
+        setIsSaving(false)
+      }
+    },
+  })
 
   const onRequestDeletion = async () => {
+    const parsed = deletionReasonSchema.safeParse(deleteReason)
+    if (!parsed.success) {
+      setDeleteReasonError(
+        parsed.error.issues[0]?.message ?? 'Reason is required.',
+      )
+      return
+    }
+    setDeleteReasonError(null)
     setIsDeleting(true)
     try {
-      await requestAccountDeletion({ data: { reason: deleteReason } })
+      await requestAccountDeletion({ data: { reason: parsed.data } })
       toast.success(
         'Deletion request sent. A super admin will review it from Admins.',
       )
@@ -106,60 +130,130 @@ function AdminProfilePage() {
 
       <form
         className="bg-surface border-border space-y-4 rounded-xl border p-5"
-        onSubmit={onSave}
+        onSubmit={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          void form.handleSubmit()
+        }}
       >
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field>
-            <Field.Label>First name</Field.Label>
-            <Field.Control>
-              <Input
-                value={firstName}
-                onChange={(event) => setFirstName(event.target.value)}
-                required
-                autoComplete="given-name"
-              />
-            </Field.Control>
-          </Field>
-          <Field>
-            <Field.Label>Last name</Field.Label>
-            <Field.Control>
-              <Input
-                value={lastName}
-                onChange={(event) => setLastName(event.target.value)}
-                required
-                autoComplete="family-name"
-              />
-            </Field.Control>
-          </Field>
-        </div>
+        <form.Subscribe
+          selector={(state) => state.submissionAttempts > 0}
+        >
+          {(submitted) => (
+            <>
+              <div className="grid gap-4 md:grid-cols-2">
+                <form.Field name="firstName">
+                  {(field) => {
+                    const error = fieldErrorMessage(field.state.meta.errors)
+                    const invalid =
+                      !!error && (field.state.meta.isTouched || submitted)
+                    return (
+                      <Field invalid={invalid}>
+                        <Field.Label>First name</Field.Label>
+                        <Field.Control>
+                          <Input
+                            value={field.state.value}
+                            onBlur={field.handleBlur}
+                            onChange={(event) =>
+                              field.handleChange(event.target.value)
+                            }
+                            invalid={invalid}
+                            autoComplete="given-name"
+                          />
+                        </Field.Control>
+                        {invalid ? <Field.Error>{error}</Field.Error> : null}
+                      </Field>
+                    )
+                  }}
+                </form.Field>
+                <form.Field name="lastName">
+                  {(field) => {
+                    const error = fieldErrorMessage(field.state.meta.errors)
+                    const invalid =
+                      !!error && (field.state.meta.isTouched || submitted)
+                    return (
+                      <Field invalid={invalid}>
+                        <Field.Label>Last name</Field.Label>
+                        <Field.Control>
+                          <Input
+                            value={field.state.value}
+                            onBlur={field.handleBlur}
+                            onChange={(event) =>
+                              field.handleChange(event.target.value)
+                            }
+                            invalid={invalid}
+                            autoComplete="family-name"
+                          />
+                        </Field.Control>
+                        {invalid ? <Field.Error>{error}</Field.Error> : null}
+                      </Field>
+                    )
+                  }}
+                </form.Field>
+              </div>
 
-        <Field>
-          <Field.Label>Email</Field.Label>
-          <Field.Control>
-            <Input
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required={isSuper}
-              readOnly={!isSuper}
-              disabled={!isSuper}
-              autoComplete="email"
-            />
-          </Field.Control>
-          <Field.Description>
-            {isSuper
-              ? 'Changing email updates your sign-in address.'
-              : 'Email is managed by the super admin. Use Support if you need it changed.'}
-          </Field.Description>
-        </Field>
+              <form.Field name="email">
+                {(field) => {
+                  const error = fieldErrorMessage(field.state.meta.errors)
+                  const invalid =
+                    isSuper &&
+                    !!error &&
+                    (field.state.meta.isTouched || submitted)
+                  return (
+                    <Field invalid={invalid}>
+                      <Field.Label>Email</Field.Label>
+                      <Field.Control>
+                        <Input
+                          type="email"
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(event) =>
+                            field.handleChange(event.target.value)
+                          }
+                          invalid={invalid}
+                          readOnly={!isSuper}
+                          disabled={!isSuper}
+                          autoComplete="email"
+                        />
+                      </Field.Control>
+                      {invalid ? <Field.Error>{error}</Field.Error> : null}
+                      <Field.Description>
+                        {isSuper
+                          ? 'Changing email updates your sign-in address.'
+                          : 'Email is managed by the super admin. Use Support if you need it changed.'}
+                      </Field.Description>
+                    </Field>
+                  )
+                }}
+              </form.Field>
 
-        <PhoneField
-          valueE164={session.profile.phone}
-          onChange={({ country, nationalNumber }) => {
-            setPhoneCountry(country)
-            setPhoneNational(nationalNumber)
-          }}
-        />
+              <form.Field name="phoneCountry">
+                {(countryField) => (
+                  <form.Field name="phoneNational">
+                    {(phoneField) => {
+                      const error = fieldErrorMessage(phoneField.state.meta.errors)
+                      const invalid =
+                        !!error &&
+                        (phoneField.state.meta.isTouched || submitted)
+                      return (
+                        <PhoneField
+                          country={countryField.state.value as CountryCode}
+                          nationalNumber={phoneField.state.value}
+                          invalid={invalid}
+                          error={invalid ? error : undefined}
+                          onChange={({ country, nationalNumber }) => {
+                            countryField.handleChange(country)
+                            phoneField.handleChange(nationalNumber)
+                          }}
+                        />
+                      )
+                    }}
+                  </form.Field>
+                )}
+              </form.Field>
+            </>
+          )}
+        </form.Subscribe>
 
         <Button type="submit" isLoading={isSaving}>
           Save profile
@@ -207,17 +301,23 @@ function AdminProfilePage() {
         onOpenChange={setDeleteOpen}
         onConfirm={onRequestDeletion}
       >
-        <Field>
+        <Field invalid={!!deleteReasonError}>
           <Field.Label>Reason</Field.Label>
           <Field.Control>
             <Textarea
               rows={4}
               value={deleteReason}
-              onChange={(event) => setDeleteReason(event.target.value)}
+              onChange={(event) => {
+                setDeleteReason(event.target.value)
+                setDeleteReasonError(null)
+              }}
+              invalid={!!deleteReasonError}
               placeholder="Tell the super admin why you need this account removed."
-              required
             />
           </Field.Control>
+          {deleteReasonError ? (
+            <Field.Error>{deleteReasonError}</Field.Error>
+          ) : null}
         </Field>
       </ConfirmDialog>
     </div>

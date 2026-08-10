@@ -1,28 +1,29 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Field } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
 import { Select } from '#/components/ui/select'
 import {
   defaultPhoneCountry,
   listPhoneCountries,
-  parseStoredPhone,
   sanitizeNationalNumber,
 } from '#/lib/auth/phone'
 import type { CountryCode } from '#/lib/auth/phone'
 import { getCountryCallingCode } from 'libphonenumber-js'
 
 export function PhoneField({
-  valueE164,
+  country,
+  nationalNumber,
   onChange,
+  invalid,
+  error,
 }: {
-  valueE164: string | null
+  country: CountryCode
+  nationalNumber: string
   onChange: (next: { country: CountryCode; nationalNumber: string }) => void
+  invalid?: boolean
+  error?: string
 }) {
   const countries = useMemo(() => listPhoneCountries(), [])
-  const initial = parseStoredPhone(valueE164)
-  const [country, setCountry] = useState<CountryCode>(initial.country)
-  const [nationalNumber, setNationalNumber] = useState(initial.nationalNumber)
-
   const callingCode =
     countries.find((item) => item.code === country)?.callingCode ?? ''
 
@@ -34,9 +35,10 @@ export function PhoneField({
           <Select
             value={country}
             onChange={(event) => {
-              const next = event.target.value as CountryCode
-              setCountry(next)
-              onChange({ country: next, nationalNumber })
+              onChange({
+                country: event.target.value as CountryCode,
+                nationalNumber,
+              })
             }}
           >
             {countries.map((item) => (
@@ -47,7 +49,7 @@ export function PhoneField({
           </Select>
         </Field.Control>
       </Field>
-      <Field>
+      <Field invalid={invalid}>
         <Field.Label>Phone number</Field.Label>
         <Field.Control>
           <div className="flex gap-2">
@@ -59,17 +61,23 @@ export function PhoneField({
               autoComplete="tel-national"
               placeholder="Phone number"
               value={nationalNumber}
+              invalid={invalid}
               onChange={(event) => {
-                const next = sanitizeNationalNumber(event.target.value)
-                setNationalNumber(next)
-                onChange({ country, nationalNumber: next })
+                onChange({
+                  country,
+                  nationalNumber: sanitizeNationalNumber(event.target.value),
+                })
               }}
             />
           </div>
         </Field.Control>
-        <Field.Description>
-          Optional. Digits only — country code comes from the dropdown.
-        </Field.Description>
+        {error ? (
+          <Field.Error>{error}</Field.Error>
+        ) : (
+          <Field.Description>
+            Optional. Digits only — country code comes from the dropdown.
+          </Field.Description>
+        )}
       </Field>
     </div>
   )
