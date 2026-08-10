@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { List, SignOut, X } from '@phosphor-icons/react'
+import { ArrowSquareOut, List, SignOut, X } from '@phosphor-icons/react'
 import { NavigationProgress } from '#/components/navigation-progress'
 import { Button } from '#/components/ui/button'
 import { Toaster } from '#/components/ui/toaster'
@@ -98,6 +98,19 @@ function SidebarFooter({
           </p>
         ) : null}
       </div>
+      {wedding ? (
+        <Button
+          asChild
+          size="sm"
+          variant="outline"
+          className="border-white/20 bg-transparent text-sidebar-foreground hover:bg-white/10"
+        >
+          <a href="/" target="_blank" rel="noreferrer">
+            <ArrowSquareOut />
+            Preview site
+          </a>
+        </Button>
+      ) : null}
       <Button
         size="sm"
         variant="outline"

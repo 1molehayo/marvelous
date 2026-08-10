@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
+import { AddressSearchField } from '#/components/address-search-field'
 import { Button } from '#/components/ui/button'
 import { Field } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
@@ -131,15 +132,10 @@ function AdminOnboardingPage() {
               />
             </Field.Control>
           </Field>
-          <Field>
-            <Field.Label>Venue location</Field.Label>
-            <Field.Control>
-              <Input
-                value={venueLocation}
-                onChange={(event) => setVenueLocation(event.target.value)}
-              />
-            </Field.Control>
-          </Field>
+          <AddressSearchField
+            value={venueLocation}
+            onChange={setVenueLocation}
+          />
           <Field>
             <Field.Label>Dress code</Field.Label>
             <Field.Control>

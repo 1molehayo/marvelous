@@ -78,6 +78,11 @@ function AdminOverviewPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="info">{WEDDING_STATUS_LABELS[wedding.status]}</Badge>
+          <Button asChild size="sm">
+            <a href="/" target="_blank" rel="noreferrer">
+              Preview site
+            </a>
+          </Button>
           <Button asChild size="sm" variant="outline">
             <Link to="/admin/settings">Edit settings</Link>
           </Button>
