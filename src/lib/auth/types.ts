@@ -10,6 +10,11 @@ export type AdminSession = {
   wedding: Wedding | null
 }
 
+export type AdminAccountStatus =
+  | 'active'
+  | 'pending'
+  | 'deletion_requested'
+
 export type AdminListItem = {
   id: string
   email: string | null
@@ -20,6 +25,23 @@ export type AdminListItem = {
   deletion_requested_at: string | null
   deletion_reason: string | null
   created_at: string
+  last_sign_in_at: string | null
+  status: AdminAccountStatus
+}
+
+export const ADMIN_STATUS_LABELS: Record<AdminAccountStatus, string> = {
+  active: 'Active',
+  pending: 'Pending',
+  deletion_requested: 'Deletion requested',
+}
+
+export function deriveAdminStatus(input: {
+  deletion_requested_at: string | null
+  last_sign_in_at: string | null
+}): AdminAccountStatus {
+  if (input.deletion_requested_at) return 'deletion_requested'
+  if (!input.last_sign_in_at) return 'pending'
+  return 'active'
 }
 
 export function adminFirstName(profile: Pick<AdminProfile, 'first_name' | 'display_name'>): string {

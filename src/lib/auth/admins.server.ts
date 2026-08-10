@@ -3,11 +3,47 @@ import {
   isSuperAdminProfile,
 } from '#/lib/auth/roles'
 import { requireSuperAdminSession } from '#/lib/auth/session.server'
+import {
+  deriveAdminStatus,
+} from '#/lib/auth/types'
 import type { AdminListItem } from '#/lib/auth/types'
 import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
 
 const ADMIN_LIST_SELECT =
   'id, email, first_name, last_name, display_name, role, deletion_requested_at, deletion_reason, created_at'
+
+type AdminProfileRow = Omit<AdminListItem, 'last_sign_in_at' | 'status'>
+
+async function withAuthSignInTimes(
+  rows: AdminProfileRow[],
+): Promise<AdminListItem[]> {
+  if (rows.length === 0) return []
+
+  const admin = createAdminSupabaseClient()
+  const signInById = new Map<string, string | null>()
+
+  await Promise.all(
+    rows.map(async (row) => {
+      const result = await admin.auth.admin.getUserById(row.id)
+      signInById.set(
+        row.id,
+        result.data.user?.last_sign_in_at ?? null,
+      )
+    }),
+  )
+
+  return rows.map((row) => {
+    const last_sign_in_at = signInById.get(row.id) ?? null
+    return {
+      ...row,
+      last_sign_in_at,
+      status: deriveAdminStatus({
+        deletion_requested_at: row.deletion_requested_at,
+        last_sign_in_at,
+      }),
+    }
+  })
+}
 
 export async function listAdminsHandler(): Promise<AdminListItem[]> {
   await requireSuperAdminSession()
@@ -21,7 +57,7 @@ export async function listAdminsHandler(): Promise<AdminListItem[]> {
     throw new Error(result.error.message)
   }
 
-  return result.data
+  return withAuthSignInTimes(result.data)
 }
 
 export async function inviteAdminHandler(input: {
@@ -63,7 +99,7 @@ export async function inviteAdminHandler(input: {
     throw new Error(inserted.error.message)
   }
 
-  return inserted.data
+  return (await withAuthSignInTimes([inserted.data]))[0]
 }
 
 export async function removeAdminHandler(adminId: string) {
