@@ -30,10 +30,12 @@ export async function uploadPageBlockImage(file: {
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
   const path = `page-blocks/${crypto.randomUUID()}-${safeName}`
 
-  const result = await admin.storage.from(PHOTOS_BUCKET).upload(path, file.data, {
-    contentType: file.type || 'application/octet-stream',
-    upsert: false,
-  })
+  const result = await admin.storage
+    .from(PHOTOS_BUCKET)
+    .upload(path, file.data, {
+      contentType: file.type || 'application/octet-stream',
+      upsert: false,
+    })
 
   if (result.error) {
     throw new Error(result.error.message)

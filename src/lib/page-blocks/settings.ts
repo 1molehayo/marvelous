@@ -39,18 +39,16 @@ export const getSignedPhotoUrl = createServerFn({ method: 'POST' })
   })
 
 export const uploadPageBlockImage = createServerFn({ method: 'POST' })
-  .validator(
-    (data: { name: string; type: string; dataBase64: string }) => {
-      if (!data.name.trim() || !data.dataBase64) {
-        throw new Error('Image upload payload is incomplete.')
-      }
-      return {
-        name: data.name,
-        type: data.type || 'application/octet-stream',
-        dataBase64: data.dataBase64,
-      }
-    },
-  )
+  .validator((data: { name: string; type: string; dataBase64: string }) => {
+    if (!data.name.trim() || !data.dataBase64) {
+      throw new Error('Image upload payload is incomplete.')
+    }
+    return {
+      name: data.name,
+      type: data.type || 'application/octet-stream',
+      dataBase64: data.dataBase64,
+    }
+  })
   .handler(async ({ data }) => {
     const { uploadPageBlockImageHandler } = await import('./settings.server')
     return uploadPageBlockImageHandler(data)

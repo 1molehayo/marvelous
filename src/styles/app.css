@@ -103,7 +103,11 @@ html[data-theme='celeste'][data-mode='dark'] {
   --theme-background-secondary: var(--navy);
   --theme-surface: color-mix(in oklab, var(--navy) 88%, black);
   --theme-foreground: var(--ivory);
-  --theme-foreground-secondary: color-mix(in oklab, var(--ivory) 70%, transparent);
+  --theme-foreground-secondary: color-mix(
+    in oklab,
+    var(--ivory) 70%,
+    transparent
+  );
   --theme-accent: var(--powder);
   --theme-accent-foreground: var(--navy-deep);
   --theme-highlight: var(--naples);

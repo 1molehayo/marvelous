@@ -55,9 +55,7 @@ function AdminLoginPage() {
           : 'Check your email for a one-time code. It expires in 1 hour.',
       )
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Unable to send code.',
-      )
+      toast.error(err instanceof Error ? err.message : 'Unable to send code.')
     } finally {
       setIsSubmitting(false)
     }
@@ -70,9 +68,7 @@ function AdminLoginPage() {
       await verifyAdminOtp({ data: { email, token } })
       await navigate({ to: '/admin' })
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Unable to verify code.',
-      )
+      toast.error(err instanceof Error ? err.message : 'Unable to verify code.')
     } finally {
       setIsSubmitting(false)
     }
@@ -165,7 +161,7 @@ function AdminLoginPage() {
                 setToken('')
               }}
             >
-              Use a different email
+              Back to email
             </Button>
           </form>
         )}

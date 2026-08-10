@@ -47,9 +47,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" data-theme={publicTheme} suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{ __html: COLOR_MODE_INIT_SCRIPT }}
-        />
+        <script dangerouslySetInnerHTML={{ __html: COLOR_MODE_INIT_SCRIPT }} />
         <HeadContent />
       </head>
       <body>

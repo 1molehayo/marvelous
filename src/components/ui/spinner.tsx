@@ -20,8 +20,7 @@ const ringStyle = cva({
 })
 
 export interface SpinnerProps
-  extends React.ComponentPropsWithRef<'div'>,
-    VariantProps<typeof ringStyle> {}
+  extends React.ComponentPropsWithRef<'div'>, VariantProps<typeof ringStyle> {}
 
 export const Spinner = ({
   ref,

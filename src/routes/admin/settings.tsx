@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Button } from '#/components/ui/button'
 import { Field } from '#/components/ui/field'
@@ -17,6 +17,11 @@ import {
 import { Route as AdminRoute } from './route'
 
 export const Route = createFileRoute('/admin/settings')({
+  beforeLoad: ({ context }) => {
+    if (!context.session?.wedding) {
+      throw redirect({ to: '/admin/onboarding' })
+    }
+  },
   component: AdminWeddingSettingsPage,
 })
 
@@ -48,12 +53,12 @@ function AdminWeddingSettingsPage() {
   const { session } = AdminRoute.useRouteContext()
   const router = useRouter()
 
-  if (!session) {
+  if (!session?.wedding) {
     return null
   }
 
   const [form, setForm] = useState<FormState>(() =>
-    weddingToForm(session.wedding),
+    weddingToForm(session.wedding!),
   )
   const [isSubmitting, setIsSubmitting] = useState(false)
 

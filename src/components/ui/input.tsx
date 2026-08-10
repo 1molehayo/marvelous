@@ -30,7 +30,8 @@ const inputStyle = cva({
 })
 
 export interface InputProps
-  extends Omit<React.ComponentPropsWithRef<'input'>, 'size'>,
+  extends
+    Omit<React.ComponentPropsWithRef<'input'>, 'size'>,
     VariantProps<typeof inputStyle> {
   invalid?: boolean
 }

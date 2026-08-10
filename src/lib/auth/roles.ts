@@ -54,6 +54,8 @@ export function getLocalBootstrapRole(email: string): AdminRole | null {
   return null
 }
 
-export function isSuperAdminProfile(profile: Pick<AdminProfile, 'role'>): boolean {
+export function isSuperAdminProfile(
+  profile: Pick<AdminProfile, 'role'>,
+): boolean {
   return profile.role === 'super_admin'
 }

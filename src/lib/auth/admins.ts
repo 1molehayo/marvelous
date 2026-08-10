@@ -15,7 +15,8 @@ function parseInviteInput(data: { email: string; display_name?: string }) {
   if (isReservedSuperAdminEmail(email)) {
     throw new Error('The super admin account is managed separately.')
   }
-  const displayName = data.display_name?.trim() || email.split('@')[0] || 'Admin'
+  const displayName =
+    data.display_name?.trim() || email.split('@')[0] || 'Admin'
   return { email, displayName }
 }
 

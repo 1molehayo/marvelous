@@ -1,8 +1,4 @@
-import {
-  createFileRoute,
-  redirect,
-  useRouter,
-} from '@tanstack/react-router'
+import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { Button } from '#/components/ui/button'
 import { Field } from '#/components/ui/field'
@@ -10,11 +6,7 @@ import { Input } from '#/components/ui/input'
 import { Badge } from '#/components/ui/badge'
 import { toast } from '#/components/ui/toaster'
 import { isSuperAdminProfile } from '#/lib/auth/roles'
-import {
-  inviteAdmin,
-  listAdmins,
-  removeAdmin,
-} from '#/lib/auth/admins'
+import { inviteAdmin, listAdmins, removeAdmin } from '#/lib/auth/admins'
 import type { AdminListItem } from '#/lib/auth/admins'
 
 export const Route = createFileRoute('/admin/admins')({
@@ -145,9 +137,7 @@ function AdminAdminsPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Badge
-                  variant={
-                    admin.role === 'super_admin' ? 'info' : 'neutral'
-                  }
+                  variant={admin.role === 'super_admin' ? 'info' : 'neutral'}
                 >
                   {admin.role === 'super_admin' ? 'Super admin' : 'Admin'}
                 </Badge>

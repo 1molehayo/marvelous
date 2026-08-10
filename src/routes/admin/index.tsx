@@ -1,6 +1,7 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
+import { isSuperAdminProfile } from '#/lib/auth/roles'
 import { formatCoupleNames } from '#/lib/constants'
 import { PUBLIC_THEME_META } from '#/lib/site-settings'
 import { WEDDING_STATUS_LABELS } from '#/lib/wedding/validation'
@@ -18,6 +19,39 @@ function AdminOverviewPage() {
   }
 
   const { wedding, profile, user } = session
+  const isSuper = isSuperAdminProfile(profile)
+
+  if (!wedding) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-6">
+        <div>
+          <h1 className="admin-page-title">Overview</h1>
+          <p className="text-foreground-secondary mt-2 text-sm">
+            No wedding is set up yet.
+            {isSuper
+              ? ' You can invite an admin to complete onboarding, or set it up yourself.'
+              : ' Complete onboarding to continue.'}
+          </p>
+        </div>
+        <div className="bg-surface border-border space-y-4 rounded-xl border border-dashed p-6">
+          <p className="font-serif text-2xl italic">Wedding not set up</p>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild>
+              <Link to="/admin/onboarding">Set up wedding</Link>
+            </Button>
+            {isSuper ? (
+              <Button asChild variant="outline">
+                <Link to="/admin/admins">Invite admin</Link>
+              </Button>
+            ) : null}
+          </div>
+          <p className="text-foreground-secondary text-sm">
+            Signed in as {profile.display_name ?? 'Admin'} · {user.email}
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

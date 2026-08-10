@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import {
   CaretDown,
   CaretDoubleDown,
@@ -28,6 +28,11 @@ import {
 import type { PageBlock, PageBlockType } from '#/lib/page-blocks/types'
 
 export const Route = createFileRoute('/admin/pages')({
+  beforeLoad: ({ context }) => {
+    if (!context.session?.wedding) {
+      throw redirect({ to: '/admin/onboarding' })
+    }
+  },
   loader: () => getPageBlocks(),
   component: AdminPagesPage,
 })
@@ -404,7 +409,9 @@ function AdminPagesPage() {
                     aria-label="Move up"
                     disabled={index === 0}
                     onClick={() =>
-                      setBlocks((current) => moveBlock(current, index, index - 1))
+                      setBlocks((current) =>
+                        moveBlock(current, index, index - 1),
+                      )
                     }
                   >
                     <CaretDoubleUp />
@@ -417,7 +424,9 @@ function AdminPagesPage() {
                     aria-label="Move down"
                     disabled={index === blocks.length - 1}
                     onClick={() =>
-                      setBlocks((current) => moveBlock(current, index, index + 1))
+                      setBlocks((current) =>
+                        moveBlock(current, index, index + 1),
+                      )
                     }
                   >
                     <CaretDoubleDown />

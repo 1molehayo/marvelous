@@ -1,9 +1,4 @@
-import {
-  CheckCircle,
-  Info,
-  Warning,
-  XCircle,
-} from '@phosphor-icons/react'
+import { CheckCircle, Info, Warning, XCircle } from '@phosphor-icons/react'
 import { Toaster as SonnerToaster, toast } from 'sonner'
 import { Spinner } from '#/components/ui/spinner'
 

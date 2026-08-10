@@ -8,14 +8,12 @@ import type { UpdateWeddingInput } from '#/lib/wedding/validation'
 export type { PublicWeddingSettings }
 export { FALLBACK_PUBLIC_WEDDING }
 
-export const getPublicWeddingSettings = createServerFn({ method: 'GET' }).handler(
-  async (): Promise<PublicWeddingSettings> => {
-    const { getPublicWeddingSettingsHandler } = await import(
-      './settings.server'
-    )
-    return getPublicWeddingSettingsHandler()
-  },
-)
+export const getPublicWeddingSettings = createServerFn({
+  method: 'GET',
+}).handler(async (): Promise<PublicWeddingSettings> => {
+  const { getPublicWeddingSettingsHandler } = await import('./settings.server')
+  return getPublicWeddingSettingsHandler()
+})
 
 export const updateWedding = createServerFn({ method: 'POST' })
   .validator((data: UpdateWeddingInput) => parseUpdateWeddingInput(data))

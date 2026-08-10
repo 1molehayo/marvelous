@@ -13,9 +13,7 @@ export function DetailsBlock({
     block.fields.showVenue ? wedding.venue_location : null,
   ].filter(Boolean)
   const dressCode =
-    block.fields.showDressCode && wedding.dress_code
-      ? wedding.dress_code
-      : null
+    block.fields.showDressCode && wedding.dress_code ? wedding.dress_code : null
 
   if (venueParts.length === 0 && !dressCode) {
     return null

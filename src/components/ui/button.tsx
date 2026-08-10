@@ -16,7 +16,8 @@ const buttonStyle = cva({
         'bg-accent [--button-text-color:var(--color-accent-foreground)] hover:bg-accent/90',
       outline:
         'border border-border bg-background hover:bg-foreground/2 focus-visible:border-accent',
-      ghost: 'border-none bg-transparent shadow-none ring-0 hover:bg-foreground/5',
+      ghost:
+        'border-none bg-transparent shadow-none ring-0 hover:bg-foreground/5',
       destructive:
         'bg-error ring-error/50 [--button-text-color:var(--color-white)] hover:bg-error/90',
     },
@@ -38,7 +39,8 @@ const buttonStyle = cva({
 })
 
 export interface ButtonProps
-  extends React.ComponentPropsWithRef<'button'>,
+  extends
+    React.ComponentPropsWithRef<'button'>,
     VariantProps<typeof buttonStyle> {
   asChild?: boolean
   isLoading?: boolean

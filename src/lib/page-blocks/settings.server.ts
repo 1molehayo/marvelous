@@ -1,8 +1,8 @@
+import { requireWeddingSession } from '#/lib/auth/session.server'
 import { createDefaultPageBlocks } from '#/lib/page-blocks/types'
 import type { PageBlock } from '#/lib/page-blocks/types'
 import { parsePageBlocks } from '#/lib/page-blocks/validation'
 import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
-import { createServerSupabaseClient } from '#/lib/supabase/server.server'
 import type { Wedding } from '#/lib/supabase/types'
 import {
   FALLBACK_PUBLIC_WEDDING,
@@ -26,30 +26,13 @@ function coercePageBlocks(value: unknown): PageBlock[] {
 }
 
 export async function getPageBlocksHandler(): Promise<PageBlock[]> {
-  const supabase = createServerSupabaseClient()
-  const { data: authData } = await supabase.auth.getUser()
-  if (!authData.user) {
-    throw new Error('You must be signed in to load page content.')
-  }
+  const session = await requireWeddingSession()
+  const admin = createAdminSupabaseClient()
 
-  const profileResult = await supabase
-    .from('admin_profiles')
-    .select('wedding_id')
-    .eq('id', authData.user.id)
-    .maybeSingle()
-
-  if (profileResult.error) {
-    throw new Error(profileResult.error.message)
-  }
-
-  if (!profileResult.data?.wedding_id) {
-    throw new Error('Admin profile is not linked to a wedding.')
-  }
-
-  const weddingResult = await supabase
+  const weddingResult = await admin
     .from('weddings')
     .select('page_blocks')
-    .eq('id', profileResult.data.wedding_id)
+    .eq('id', session.wedding.id)
     .single()
 
   if (weddingResult.error) {
@@ -62,30 +45,13 @@ export async function getPageBlocksHandler(): Promise<PageBlock[]> {
 export async function updatePageBlocksHandler(
   pageBlocks: PageBlock[],
 ): Promise<Wedding> {
-  const supabase = createServerSupabaseClient()
-  const { data: authData } = await supabase.auth.getUser()
-  if (!authData.user) {
-    throw new Error('You must be signed in to update page content.')
-  }
+  const session = await requireWeddingSession()
+  const admin = createAdminSupabaseClient()
 
-  const profileResult = await supabase
-    .from('admin_profiles')
-    .select('wedding_id')
-    .eq('id', authData.user.id)
-    .maybeSingle()
-
-  if (profileResult.error) {
-    throw new Error(profileResult.error.message)
-  }
-
-  if (!profileResult.data?.wedding_id) {
-    throw new Error('Admin profile is not linked to a wedding.')
-  }
-
-  const updated = await supabase
+  const updated = await admin
     .from('weddings')
     .update({ page_blocks: pageBlocks })
-    .eq('id', profileResult.data.wedding_id)
+    .eq('id', session.wedding.id)
     .select('*')
     .single()
 
@@ -159,11 +125,7 @@ export async function getPublicHomeDataHandler(): Promise<PublicHomeData> {
 export async function getSignedPhotoUrlHandler(
   imagePath: string,
 ): Promise<string | null> {
-  const supabase = createServerSupabaseClient()
-  const { data: authData } = await supabase.auth.getUser()
-  if (!authData.user) {
-    throw new Error('You must be signed in to preview images.')
-  }
+  await requireWeddingSession()
   return createPhotoSignedUrl(imagePath)
 }
 
@@ -172,11 +134,7 @@ export async function uploadPageBlockImageHandler(file: {
   type: string
   dataBase64: string
 }): Promise<{ path: string; signedUrl: string | null }> {
-  const supabase = createServerSupabaseClient()
-  const { data: authData } = await supabase.auth.getUser()
-  if (!authData.user) {
-    throw new Error('You must be signed in to upload images.')
-  }
+  await requireWeddingSession()
 
   const binary = Uint8Array.from(atob(file.dataBase64), (c) => c.charCodeAt(0))
   const path = await uploadPageBlockImage({

@@ -62,14 +62,14 @@ Mailpit (local OTP emails): [http://127.0.0.1:54324](http://127.0.0.1:54324)
 
 ### Useful pnpm scripts
 
-| Script | What it runs |
-|--------|----------------|
-| `pnpm status` | `supabase status` (API URL, keys, Mailpit) |
-| `pnpm supabase:start` | Start local Supabase |
-| `pnpm supabase:stop` | Stop local Supabase |
-| `pnpm db:reset` | Reset **local** DB + apply migrations/seed |
-| `pnpm db:link` | Link CLI to cloud project ref from `.env` → `VITE_SUPABASE_URL` |
-| `pnpm db:push` | Link from `.env`, then push migrations to cloud |
+| Script                | What it runs                                                    |
+| --------------------- | --------------------------------------------------------------- |
+| `pnpm status`         | `supabase status` (API URL, keys, Mailpit)                      |
+| `pnpm supabase:start` | Start local Supabase                                            |
+| `pnpm supabase:stop`  | Stop local Supabase                                             |
+| `pnpm db:reset`       | Reset **local** DB + apply migrations/seed                      |
+| `pnpm db:link`        | Link CLI to cloud project ref from `.env` → `VITE_SUPABASE_URL` |
+| `pnpm db:push`        | Link from `.env`, then push migrations to cloud                 |
 
 ### Quality checks
 
@@ -88,27 +88,27 @@ Couple-facing copy in the **app** comes from the DB (Wedding settings + page blo
 
 ### A. Code / repo (usually once per product; change per couple only if needed)
 
-| What | Where | Notes |
-|------|--------|--------|
-| Product name / tagline | `src/lib/constants.ts` (`PRODUCT_*`) | Keep as Onemole product branding unless white-labeling the builder itself |
-| Production super admin email | `src/lib/auth/roles.ts` → `PRODUCTION_SUPER_ADMIN_EMAIL` | Who can bootstrap `/admin` on first login |
-| Local OTP email subject | `supabase/config.toml` → `[auth.email.template.magic_link].subject` | e.g. `Marvelous & Lillian Wedding` |
-| Local OTP email body | `supabase/templates/magic_link.html` | Keep `{{ .Token }}` — do not replace with a real code |
-| Seed couple | `supabase/seed.sql` | `groom_name` / `bride_name` for local resets |
-| Fallback couple (DB down) | `src/lib/wedding/public-settings.ts` → `FALLBACK_PUBLIC_WEDDING` | Emergency public fallback only |
+| What                                       | Where                                                               | Notes                                                                     |
+| ------------------------------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Product name / tagline                     | `src/lib/constants.ts` (`PRODUCT_*`)                                | Keep as Onemole product branding unless white-labeling the builder itself |
+| Production super admin email               | `src/lib/auth/roles.ts` → `PRODUCTION_SUPER_ADMIN_EMAIL`            | Who can bootstrap `/admin` on first login                                 |
+| Local OTP email subject                    | `supabase/config.toml` → `[auth.email.template.magic_link].subject` | e.g. `Marvelous & Lillian Wedding`                                        |
+| Local OTP email body                       | `supabase/templates/magic_link.html`                                | Keep `{{ .Token }}` — do not replace with a real code                     |
+| Seed couple                                | `supabase/seed.sql`                                                 | Local resets only (`db:reset`). Cloud uses **onboarding**, not seed.      |
+| Fallback couple (DB down / no wedding yet) | `src/lib/wedding/public-settings.ts` → `FALLBACK_PUBLIC_WEDDING`    | Public site only until onboarding creates a row                           |
 
 ### B. Supabase Dashboard (cloud project for this wedding)
 
-| What | Where | Set to |
-|------|--------|--------|
-| Site URL | **Authentication → URL Configuration** | Production site origin, e.g. `https://your-site.vercel.app` (include `https://`) |
-| Redirect URLs | same page | Same production origin (+ preview URLs if needed) |
-| Email provider | **Authentication → Providers → Email** | Enabled |
-| Custom SMTP | **Project Settings → Authentication → SMTP** (or Resend integration) | **Required** to edit Auth email templates on hosted Supabase |
-| Magic link / OTP **subject** | **Authentication → Emails → Magic link or OTP** | Couple wedding title, e.g. `Marvelous & Lillian Wedding` |
-| Magic link / OTP **body** | same template | OTP-only HTML (see below). Must include `{{ .Token }}` |
-| Migrations | CLI: `pnpm db:push` after `pnpm db:link` (or SQL editor) | Apply all `supabase/migrations/*` including `page_blocks`, `groom_name` / `bride_name` |
-| Wedding row | Admin UI after login, or seed | Groom, bride, theme, venue, page blocks |
+| What                         | Where                                                                | Set to                                                                                 |
+| ---------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Site URL                     | **Authentication → URL Configuration**                               | Production site origin, e.g. `https://your-site.vercel.app` (include `https://`)       |
+| Redirect URLs                | same page                                                            | Same production origin (+ preview URLs if needed)                                      |
+| Email provider               | **Authentication → Providers → Email**                               | Enabled                                                                                |
+| Custom SMTP                  | **Project Settings → Authentication → SMTP** (or Resend integration) | **Required** to edit Auth email templates on hosted Supabase                           |
+| Magic link / OTP **subject** | **Authentication → Emails → Magic link or OTP**                      | Couple wedding title, e.g. `Marvelous & Lillian Wedding`                               |
+| Magic link / OTP **body**    | same template                                                        | OTP-only HTML (see below). Must include `{{ .Token }}`                                 |
+| Migrations                   | CLI: `pnpm db:push` after `pnpm db:link` (or SQL editor)             | Apply all `supabase/migrations/*` including `page_blocks`, `groom_name` / `bride_name` |
+| Wedding row                  | Admin UI after login, or seed                                        | Groom, bride, theme, venue, page blocks                                                |
 
 **OTP email body (hosted template):**
 
@@ -125,22 +125,22 @@ Leave `{{ .Token }}` exactly as written. Subject is where the couple name belong
 
 ### C. Resend
 
-| What | Where | Notes |
-|------|--------|--------|
-| Account + API key | [resend.com](https://resend.com) | Used as Supabase Auth SMTP password |
-| Sending domain | Resend → Domains | Use a domain you control (`example.com`), **not** `*.vercel.app` |
-| Sender identity | Supabase SMTP “Sender email” | Must be allowed by Resend (verified domain, or `onboarding@resend.dev` for tests only) |
-| SMTP into Supabase | Host `smtp.resend.com`, port `465`, user `resend`, password = API key | Unlocks editable Auth templates |
+| What               | Where                                                                 | Notes                                                                                  |
+| ------------------ | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Account + API key  | [resend.com](https://resend.com)                                      | Used as Supabase Auth SMTP password                                                    |
+| Sending domain     | Resend → Domains                                                      | Use a domain you control (`example.com`), **not** `*.vercel.app`                       |
+| Sender identity    | Supabase SMTP “Sender email”                                          | Must be allowed by Resend (verified domain, or `onboarding@resend.dev` for tests only) |
+| SMTP into Supabase | Host `smtp.resend.com`, port `465`, user `resend`, password = API key | Unlocks editable Auth templates                                                        |
 
 Resend does **not** store the OTP subject/body — those live in **Supabase Email Templates**. Resend only delivers whatever Supabase sends.
 
 ### D. Vercel
 
-| What | Where | Notes |
-|------|--------|--------|
-| Project | linked to this GitHub repo | One Vercel project per wedding site in v1 |
+| What     | Where                                      | Notes                                                                                                                           |
+| -------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| Project  | linked to this GitHub repo                 | One Vercel project per wedding site in v1                                                                                       |
 | Env vars | Project → Settings → Environment Variables | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` (Sensitive) for **this** wedding’s Supabase project |
-| Domain | Domains | Temporary `*.vercel.app` is fine; custom domain later |
+| Domain   | Domains                                    | Temporary `*.vercel.app` is fine; custom domain later                                                                           |
 
 Do **not** point production at local Mailpit keys.
 
@@ -155,26 +155,26 @@ Do **not** point production at local Mailpit keys.
 
 When reusing this product for another wedding:
 
-1. New Supabase project + push migrations  
-2. New (or retargeted) Vercel project + env keys  
-3. Resend SMTP connected on that Supabase project  
-4. Auth **Site URL** / redirects = that site’s URL  
-5. Auth email **subject** = `{Groom} & {Bride} Wedding`  
-6. Auth email **body** = OTP template with `{{ .Token }}`  
-7. Update `PRODUCTION_SUPER_ADMIN_EMAIL` if a different owner should bootstrap  
-8. Update local `config.toml` subject + `seed.sql` if you care about local parity  
-9. Sign in → set groom/bride/content in admin  
+1. New Supabase project + push migrations
+2. New (or retargeted) Vercel project + env keys
+3. Resend SMTP connected on that Supabase project
+4. Auth **Site URL** / redirects = that site’s URL
+5. Auth email **subject** = `{Groom} & {Bride} Wedding`
+6. Auth email **body** = OTP template with `{{ .Token }}`
+7. Update `PRODUCTION_SUPER_ADMIN_EMAIL` if a different owner should bootstrap
+8. Update local `config.toml` subject + `seed.sql` if you care about local parity
+9. Sign in → set groom/bride/content in admin
 
 ## Supabase
 
 ### Environment variables
 
-| Name | Where | Purpose |
-|------|--------|---------|
-| `VITE_SUPABASE_URL` | browser + server | Project URL |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | browser + server | Publishable key (`sb_publishable_…`) |
-| `SUPABASE_SECRET_KEY` | **server only** | Secret key (`sb_secret_…`) for privileged ops (first-login admin profile) |
-| `RESEND_API_KEY` | optional / later | App transactional email (Phase 11+). Auth OTP uses Resend via **Supabase SMTP**, not this var, unless you wire it later |
+| Name                            | Where            | Purpose                                                                                                                 |
+| ------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `VITE_SUPABASE_URL`             | browser + server | Project URL                                                                                                             |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | browser + server | Publishable key (`sb_publishable_…`)                                                                                    |
+| `SUPABASE_SECRET_KEY`           | **server only**  | Secret key (`sb_secret_…`) for privileged ops (first-login admin profile)                                               |
+| `RESEND_API_KEY`                | optional / later | App transactional email (Phase 11+). Auth OTP uses Resend via **Supabase SMTP**, not this var, unless you wire it later |
 
 Never put the secret key in a `VITE_` variable. Mark it Sensitive in Vercel.
 
@@ -190,10 +190,10 @@ Local Auth has `enable_signup = false`. Local OTP uses Mailpit + `supabase/templ
 
 **Local Mailpit auth** (when `.env.local` points at `127.0.0.1`):
 
-| Email | Role |
-|-------|------|
+| Email                     | Role        |
+| ------------------------- | ----------- |
 | `superadmin@supabase.com` | Super admin |
-| `admin@supabase.com` | Admin |
+| `admin@supabase.com`      | Admin       |
 
 1. `pnpm supabase:start` then `pnpm db:reset` (first time / after migrations)
 2. `pnpm dev` — login badge should say **Local · Mailpit**
@@ -202,9 +202,12 @@ Local Auth has `enable_signup = false`. Local OTP uses Mailpit + `supabase/templ
 **Production / cloud auth** (`.env` cloud URL, no local override):
 
 1. Super admin email is hardcoded in `src/lib/auth/roles.ts` (`PRODUCTION_SUPER_ADMIN_EMAIL`)
-2. First login bootstraps that email as `super_admin`
-3. Invite other admins from **Admin → Admins**
-4. Enable Email provider + custom SMTP (Resend) + OTP template (see checklist above)
+2. First login creates the **admin profile only** (no fake wedding row). `wedding_id` may be null.
+3. **Super admin** may navigate without a wedding (empty states, invite admins) and can **skip** onboarding.
+4. **Regular admins** are always redirected to `/admin/onboarding` until a wedding exists — route guards **and** server functions (`requireWeddingSession`) enforce this (client bypass is not enough).
+5. Onboarding requires **groom + bride**; date/venue/dress/theme are optional. Completing it creates the wedding and links all profiles with null `wedding_id`.
+6. Invite other admins from **Admin → Admins**
+7. Enable Email provider + custom SMTP (Resend) + OTP template (see checklist above)
 
 ### Security model
 
@@ -277,23 +280,23 @@ supabase/
 
 ## Implementation phases (v1)
 
-| Phase | Focus |
-|------:|-------|
-| 1 | Bootstrap, local infra, CI |
-| 2 | Design foundation / wedding tokens |
-| 3 | Supabase schema + admin auth |
-| 4 | Wedding settings editing |
-| 4b | Page blocks CMS (current) |
-| 5 | Public wedding website polish |
-| 6–12 | Story/photos, guests, RSVP, registry, date publish, email, launch |
+| Phase | Focus                                                             |
+| ----: | ----------------------------------------------------------------- |
+|     1 | Bootstrap, local infra, CI                                        |
+|     2 | Design foundation / wedding tokens                                |
+|     3 | Supabase schema + admin auth                                      |
+|     4 | Wedding settings editing                                          |
+|    4b | Page blocks CMS (current)                                         |
+|     5 | Public wedding website polish                                     |
+|  6–12 | Story/photos, guests, RSVP, registry, date publish, email, launch |
 
 Do not start the next phase until the previous phase is merged and confirmed.
 
 ## Future plan
 
-| Version | Goal |
-|--------:|------|
-| **v1** | Single wedding per deploy (this repo). Whitelabel by reconfiguring Supabase / Resend / Vercel / seed + admin content. |
-| **v2** | Multi-wedding platform: create many live wedding websites from one product (tenancy, per-wedding domains, shared admin/builder, provisioning). Auth email subjects/templates and super-admin bootstrap must become data-driven instead of per-project dashboard edits. |
+| Version | Goal                                                                                                                                                                                                                                                                   |
+| ------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|  **v1** | Single wedding per deploy (this repo). Whitelabel by reconfiguring Supabase / Resend / Vercel / seed + admin content.                                                                                                                                                  |
+|  **v2** | Multi-wedding platform: create many live wedding websites from one product (tenancy, per-wedding domains, shared admin/builder, provisioning). Auth email subjects/templates and super-admin bootstrap must become data-driven instead of per-project dashboard edits. |
 
 Track v2 explicitly so we do not bolt multi-site onto v1 accidentally. Until then, treat each production wedding as its own Supabase + Vercel surface and use the [launch checklist](#whitelabel-launch-checklist-for-a-new-wedding-v1).

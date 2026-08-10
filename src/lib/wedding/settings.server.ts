@@ -1,5 +1,4 @@
-import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
-import { createServerSupabaseClient } from '#/lib/supabase/server.server'
+import { requireWeddingSession } from '#/lib/auth/session.server'
 import type { Wedding } from '#/lib/supabase/types'
 import {
   FALLBACK_PUBLIC_WEDDING,
@@ -7,6 +6,7 @@ import {
 } from '#/lib/wedding/public-settings'
 import type { PublicWeddingSettings } from '#/lib/wedding/public-settings'
 import type { UpdateWeddingInput } from '#/lib/wedding/validation'
+import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
 
 export async function getPublicWeddingSettingsHandler(): Promise<PublicWeddingSettings> {
   try {
@@ -37,29 +37,10 @@ export async function getPublicWeddingSettingsHandler(): Promise<PublicWeddingSe
 export async function updateWeddingHandler(
   data: UpdateWeddingInput,
 ): Promise<Wedding> {
-  const supabase = createServerSupabaseClient()
-  const { data: authData } = await supabase.auth.getUser()
-  const user = authData.user
+  const session = await requireWeddingSession()
 
-  if (!user) {
-    throw new Error('You must be signed in to update wedding settings.')
-  }
-
-  const profileResult = await supabase
-    .from('admin_profiles')
-    .select('wedding_id')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (profileResult.error) {
-    throw new Error(profileResult.error.message)
-  }
-
-  if (!profileResult.data?.wedding_id) {
-    throw new Error('Admin profile is not linked to a wedding.')
-  }
-
-  const updated = await supabase
+  const admin = createAdminSupabaseClient()
+  const updated = await admin
     .from('weddings')
     .update({
       groom_name: data.groom_name,
@@ -71,7 +52,7 @@ export async function updateWeddingHandler(
       dress_code: data.dress_code,
       active_public_theme: data.active_public_theme,
     })
-    .eq('id', profileResult.data.wedding_id)
+    .eq('id', session.wedding.id)
     .select('*')
     .single()
 

@@ -65,21 +65,23 @@ function SidebarFooter({
   onLogout: () => void
   isLoggingOut?: boolean
 }) {
-  const dateLabel = session.wedding.wedding_date
-    ? new Date(`${session.wedding.wedding_date}T00:00:00`).toLocaleDateString(
+  const wedding = session.wedding
+  const dateLabel = wedding?.wedding_date
+    ? new Date(`${wedding.wedding_date}T00:00:00`).toLocaleDateString(
         undefined,
         { dateStyle: 'long' },
       )
-    : 'Date to be announced'
+    : wedding
+      ? 'Date to be announced'
+      : 'Wedding not set up'
 
   return (
     <div className="shrink-0 space-y-3 border-t border-white/10 pt-4">
       <div className="text-sm">
         <p className="font-serif italic">
-          {formatCoupleNames(
-            session.wedding.groom_name,
-            session.wedding.bride_name,
-          )}
+          {wedding
+            ? formatCoupleNames(wedding.groom_name, wedding.bride_name)
+            : 'No wedding yet'}
         </p>
         <p className="text-sidebar-foreground/60 mt-1 text-xs">{dateLabel}</p>
         <p className="text-sidebar-foreground/60 mt-1 text-xs">
@@ -118,7 +120,9 @@ export function AdminShell({
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const titleId = useId()
-  const navItems = getAdminNavItems(isSuperAdminProfile(session.profile))
+  const navItems = getAdminNavItems(isSuperAdminProfile(session.profile), {
+    hasWedding: Boolean(session.wedding),
+  })
 
   useEffect(() => {
     if (!mobileNavOpen) return
@@ -142,7 +146,10 @@ export function AdminShell({
   const closeMobileNav = () => setMobileNavOpen(false)
 
   return (
-    <div data-surface="admin" className="bg-background text-foreground min-h-dvh">
+    <div
+      data-surface="admin"
+      className="bg-background text-foreground min-h-dvh"
+    >
       <Toaster />
 
       <div className="border-border bg-surface sticky top-0 z-30 flex items-center gap-3 border-b px-4 py-3 md:hidden">

@@ -44,7 +44,7 @@ export async function inviteAdminHandler(input: {
     .from('admin_profiles')
     .insert({
       id: userId,
-      wedding_id: session.wedding.id,
+      wedding_id: session.wedding?.id ?? null,
       display_name: input.displayName,
       email: input.email,
       role: 'admin',
@@ -84,9 +84,12 @@ export async function removeAdminHandler(adminId: string) {
 
   const profile = existing.data
 
-  if (isSuperAdminProfile(profile) || isReservedSuperAdminEmail(profile.email)) {
-      throw new Error('The super admin cannot be removed.')
-    }
+  if (
+    isSuperAdminProfile(profile) ||
+    isReservedSuperAdminEmail(profile.email)
+  ) {
+    throw new Error('The super admin cannot be removed.')
+  }
 
   const deletedProfile = await admin
     .from('admin_profiles')

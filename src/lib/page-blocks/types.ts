@@ -1,9 +1,4 @@
-export const PAGE_BLOCK_TYPES = [
-  'hero',
-  'story',
-  'image',
-  'details',
-] as const
+export const PAGE_BLOCK_TYPES = ['hero', 'story', 'image', 'details'] as const
 
 export type PageBlockType = (typeof PAGE_BLOCK_TYPES)[number]
 
@@ -53,10 +48,7 @@ export type DetailsPageBlock = {
 }
 
 export type PageBlock =
-  | HeroPageBlock
-  | StoryPageBlock
-  | ImagePageBlock
-  | DetailsPageBlock
+  HeroPageBlock | StoryPageBlock | ImagePageBlock | DetailsPageBlock
 
 export const PAGE_BLOCK_TYPE_LABELS: Record<PageBlockType, string> = {
   hero: 'Hero',

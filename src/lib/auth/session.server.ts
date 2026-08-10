@@ -9,9 +9,11 @@ import type { AdminSession } from '#/lib/auth/types'
 import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
 import { isLocalSupabase } from '#/lib/supabase/env'
 import { createServerSupabaseClient } from '#/lib/supabase/server.server'
-import type { AdminProfile, AdminRole } from '#/lib/supabase/types'
+import type { AdminProfile, AdminRole, Wedding } from '#/lib/supabase/types'
 
 export type { AdminSession }
+
+export type AdminSessionWithWedding = AdminSession & { wedding: Wedding }
 
 async function promoteSuperAdminIfNeeded(
   profile: AdminProfile,
@@ -58,31 +60,16 @@ async function createBootstrapProfile(
   role: AdminRole,
 ): Promise<AdminProfile> {
   const admin = createAdminSupabaseClient()
-  const weddingResult = await admin
-    .from('weddings')
-    .select('id')
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle()
-
-  if (weddingResult.error) {
-    throw new Error(weddingResult.error.message)
-  }
-
-  if (!weddingResult.data) {
-    throw new Error(
-      'No wedding record found. Run migrations/seed before first admin login.',
-    )
-  }
-
   const normalizedEmail = normalizeAdminEmail(email)
   const displayName = normalizedEmail.split('@')[0] ?? 'Admin'
 
+  // Do not create a wedding here — onboarding owns that. Super admin may navigate
+  // with wedding_id null; regular admins are forced through onboarding.
   const inserted = await admin
     .from('admin_profiles')
     .insert({
       id: userId,
-      wedding_id: weddingResult.data.id,
+      wedding_id: null,
       display_name: displayName,
       email: normalizedEmail,
       role,
@@ -137,6 +124,56 @@ async function ensureAdminProfile(
   return createBootstrapProfile(userId, email, 'super_admin')
 }
 
+async function loadWeddingForProfile(
+  profile: AdminProfile,
+): Promise<Wedding | null> {
+  if (!profile.wedding_id) {
+    // v1: prefer any existing wedding and attach this profile if still null
+    const admin = createAdminSupabaseClient()
+    const existingWedding = await admin
+      .from('weddings')
+      .select('*')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+    if (existingWedding.error) {
+      throw new Error(existingWedding.error.message)
+    }
+
+    if (existingWedding.data) {
+      const linked = await admin
+        .from('admin_profiles')
+        .update({ wedding_id: existingWedding.data.id })
+        .eq('id', profile.id)
+        .is('wedding_id', null)
+        .select('*')
+        .maybeSingle()
+
+      if (linked.error) {
+        throw new Error(linked.error.message)
+      }
+
+      return existingWedding.data
+    }
+
+    return null
+  }
+
+  const admin = createAdminSupabaseClient()
+  const weddingResult = await admin
+    .from('weddings')
+    .select('*')
+    .eq('id', profile.wedding_id)
+    .maybeSingle()
+
+  if (weddingResult.error) {
+    throw new Error(weddingResult.error.message)
+  }
+
+  return weddingResult.data
+}
+
 async function loadAdminSession(
   userId: string,
   email: string | undefined,
@@ -146,25 +183,12 @@ async function loadAdminSession(
     return null
   }
 
-  const admin = createAdminSupabaseClient()
-  const weddingResult = await admin
-    .from('weddings')
-    .select('*')
-    .eq('id', profile.wedding_id)
-    .single()
-
-  if (weddingResult.error) {
-    throw new Error(weddingResult.error.message)
-  }
-
-  if (!weddingResult.data) {
-    throw new Error('Wedding record missing for admin.')
-  }
+  const wedding = await loadWeddingForProfile(profile)
 
   return {
     user: { id: userId, email },
-    profile,
-    wedding: weddingResult.data,
+    profile: wedding ? { ...profile, wedding_id: wedding.id } : profile,
+    wedding,
   }
 }
 
@@ -297,6 +321,29 @@ export async function requireAdminSession(): Promise<AdminSession> {
     throw new Error('You must be signed in.')
   }
   return session
+}
+
+function hasWedding(wedding: Wedding | null): wedding is Wedding {
+  return wedding !== null
+}
+
+/** Server-side gate: wedding-scoped ops cannot be bypassed from the client. */
+export async function requireWeddingSession(): Promise<AdminSessionWithWedding> {
+  const session = await requireAdminSession()
+
+  if (!hasWedding(session.wedding)) {
+    throw new Error(
+      isSuperAdminProfile(session.profile)
+        ? 'Set up the wedding first (Onboarding), or invite an admin to complete it.'
+        : 'Complete wedding onboarding before continuing.',
+    )
+  }
+
+  return {
+    user: session.user,
+    profile: session.profile,
+    wedding: session.wedding,
+  }
 }
 
 export async function requireSuperAdminSession(): Promise<AdminSession> {

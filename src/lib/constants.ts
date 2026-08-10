@@ -20,7 +20,12 @@ export const ADMIN_PREVIEW_NAV_LABELS = [
 ] as const
 
 export type AdminNavItem = {
-  to: '/admin' | '/admin/settings' | '/admin/pages' | '/admin/admins'
+  to:
+    | '/admin'
+    | '/admin/settings'
+    | '/admin/pages'
+    | '/admin/admins'
+    | '/admin/onboarding'
   label: string
   exact: boolean
 }
@@ -35,7 +40,23 @@ export const ADMIN_SUPER_NAV_ITEMS: readonly AdminNavItem[] = [
   { to: '/admin/admins', label: 'Admins', exact: false },
 ]
 
-export function getAdminNavItems(isSuperAdmin: boolean): AdminNavItem[] {
+export function getAdminNavItems(
+  isSuperAdmin: boolean,
+  options?: { hasWedding?: boolean },
+): AdminNavItem[] {
+  const hasWedding = options?.hasWedding ?? true
+
+  if (!hasWedding) {
+    const items: AdminNavItem[] = [
+      { to: '/admin', label: 'Overview', exact: true },
+      { to: '/admin/onboarding', label: 'Set up wedding', exact: false },
+    ]
+    if (isSuperAdmin) {
+      items.push(...ADMIN_SUPER_NAV_ITEMS)
+    }
+    return items
+  }
+
   return isSuperAdmin
     ? [...ADMIN_NAV_ITEMS, ...ADMIN_SUPER_NAV_ITEMS]
     : [...ADMIN_NAV_ITEMS]

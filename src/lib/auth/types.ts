@@ -6,7 +6,8 @@ export type AdminSession = {
     email: string | undefined
   }
   profile: AdminProfile
-  wedding: Wedding
+  /** Null until onboarding creates the wedding row. */
+  wedding: Wedding | null
 }
 
 export type AdminListItem = {

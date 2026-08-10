@@ -7,11 +7,14 @@ import {
 } from '@tanstack/react-router'
 import { useState } from 'react'
 import { AdminShell } from '#/components/admin-shell'
+import { isSuperAdminProfile } from '#/lib/auth/roles'
 import { getAdminSession, logoutAdmin } from '#/lib/auth/session'
 import type { AdminSession } from '#/lib/auth/types'
 
 export const Route = createFileRoute('/admin')({
-  beforeLoad: async ({ location }): Promise<{ session: AdminSession | null }> => {
+  beforeLoad: async ({
+    location,
+  }): Promise<{ session: AdminSession | null }> => {
     if (location.pathname === '/admin/login') {
       return { session: null }
     }
@@ -19,6 +22,19 @@ export const Route = createFileRoute('/admin')({
     const session = await getAdminSession()
     if (!session) {
       throw redirect({ to: '/admin/login' })
+    }
+
+    const isOnboarding = location.pathname === '/admin/onboarding'
+    const isSuper = isSuperAdminProfile(session.profile)
+    const hasWedding = Boolean(session.wedding)
+
+    // Regular admins cannot skip onboarding (server routes also enforce wedding).
+    if (!hasWedding && !isSuper && !isOnboarding) {
+      throw redirect({ to: '/admin/onboarding' })
+    }
+
+    if (hasWedding && isOnboarding) {
+      throw redirect({ to: '/admin' })
     }
 
     return { session }
