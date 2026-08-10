@@ -1,5 +1,5 @@
 import { createRouter as createTanStackRouter } from '@tanstack/react-router'
-import { NotFoundPage } from '#/components/not-found'
+import { AppRouteError, NotFoundPage } from '#/components/app-error-page'
 import { routeTree } from './routeTree.gen'
 
 export function getRouter() {
@@ -8,7 +8,9 @@ export function getRouter() {
     scrollRestoration: true,
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
+    notFoundMode: 'root',
     defaultNotFoundComponent: NotFoundPage,
+    defaultErrorComponent: AppRouteError,
   })
 
   return router

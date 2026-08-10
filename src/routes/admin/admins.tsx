@@ -1,22 +1,29 @@
-import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
+import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { Button } from '#/components/ui/button'
 import { Field } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
 import { Badge } from '#/components/ui/badge'
 import { toast } from '#/components/ui/toaster'
-import { isSuperAdminProfile } from '#/lib/auth/roles'
 import { inviteAdmin, listAdmins, removeAdmin } from '#/lib/auth/admins'
 import type { AdminListItem } from '#/lib/auth/admins'
+import { requireSuperAdmin } from '#/lib/auth/require-access'
+import { internalError } from '#/lib/errors/route-error'
 
 export const Route = createFileRoute('/admin/admins')({
   beforeLoad: ({ context }) => {
-    const session = context.session
-    if (!session || !isSuperAdminProfile(session.profile)) {
-      throw redirect({ to: '/admin' })
+    requireSuperAdmin(context.session)
+  },
+  loader: async () => {
+    try {
+      return await listAdmins()
+    } catch (cause) {
+      throw internalError({
+        message: 'Failed to load admin list for /admin/admins',
+        cause,
+      })
     }
   },
-  loader: () => listAdmins(),
   component: AdminAdminsPage,
 })
 

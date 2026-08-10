@@ -35,8 +35,12 @@ export function toPublicSettings(
     | 'dress_code'
     | 'active_public_theme'
     | 'status'
-  >,
+  > | null,
 ): PublicWeddingSettings {
+  if (!wedding) {
+    return FALLBACK_PUBLIC_WEDDING
+  }
+
   return {
     groom_name: wedding.groom_name,
     bride_name: wedding.bride_name,
