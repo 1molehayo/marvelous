@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { List, SignOut, X } from '@phosphor-icons/react'
+import { NavigationProgress } from '#/components/navigation-progress'
 import { Button } from '#/components/ui/button'
 import { Toaster } from '#/components/ui/toaster'
 import { isSuperAdminProfile } from '#/lib/auth/roles'
@@ -154,6 +155,7 @@ export function AdminShell({
       data-surface="admin"
       className="bg-background text-foreground min-h-dvh"
     >
+      <NavigationProgress />
       <Toaster />
 
       <div className="border-border bg-surface sticky top-0 z-30 flex items-center gap-3 border-b px-4 py-3 md:hidden">
