@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { ImagePageBlock } from '#/lib/page-blocks/types'
+import { publicSectionId } from '#/lib/page-blocks/types'
 import { cn } from '#/lib/utils'
 
 export function ImageBlock({
@@ -13,7 +14,10 @@ export function ImageBlock({
   const showImage = Boolean(imageUrl) && !failed
 
   return (
-    <section className="public-section mx-auto max-w-5xl px-6">
+    <section
+      id={publicSectionId(block)}
+      className="public-section mx-auto max-w-5xl scroll-mt-24 px-6"
+    >
       <figure className="public-reveal">
         <div
           className={cn(

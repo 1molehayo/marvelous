@@ -97,15 +97,19 @@ export async function getPublicHomeDataHandler(): Promise<PublicHomeData> {
     const imageUrls: Record<string, string> = {}
 
     await Promise.all(
-      page_blocks
-        .filter((block) => block.type === 'image' && block.fields.imagePath)
-        .map(async (block) => {
-          if (block.type !== 'image') return
-          const url = await createPhotoSignedUrl(block.fields.imagePath)
-          if (url) {
-            imageUrls[block.id] = url
-          }
-        }),
+      page_blocks.map(async (block) => {
+        const imagePath =
+          block.type === 'image'
+            ? block.fields.imagePath
+            : block.type === 'hero'
+              ? block.fields.imagePath
+              : null
+        if (!imagePath) return
+        const url = await createPhotoSignedUrl(imagePath)
+        if (url) {
+          imageUrls[block.id] = url
+        }
+      }),
     )
 
     return {

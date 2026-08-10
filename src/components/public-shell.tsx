@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { ColorModeToggle } from '#/components/color-mode-toggle'
 import { FALLBACK_PUBLIC_THEME } from '#/lib/site-settings'
 import type { PublicThemeId } from '#/lib/site-settings'
+import type { PublicSectionNavItem } from '#/lib/page-blocks/types'
 import { formatWeddingDate } from '#/lib/wedding/public-settings'
 import { cn } from '#/lib/utils'
 
@@ -11,12 +12,14 @@ export function PublicShell({
   theme = FALLBACK_PUBLIC_THEME,
   coupleLabel = 'Marvelous & Lillian',
   weddingDate = null,
+  sectionNav = [],
 }: {
   children: React.ReactNode
   className?: string
   theme?: PublicThemeId
   coupleLabel?: string
   weddingDate?: string | null
+  sectionNav?: PublicSectionNavItem[]
 }) {
   return (
     <div
@@ -27,14 +30,32 @@ export function PublicShell({
       data-public-theme={theme}
     >
       <header className="border-border sticky top-0 z-30 border-b bg-background/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4 md:px-6">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4 md:gap-4 md:px-6">
           <Link
             to="/"
             className="font-serif truncate text-lg italic md:text-xl"
           >
             {coupleLabel}
           </Link>
-          <ColorModeToggle />
+          <div className="flex min-w-0 items-center gap-2 md:gap-4">
+            {sectionNav.length > 1 ? (
+              <nav
+                aria-label="Page sections"
+                className="hidden items-center gap-4 sm:flex"
+              >
+                {sectionNav.map((item) => (
+                  <a
+                    key={item.id}
+                    href={`#${item.id}`}
+                    className="text-foreground-secondary hover:text-foreground text-xs tracking-[0.16em] uppercase transition"
+                  >
+                    {item.label}
+                  </a>
+                ))}
+              </nav>
+            ) : null}
+            <ColorModeToggle />
+          </div>
         </div>
       </header>
 
@@ -46,6 +67,22 @@ export function PublicShell({
           <p className="text-foreground-secondary text-sm tracking-[0.12em] uppercase">
             {formatWeddingDate(weddingDate)}
           </p>
+          {sectionNav.length > 1 ? (
+            <nav
+              aria-label="Footer sections"
+              className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:hidden"
+            >
+              {sectionNav.map((item) => (
+                <a
+                  key={item.id}
+                  href={`#${item.id}`}
+                  className="text-foreground-secondary hover:text-foreground text-xs tracking-[0.14em] uppercase"
+                >
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+          ) : null}
         </div>
       </footer>
     </div>

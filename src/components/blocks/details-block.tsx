@@ -1,4 +1,5 @@
 import type { DetailsPageBlock } from '#/lib/page-blocks/types'
+import { publicSectionId } from '#/lib/page-blocks/types'
 import type { PublicWeddingSettings } from '#/lib/wedding/public-settings'
 
 export function DetailsBlock({
@@ -14,10 +15,14 @@ export function DetailsBlock({
   ].filter(Boolean)
   const dressCode =
     block.fields.showDressCode && wedding.dress_code ? wedding.dress_code : null
+  const sectionId = publicSectionId(block)
 
   if (venueParts.length === 0 && !dressCode) {
     return (
-      <section className="public-section border-border border-t px-6">
+      <section
+        id={sectionId}
+        className="public-section border-border scroll-mt-24 border-t px-6"
+      >
         <div className="public-reveal mx-auto max-w-3xl text-center">
           <p className="public-kicker mb-4">Details</p>
           <h2 className="public-section-title">Celebrate with us</h2>
@@ -30,7 +35,10 @@ export function DetailsBlock({
   }
 
   return (
-    <section className="public-section border-border border-t px-6">
+    <section
+      id={sectionId}
+      className="public-section border-border scroll-mt-24 border-t px-6"
+    >
       <div className="public-reveal mx-auto max-w-4xl">
         <div className="mb-10 text-center md:mb-14">
           <p className="public-kicker mb-4">Details</p>

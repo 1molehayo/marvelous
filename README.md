@@ -301,8 +301,8 @@ supabase/
 |     3 | Supabase schema + admin auth                                      |
 |     4 | Wedding settings editing                                          |
 |    4b | Page blocks CMS                                                   |
-|     5 | Public wedding website polish (current)                           |
-|  6–12 | Story/photos, guests, RSVP, registry, date publish, email, launch |
+|     5 | Public wedding website polish                                   |
+|  6–12 | Story/photos, guests, RSVP, registry, date publish, email, launch (next) |
 
 Do not start the next phase until the previous phase is merged and confirmed.
 

@@ -73,13 +73,17 @@ function BlockEditor({
     let cancelled = false
 
     const loadPreview = async () => {
-      if (block.type !== 'image' || !block.fields.imagePath) {
+      const imagePath =
+        block.type === 'image' || block.type === 'hero'
+          ? block.fields.imagePath
+          : null
+      if (!imagePath) {
         setPreviewUrl(null)
         return
       }
       try {
         const url = await getSignedPhotoUrl({
-          data: { imagePath: block.fields.imagePath },
+          data: { imagePath },
         })
         if (!cancelled) setPreviewUrl(url)
       } catch {
@@ -131,6 +135,76 @@ function BlockEditor({
             />
           </Field.Control>
         </Field>
+        <Field>
+          <Field.Label>Background photo</Field.Label>
+          <Field.Control>
+            <Input
+              type="file"
+              accept="image/*"
+              disabled={isUploading}
+              onChange={async (event) => {
+                const file = event.target.files?.[0]
+                if (!file) return
+                setIsUploading(true)
+                try {
+                  const dataBase64 = await fileToBase64(file)
+                  const uploaded = await uploadPageBlockImage({
+                    data: {
+                      name: file.name,
+                      type: file.type,
+                      dataBase64,
+                    },
+                  })
+                  onChange({
+                    ...block,
+                    fields: {
+                      ...block.fields,
+                      imagePath: uploaded.path,
+                    },
+                  })
+                  setPreviewUrl(uploaded.signedUrl)
+                  toast.success('Hero background uploaded.')
+                } catch (err) {
+                  toast.error(
+                    err instanceof Error
+                      ? err.message
+                      : 'Unable to upload image.',
+                  )
+                } finally {
+                  setIsUploading(false)
+                  event.target.value = ''
+                }
+              }}
+            />
+          </Field.Control>
+          <Field.Description>
+            Optional full-bleed hero photo. Leave empty for the theme atmosphere
+            only.
+          </Field.Description>
+        </Field>
+        {previewUrl ? (
+          <img
+            src={previewUrl}
+            alt="Hero background preview"
+            className="border-border max-h-56 w-full rounded-lg border object-cover"
+          />
+        ) : null}
+        {block.fields.imagePath ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              onChange({
+                ...block,
+                fields: { ...block.fields, imagePath: null },
+              })
+              setPreviewUrl(null)
+            }}
+          >
+            Remove background photo
+          </Button>
+        ) : null}
       </div>
     )
   }

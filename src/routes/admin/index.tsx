@@ -83,12 +83,6 @@ function AdminOverviewPage() {
               Preview site
             </a>
           </Button>
-          <Button asChild size="sm" variant="outline">
-            <Link to="/admin/settings">Edit settings</Link>
-          </Button>
-          <Button asChild size="sm" variant="outline">
-            <Link to="/admin/pages">Page content</Link>
-          </Button>
         </div>
       </div>
 
