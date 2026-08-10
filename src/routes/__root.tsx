@@ -2,7 +2,7 @@ import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { AppRouteError, NotFoundPage } from '#/components/app-error-page'
 import { formatCoupleNames } from '#/lib/constants'
 import { COLOR_MODE_INIT_SCRIPT } from '#/lib/color-mode'
-import { internalError } from '#/lib/errors/route-error'
+import { internalError, raiseRouteError } from '#/lib/errors/route-error'
 import { getPublicWeddingSettings } from '#/lib/wedding/settings'
 
 import appCss from '../styles/app.css?url'
@@ -20,10 +20,13 @@ export const Route = createRootRoute({
         coupleLabel,
       }
     } catch (cause) {
-      throw internalError({
-        message: 'Failed to load root public wedding settings',
-        cause,
-      })
+      throw raiseRouteError(
+        internalError({
+          message: 'Failed to load root public wedding settings',
+          cause,
+        }),
+        { source: 'ssr', pathname: '/' },
+      )
     }
   },
   notFoundComponent: NotFoundPage,

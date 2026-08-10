@@ -8,7 +8,7 @@ import { toast } from '#/components/ui/toaster'
 import { inviteAdmin, listAdmins, removeAdmin } from '#/lib/auth/admins'
 import type { AdminListItem } from '#/lib/auth/admins'
 import { requireSuperAdmin } from '#/lib/auth/require-access'
-import { internalError } from '#/lib/errors/route-error'
+import { internalError, raiseRouteError } from '#/lib/errors/route-error'
 
 export const Route = createFileRoute('/admin/admins')({
   beforeLoad: ({ context }) => {
@@ -18,10 +18,13 @@ export const Route = createFileRoute('/admin/admins')({
     try {
       return await listAdmins()
     } catch (cause) {
-      throw internalError({
-        message: 'Failed to load admin list for /admin/admins',
-        cause,
-      })
+      throw raiseRouteError(
+        internalError({
+          message: 'Failed to load admin list for /admin/admins',
+          cause,
+        }),
+        { source: 'server', pathname: '/admin/admins' },
+      )
     }
   },
   component: AdminAdminsPage,

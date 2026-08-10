@@ -1,11 +1,13 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { Link, useRouter, useRouterState } from '@tanstack/react-router'
 import type { ErrorComponentProps } from '@tanstack/react-router'
 import { Button } from '#/components/ui/button'
 import { PRODUCT_SHORT_NAME, PRODUCT_TAGLINE } from '#/lib/constants'
+import { reportClientError } from '#/lib/errors/report-client-error'
 import {
   logRouteError,
   normalizeRouteError,
+  toClientErrorReport,
 } from '#/lib/errors/route-error'
 import type { RouteError, RouteErrorCode } from '#/lib/errors/route-error'
 
@@ -132,10 +134,28 @@ export function AppRouteError({ error, reset }: ErrorComponentProps) {
   const routeError = useMemo(() => normalizeRouteError(error), [error])
   const isAdminPath =
     pathname.startsWith('/admin') && pathname !== '/admin/login'
+  const reportedId = useRef<string | null>(null)
 
   useEffect(() => {
-    logRouteError(routeError, error)
-  }, [error, routeError])
+    // Browser console (FE debugging)
+    logRouteError(routeError, error, {
+      source: 'client',
+      pathname,
+    })
+
+    // Mirror into Vercel Runtime Logs with the same errorId
+    if (reportedId.current === routeError.errorId) return
+    reportedId.current = routeError.errorId
+
+    void reportClientError({
+      data: toClientErrorReport(routeError, { pathname, original: error }),
+    }).catch((reportError) => {
+      console.error('[RouteError] failed to report client error to server', {
+        errorId: routeError.errorId,
+        reportError,
+      })
+    })
+  }, [error, pathname, routeError])
 
   const onRetry = () => {
     reset()

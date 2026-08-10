@@ -241,6 +241,18 @@ docker run --rm -p 3000:3000 wedding-website-builder
 4. Vercel Git integration deploys production automatically
 5. Confirm cloud migrations + Auth/Resend checklist before relying on `/admin`
 
+### Finding error logs
+
+Route/page errors show a **Reference** id on screen (e.g. `err_…`). Use that to find the matching technical log.
+
+| Where | What you’ll see |
+| ----- | --------------- |
+| **Browser DevTools → Console** | FE `[RouteError] err_…` plus a structured object (code, status, technical message, cause, stack) |
+| **Vercel → Project → Logs** | Same `errorId` from SSR/server throws and from FE via `reportClientError`. Search/filter for the Reference id. Logs are JSON lines with `errorId`, `code`, `status`, `message`, `source` (`ssr` / `server` / `client`), `causeMessage`, stacks |
+| **Supabase → Logs** | Auth, API, and Postgres platform events. App code that catches Supabase failures also re-logs them to Vercel with a technical message + cause |
+
+Public UI copy stays friendly. Technical detail is only in logs (and never in the user-facing title/body).
+
 ### Wedding settings (Phase 4)
 
 Admins edit structured facts at `/admin/settings`:
