@@ -116,7 +116,7 @@ Couple-facing copy in the **app** comes from the DB (Wedding settings + page blo
 <p style="font-size: 28px; font-weight: 700; letter-spacing: 0.2em">
   {{ .Token }}
 </p>
-<p>This code expires shortly and can only be used once.</p>
+<p>This code expires in 1 hour and can only be used once.</p>
 ```
 
 Leave `{{ .Token }}` exactly as written. Subject is where the couple name belongs (Resend/Supabase cannot pull groom/bride from our DB for Auth emails).
@@ -144,7 +144,7 @@ Do **not** point production at local Mailpit keys.
 
 ### E. After first deploy — in-app
 
-1. Open `/admin/login` → send OTP → enter the **6-digit code** from email (not a magic link).
+1. Open `/admin/login` → send OTP → enter the code from email (not a magic link). Hosted Supabase often uses **8** digits; local Mailpit uses **6**.
 2. Confirm **Wedding settings**: groom, bride, date (or empty), venue, dress code, theme.
 3. Confirm **Page content** blocks and public `/`.
 4. Invite additional admins from **Admins** if needed.
@@ -207,7 +207,7 @@ Local Auth has `enable_signup = false`. Local OTP uses Mailpit + `supabase/templ
 ### Security model
 
 - Public self-signup disabled (local config + production setting)
-- Admin sign-in is **email + 6-digit OTP** (no passwords for admins)
+- Admin sign-in is **email + OTP** (6–8 digits; no passwords for admins)
 - Admin routes gated in `beforeLoad` via `getAdminSession()`
 - Roles: `super_admin` (production hardcoded email) vs `admin`
 - Only super admin can invite/remove admins (`/admin/admins`)

@@ -31,8 +31,8 @@ export const verifyAdminOtp = createServerFn({ method: 'POST' })
     if (!email || !email.includes('@')) {
       throw new Error('A valid email is required.')
     }
-    if (!/^\d{6}$/.test(token)) {
-      throw new Error('Enter the 6-digit code from your email.')
+    if (!/^\d{6,8}$/.test(token)) {
+      throw new Error('Enter the one-time code from your email.')
     }
     return { email, token }
   })

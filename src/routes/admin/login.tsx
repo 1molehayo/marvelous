@@ -11,6 +11,10 @@ import { Field } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
 import { Toaster, toast } from '#/components/ui/toaster'
 
+/** Local Mailpit uses 6; hosted Supabase often issues 8. */
+const OTP_MIN_LENGTH = 6
+const OTP_MAX_LENGTH = 8
+
 function isLocalSupabaseUrl(url: string | undefined) {
   if (!url) return false
   return (
@@ -47,8 +51,8 @@ function AdminLoginPage() {
       setStep('otp')
       toast.success(
         localAuth
-          ? 'Code sent. Open Mailpit at http://127.0.0.1:54324'
-          : 'Check your email for a 6-digit code.',
+          ? 'Code sent. Open Mailpit at http://127.0.0.1:54324 — expires in 1 hour.'
+          : 'Check your email for a one-time code. It expires in 1 hour.',
       )
     } catch (err) {
       toast.error(
@@ -128,18 +132,23 @@ function AdminLoginPage() {
                 <Input
                   inputMode="numeric"
                   autoComplete="one-time-code"
-                  pattern="[0-9]{6}"
-                  maxLength={6}
+                  pattern={`[0-9]{${OTP_MIN_LENGTH},${OTP_MAX_LENGTH}}`}
+                  maxLength={OTP_MAX_LENGTH}
                   value={token}
                   onChange={(event) =>
-                    setToken(event.target.value.replace(/\D/g, '').slice(0, 6))
+                    setToken(
+                      event.target.value
+                        .replace(/\D/g, '')
+                        .slice(0, OTP_MAX_LENGTH),
+                    )
                   }
                   required
                 />
               </Field.Control>
               <Field.Description>
-                Locally, open Mailpit at http://localhost:54324 (also listed in
-                `supabase status`) to read the code.
+                {localAuth
+                  ? 'Open Mailpit at http://127.0.0.1:54324 (also listed in `supabase status`) to read the code. It expires in 1 hour.'
+                  : 'Check your email for the one-time code, then enter it here. It expires in 1 hour.'}
               </Field.Description>
             </Field>
 
