@@ -1,5 +1,4 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { isSuperAdminProfile } from '#/lib/auth/roles'
 import {
@@ -75,15 +74,15 @@ function AdminOverviewPage() {
           <p className="text-foreground-secondary mt-2 text-sm">
             Wedding facts and public page blocks are editable from the sidebar.
           </p>
+          <p className="text-foreground-secondary/80 mt-1 text-xs tracking-[0.14em] uppercase">
+            Status · {WEDDING_STATUS_LABELS[wedding.status]}
+          </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="info">{WEDDING_STATUS_LABELS[wedding.status]}</Badge>
-          <Button asChild size="sm">
-            <a href="/" target="_blank" rel="noreferrer">
-              Preview site
-            </a>
-          </Button>
-        </div>
+        <Button asChild size="sm">
+          <a href="/" target="_blank" rel="noreferrer">
+            Preview site
+          </a>
+        </Button>
       </div>
 
       {isSuper && profileIncomplete ? (
