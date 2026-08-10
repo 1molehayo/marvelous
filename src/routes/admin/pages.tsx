@@ -26,10 +26,8 @@ import {
   createDefaultBlock,
 } from '#/lib/page-blocks/types'
 import type { PageBlock, PageBlockType } from '#/lib/page-blocks/types'
-import {
-  validatePageBlocksClient,
-  type PageBlockFieldErrors,
-} from '#/lib/page-blocks/validation'
+import type { PageBlockFieldErrors } from '#/lib/page-blocks/validation'
+import { validatePageBlocksClient } from '#/lib/page-blocks/validation'
 
 export const Route = createFileRoute('/admin/pages')({
   beforeLoad: ({ context }) => {
@@ -351,8 +349,9 @@ function AdminPagesPage() {
 
   const clearBlockFieldError = (blockId: string, field: string) => {
     setFieldErrors((current) => {
+      if (!(blockId in current)) return current
       const block = current[blockId]
-      if (!block?.[field]) return current
+      if (!(field in block)) return current
       const nextBlock = { ...block }
       delete nextBlock[field]
       const next = { ...current }
@@ -411,7 +410,7 @@ function AdminPagesPage() {
       return next
     })
     setFieldErrors((current) => {
-      if (!current[id]) return current
+      if (!(id in current)) return current
       const next = { ...current }
       delete next[id]
       return next

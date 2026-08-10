@@ -18,7 +18,6 @@ import {
   profileFormSchema,
   profileFormSchemaAdmin,
 } from '#/lib/auth/profile-schema'
-import type { CountryCode } from '#/lib/auth/phone'
 import { parseStoredPhone } from '#/lib/auth/phone'
 import {
   adminFirstName,
@@ -55,7 +54,7 @@ function AdminProfilePage() {
       firstName: session.profile.first_name ?? '',
       lastName: session.profile.last_name ?? '',
       email: session.profile.email ?? session.user.email ?? '',
-      phoneCountry: initialPhone.country as string,
+      phoneCountry: initialPhone.country,
       phoneNational: initialPhone.nationalNumber,
     },
     validators: {
@@ -237,7 +236,7 @@ function AdminProfilePage() {
                         (phoneField.state.meta.isTouched || submitted)
                       return (
                         <PhoneField
-                          country={countryField.state.value as CountryCode}
+                          country={countryField.state.value}
                           nationalNumber={phoneField.state.value}
                           invalid={invalid}
                           error={invalid ? error : undefined}

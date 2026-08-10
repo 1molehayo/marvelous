@@ -49,7 +49,7 @@ describe('page blocks validation', () => {
     ])
     expect(result.ok).toBe(false)
     if (result.ok) return
-    expect(result.fieldErrors['story-1']?.body).toMatch(/required/i)
+    expect(result.fieldErrors['story-1'].body).toMatch(/required/i)
   })
 
   it('rejects image blocks without a path on save', () => {
@@ -62,6 +62,6 @@ describe('page blocks validation', () => {
     ])
     expect(result.ok).toBe(false)
     if (result.ok) return
-    expect(result.fieldErrors['image-1']?.imagePath).toBeTruthy()
+    expect(result.fieldErrors['image-1'].imagePath).toBeTruthy()
   })
 })
