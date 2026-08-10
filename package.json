@@ -19,7 +19,9 @@
     "status": "npx supabase status",
     "supabase:start": "npx supabase start",
     "supabase:stop": "npx supabase stop",
-    "db:reset": "npx supabase db reset"
+    "db:reset": "npx supabase db reset",
+    "db:link": "node scripts/db-link.mjs",
+    "db:push": "node scripts/db-link.mjs && npx supabase db push"
   },
   "dependencies": {
     "@fontsource-variable/cormorant-garamond": "^5.3.0",

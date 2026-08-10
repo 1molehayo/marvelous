@@ -67,7 +67,9 @@ Mailpit (local OTP emails): [http://127.0.0.1:54324](http://127.0.0.1:54324)
 | `pnpm status` | `supabase status` (API URL, keys, Mailpit) |
 | `pnpm supabase:start` | Start local Supabase |
 | `pnpm supabase:stop` | Stop local Supabase |
-| `pnpm db:reset` | Reset DB + apply migrations/seed |
+| `pnpm db:reset` | Reset **local** DB + apply migrations/seed |
+| `pnpm db:link` | Link CLI to cloud project ref from `.env` → `VITE_SUPABASE_URL` |
+| `pnpm db:push` | Link from `.env`, then push migrations to cloud |
 
 ### Quality checks
 
@@ -105,7 +107,7 @@ Couple-facing copy in the **app** comes from the DB (Wedding settings + page blo
 | Custom SMTP | **Project Settings → Authentication → SMTP** (or Resend integration) | **Required** to edit Auth email templates on hosted Supabase |
 | Magic link / OTP **subject** | **Authentication → Emails → Magic link or OTP** | Couple wedding title, e.g. `Marvelous & Lillian Wedding` |
 | Magic link / OTP **body** | same template | OTP-only HTML (see below). Must include `{{ .Token }}` |
-| Migrations | CLI: `npx supabase db push` (or SQL editor) | Apply all `supabase/migrations/*` including `page_blocks`, `groom_name` / `bride_name` |
+| Migrations | CLI: `pnpm db:push` after `pnpm db:link` (or SQL editor) | Apply all `supabase/migrations/*` including `page_blocks`, `groom_name` / `bride_name` |
 | Wedding row | Admin UI after login, or seed | Groom, bride, theme, venue, page blocks |
 
 **OTP email body (hosted template):**
@@ -254,7 +256,7 @@ Admins edit ordered home-page blocks at `/admin/pages`:
 - Public `/` renders blocks via `DynamicBlock`
 - Image blocks store a path in the private `photos` bucket; signed URLs for admin preview and public render
 
-After pulling migrations: `pnpm db:reset` (local) or `npx supabase db push` (cloud).
+After pulling migrations: `pnpm db:reset` (local) or `pnpm db:push` (cloud, once linked).
 
 ## Project layout
 
