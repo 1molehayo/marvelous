@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { ArrowSquareOut } from '@phosphor-icons/react'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { isSuperAdminProfile } from '#/lib/auth/roles'
@@ -8,8 +9,24 @@ import {
 } from '#/lib/auth/types'
 import { formatCoupleNames } from '#/lib/constants'
 import { PUBLIC_THEME_META } from '#/lib/site-settings'
+import type { WeddingStatus } from '#/lib/supabase/types'
 import { WEDDING_STATUS_LABELS } from '#/lib/wedding/validation'
 import { Route as AdminRoute } from './route'
+
+function weddingStatusBadgeVariant(
+  status: WeddingStatus,
+): 'info' | 'success' | 'warning' | 'neutral' {
+  switch (status) {
+    case 'planning':
+      return 'info'
+    case 'date_confirmed':
+      return 'warning'
+    case 'invitations_sent':
+      return 'success'
+    case 'completed':
+      return 'neutral'
+  }
+}
 
 export const Route = createFileRoute('/admin/')({
   component: AdminOverviewPage,
@@ -75,21 +92,24 @@ function AdminOverviewPage() {
           <p className="text-foreground-secondary mt-2 text-sm">
             Wedding facts and public page blocks are editable from the sidebar.
           </p>
+          <div className="mt-2.5 flex items-center gap-2">
+            <span className="text-foreground-secondary text-xs tracking-[0.14em] uppercase">
+              Status
+            </span>
+            <Badge
+              variant={weddingStatusBadgeVariant(wedding.status)}
+              size="sm"
+            >
+              {WEDDING_STATUS_LABELS[wedding.status]}
+            </Badge>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="info">{WEDDING_STATUS_LABELS[wedding.status]}</Badge>
-          <Button asChild size="sm">
-            <a href="/" target="_blank" rel="noreferrer">
-              Preview site
-            </a>
-          </Button>
-          <Button asChild size="sm" variant="outline">
-            <Link to="/admin/settings">Edit settings</Link>
-          </Button>
-          <Button asChild size="sm" variant="outline">
-            <Link to="/admin/pages">Page content</Link>
-          </Button>
-        </div>
+        <Button asChild size="sm">
+          <a href="/" target="_blank" rel="noreferrer">
+            <ArrowSquareOut />
+            Preview site
+          </a>
+        </Button>
       </div>
 
       {isSuper && profileIncomplete ? (

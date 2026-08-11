@@ -43,6 +43,8 @@ function makePageBlocksSchema(mode: 'loose' | 'strict') {
       fields: z.object({
         title: nullableTrimmedString,
         tagline: nullableTrimmedString,
+        // Optional for older stored hero blocks that predate background photos.
+        imagePath: nullableTrimmedString.default(null),
       }),
     }),
     z.object({

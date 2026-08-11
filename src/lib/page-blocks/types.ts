@@ -5,6 +5,8 @@ export type PageBlockType = (typeof PAGE_BLOCK_TYPES)[number]
 export type HeroBlockFields = {
   title: string | null
   tagline: string | null
+  /** Optional full-bleed background photo (storage path). */
+  imagePath: string | null
 }
 
 export type StoryBlockFields = {
@@ -68,6 +70,7 @@ export function createDefaultBlock(type: PageBlockType): PageBlock {
         fields: {
           title: null,
           tagline: "We're getting married",
+          imagePath: null,
         },
       }
     case 'story':
@@ -107,4 +110,52 @@ export function createDefaultPageBlocks(): PageBlock[] {
     createDefaultBlock('story'),
     createDefaultBlock('details'),
   ]
+}
+
+export type PublicSectionNavItem = {
+  id: string
+  label: string
+}
+
+/** Stable section ids for public anchors / in-page nav. */
+export function publicSectionId(block: PageBlock): string {
+  switch (block.type) {
+    case 'hero':
+      return 'hero'
+    case 'story':
+      return `story-${block.id}`
+    case 'image':
+      return `photo-${block.id}`
+    case 'details':
+      return 'details'
+  }
+}
+
+/** One nav entry per section type (first occurrence). */
+export function getPublicSectionNav(
+  blocks: PageBlock[],
+): PublicSectionNavItem[] {
+  const items: PublicSectionNavItem[] = []
+  const seen = new Set<PageBlockType>()
+
+  for (const block of blocks) {
+    if (seen.has(block.type)) continue
+    seen.add(block.type)
+    switch (block.type) {
+      case 'hero':
+        items.push({ id: publicSectionId(block), label: 'Home' })
+        break
+      case 'story':
+        items.push({ id: publicSectionId(block), label: 'Story' })
+        break
+      case 'image':
+        items.push({ id: publicSectionId(block), label: 'Photos' })
+        break
+      case 'details':
+        items.push({ id: publicSectionId(block), label: 'Details' })
+        break
+    }
+  }
+
+  return items
 }

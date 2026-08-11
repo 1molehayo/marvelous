@@ -64,4 +64,18 @@ describe('page blocks validation', () => {
     if (result.ok) return
     expect(result.fieldErrors['image-1'].imagePath).toBeTruthy()
   })
+
+  it('loads older hero blocks without imagePath', () => {
+    const blocks = parsePageBlocks([
+      {
+        id: 'hero-1',
+        type: 'hero',
+        fields: { title: null, tagline: "We're getting married" },
+      },
+    ])
+    expect(blocks[0]).toMatchObject({
+      type: 'hero',
+      fields: { imagePath: null },
+    })
+  })
 })
