@@ -25,11 +25,12 @@ Built as a single **TanStack Start** (React + TypeScript) application. Productio
 
 Useful routes:
 
-- `/` — public home (theme + ordered page blocks from DB)
+- `/` — Igbeyawowa landing
+- `/$weddingSlug` — public wedding site (e.g. `/lillian-marvelous-2026`)
 - `/design` — design showcase
 - `/admin/login` — admin sign-in
 - `/admin` — protected overview
-- `/admin/settings` — wedding settings (groom, bride, date, venue, theme)
+- `/admin/settings` — wedding settings (groom, bride, date, venue, theme, public URL slug)
 - `/admin/pages` — page content blocks (hero, story, image, details)
 - `/admin/guests` — guest list + RSVP status (copy private `/rsvp/$token` links)
 - `/rsvp/$token` — public guest RSVP form (tokenized; no login)

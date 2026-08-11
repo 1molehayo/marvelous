@@ -1,70 +1,81 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { DynamicBlock } from '#/components/blocks/dynamic-block'
-import { PublicShell } from '#/components/public-shell'
-import { formatCoupleNames } from '#/lib/constants'
-import { getPublicHomeData } from '#/lib/page-blocks/settings'
-import { getPublicSectionNav } from '#/lib/page-blocks/types'
-import { formatWeddingDate } from '#/lib/wedding/public-settings'
+import { Link, createFileRoute } from '@tanstack/react-router'
+import { ColorModeToggle } from '#/components/color-mode-toggle'
+import { Button } from '#/components/ui/button'
+import {
+  PRODUCT_NAME,
+  PRODUCT_TAGLINE,
+  STUDIO_NAME,
+} from '#/lib/constants'
+import { getFeaturedWeddingSlug } from '#/lib/page-blocks/settings'
+import { FALLBACK_PUBLIC_THEME } from '#/lib/site-settings'
 
 export const Route = createFileRoute('/')({
-  loader: () => getPublicHomeData(),
-  head: ({ loaderData }) => {
-    const coupleLabel = loaderData
-      ? formatCoupleNames(loaderData.groom_name, loaderData.bride_name)
-      : 'Wedding'
-    const dateLabel = formatWeddingDate(loaderData?.wedding_date ?? null)
-    const description =
-      dateLabel === 'Date to be announced'
-        ? `${coupleLabel} — wedding website.`
-        : `${coupleLabel} — ${dateLabel}.`
-    const ogImage =
-      loaderData?.page_blocks
-        .map((block) => loaderData.imageUrls[block.id])
-        .find((url): url is string => Boolean(url)) ?? undefined
-
-    return {
-      meta: [
-        { title: coupleLabel },
-        { name: 'description', content: description },
-        { property: 'og:type', content: 'website' },
-        { property: 'og:title', content: coupleLabel },
-        { property: 'og:description', content: description },
-        ...(ogImage
-          ? [
-              { property: 'og:image', content: ogImage },
-              { name: 'twitter:card', content: 'summary_large_image' },
-              { name: 'twitter:image', content: ogImage },
-            ]
-          : [{ name: 'twitter:card', content: 'summary' }]),
-        { name: 'twitter:title', content: coupleLabel },
-        { name: 'twitter:description', content: description },
-      ],
-    }
+  loader: async () => {
+    const featuredSlug = await getFeaturedWeddingSlug()
+    return { featuredSlug }
   },
-  component: HomePage,
+  head: () => ({
+    meta: [
+      { title: `${PRODUCT_NAME} — ${PRODUCT_TAGLINE}` },
+      {
+        name: 'description',
+        content:
+          'Create a beautiful wedding website for your celebration — invitations, details, and RSVPs in one place.',
+      },
+    ],
+  }),
+  component: LandingPage,
 })
 
-function HomePage() {
-  const home = Route.useLoaderData()
-  const sectionNav = getPublicSectionNav(home.page_blocks)
+function LandingPage() {
+  const { featuredSlug } = Route.useLoaderData()
 
   return (
-    <PublicShell
-      theme={home.active_public_theme}
-      coupleLabel={formatCoupleNames(home.groom_name, home.bride_name)}
-      weddingDate={home.wedding_date}
-      sectionNav={sectionNav}
+    <div
+      className="public-shell flex min-h-dvh flex-col bg-background text-foreground"
+      data-public-theme={FALLBACK_PUBLIC_THEME}
     >
-      <main>
-        {home.page_blocks.map((block) => (
-          <DynamicBlock
-            key={block.id}
-            block={block}
-            wedding={home}
-            imageUrl={home.imageUrls[block.id]}
-          />
-        ))}
+      <header className="relative z-10 mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-6 py-6">
+        <p className="font-serif text-xl italic md:text-2xl">{PRODUCT_NAME}</p>
+        <div className="flex items-center gap-3">
+          <Link
+            to="/admin/login"
+            className="text-foreground-secondary hover:text-foreground text-xs tracking-[0.16em] uppercase transition"
+          >
+            Admin
+          </Link>
+          <ColorModeToggle />
+        </div>
+      </header>
+
+      <main className="public-hero-atmosphere relative flex flex-1 flex-col items-center justify-center overflow-hidden px-6 py-20 text-center">
+        <p className="public-kicker public-reveal mb-8">{PRODUCT_TAGLINE}</p>
+        <h1 className="public-display public-reveal-delay-1 text-[clamp(3.5rem,12vw,7rem)]">
+          {PRODUCT_NAME}
+        </h1>
+        <p className="text-foreground-secondary public-reveal-delay-2 mx-auto mt-6 max-w-md text-base leading-relaxed md:text-lg">
+          A calm, beautiful home for your wedding story — share details, welcome
+          guests, and celebrate together.
+        </p>
+        <div className="public-reveal-delay-3 mt-10 flex flex-wrap items-center justify-center gap-3">
+          {featuredSlug ? (
+            <Button asChild size="md">
+              <Link to="/$weddingSlug" params={{ weddingSlug: featuredSlug }}>
+                View a wedding
+              </Link>
+            </Button>
+          ) : null}
+          <Button asChild size="md" variant={featuredSlug ? 'outline' : 'primary'}>
+            <Link to="/admin/login">Open admin</Link>
+          </Button>
+        </div>
       </main>
-    </PublicShell>
+
+      <footer className="border-border relative z-10 border-t px-6 py-8 text-center">
+        <p className="text-foreground-secondary text-xs tracking-[0.14em] uppercase">
+          {PRODUCT_NAME} · by {STUDIO_NAME}
+        </p>
+      </footer>
+    </div>
   )
 }

@@ -1,23 +1,58 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { AppRouteError, NotFoundPage } from '#/components/app-error-page'
-import { formatCoupleNames } from '#/lib/constants'
+import { formatCoupleNames, PRODUCT_NAME } from '#/lib/constants'
 import { COLOR_MODE_INIT_SCRIPT } from '#/lib/color-mode'
 import { internalError, raiseRouteError } from '#/lib/errors/route-error'
+import { FALLBACK_PUBLIC_THEME } from '#/lib/site-settings'
 import { getPublicWeddingSettings } from '#/lib/wedding/settings'
+import { isReservedPublicSlug } from '#/lib/wedding/slug'
 
 import appCss from '../styles/app.css?url'
 
+function isPlatformPath(pathname: string): boolean {
+  if (pathname === '/') return true
+  if (
+    pathname === '/admin' ||
+    pathname.startsWith('/admin/') ||
+    pathname === '/design' ||
+    pathname.startsWith('/design/') ||
+    pathname === '/rsvp' ||
+    pathname.startsWith('/rsvp/')
+  ) {
+    return true
+  }
+  return false
+}
+
 export const Route = createRootRoute({
-  loader: async () => {
+  loader: async ({ location }) => {
     try {
-      const wedding = await getPublicWeddingSettings()
-      const coupleLabel = formatCoupleNames(
-        wedding.groom_name,
-        wedding.bride_name,
-      )
+      if (isPlatformPath(location.pathname)) {
+        return {
+          publicTheme: FALLBACK_PUBLIC_THEME,
+          coupleLabel: PRODUCT_NAME,
+        }
+      }
+
+      const slug = location.pathname.replace(/^\//, '').split('/')[0] ?? ''
+      if (!slug || isReservedPublicSlug(slug)) {
+        return {
+          publicTheme: FALLBACK_PUBLIC_THEME,
+          coupleLabel: PRODUCT_NAME,
+        }
+      }
+
+      const wedding = await getPublicWeddingSettings({ data: { slug } })
+      if (!wedding.public_slug) {
+        return {
+          publicTheme: FALLBACK_PUBLIC_THEME,
+          coupleLabel: PRODUCT_NAME,
+        }
+      }
+
       return {
         publicTheme: wedding.active_public_theme,
-        coupleLabel,
+        coupleLabel: formatCoupleNames(wedding.groom_name, wedding.bride_name),
       }
     } catch (cause) {
       throw raiseRouteError(
@@ -25,14 +60,14 @@ export const Route = createRootRoute({
           message: 'Failed to load root public wedding settings',
           cause,
         }),
-        { source: 'ssr', pathname: '/' },
+        { source: 'ssr', pathname: location.pathname },
       )
     }
   },
   notFoundComponent: NotFoundPage,
   errorComponent: AppRouteError,
   head: ({ loaderData }) => {
-    const coupleLabel = loaderData?.coupleLabel ?? 'Marvelous & Lillian'
+    const title = loaderData?.coupleLabel ?? PRODUCT_NAME
     return {
       meta: [
         { charSet: 'utf-8' },
@@ -40,10 +75,10 @@ export const Route = createRootRoute({
           name: 'viewport',
           content: 'width=device-width, initial-scale=1',
         },
-        { title: coupleLabel },
+        { title },
         {
           name: 'description',
-          content: `Wedding website for ${coupleLabel}.`,
+          content: `${PRODUCT_NAME} — wedding websites.`,
         },
         { name: 'theme-color', content: '#faf8f4' },
       ],

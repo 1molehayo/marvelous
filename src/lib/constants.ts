@@ -3,10 +3,12 @@
  * Domain catalogs (themes, wedding statuses) stay in their dedicated modules.
  */
 
-/** Product brand (Onemole) — not the couple names. */
-export const PRODUCT_NAME = 'Wedding Website Builder'
-export const PRODUCT_SHORT_NAME = 'Onemole'
+/** Product brand (Igbeyawowa) — platform domain & public chrome. */
+export const PRODUCT_NAME = 'Igbeyawowa'
+export const PRODUCT_SHORT_NAME = 'Igbeyawowa'
 export const PRODUCT_TAGLINE = 'Wedding websites'
+/** Studio credit (optional, landing footer). */
+export const STUDIO_NAME = 'Onemole'
 
 export const ADMIN_PREVIEW_NAV_LABELS = [
   'Overview',

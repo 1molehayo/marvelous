@@ -35,6 +35,7 @@ type FormState = {
   venue_location: string
   dress_code: string
   active_public_theme: PublicThemeId
+  public_slug: string
 }
 
 function weddingToForm(wedding: Wedding): FormState {
@@ -47,6 +48,7 @@ function weddingToForm(wedding: Wedding): FormState {
     venue_location: wedding.venue_location ?? '',
     dress_code: wedding.dress_code ?? '',
     active_public_theme: wedding.active_public_theme,
+    public_slug: wedding.public_slug,
   }
 }
 
@@ -85,6 +87,7 @@ function AdminWeddingSettingsPage() {
           venue_location: form.venue_location || null,
           dress_code: form.dress_code || null,
           active_public_theme: form.active_public_theme,
+          public_slug: form.public_slug,
         },
       })
       setForm(weddingToForm(wedding))
@@ -140,6 +143,26 @@ function AdminWeddingSettingsPage() {
               </Field.Control>
             </Field>
           </div>
+          <Field>
+            <Field.Label>Public URL slug</Field.Label>
+            <Field.Control>
+              <Input
+                value={form.public_slug}
+                onChange={(event) =>
+                  setField('public_slug', event.target.value)
+                }
+                required
+                placeholder="lillian-marvelous-2026"
+              />
+            </Field.Control>
+            <Field.Description>
+              Guests open{' '}
+              <span className="text-foreground font-medium">
+                /{form.public_slug || '…'}
+              </span>
+              . Keep this stable — changing it breaks shared links.
+            </Field.Description>
+          </Field>
         </div>
 
         <div className="bg-surface border-border space-y-4 rounded-xl border p-5">

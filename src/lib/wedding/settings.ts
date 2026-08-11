@@ -10,10 +10,15 @@ export { FALLBACK_PUBLIC_WEDDING }
 
 export const getPublicWeddingSettings = createServerFn({
   method: 'GET',
-}).handler(async (): Promise<PublicWeddingSettings> => {
-  const { getPublicWeddingSettingsHandler } = await import('./settings.server')
-  return getPublicWeddingSettingsHandler()
 })
+  .validator((data?: { slug?: string }) => {
+    const slug = data?.slug?.trim().toLowerCase()
+    return { slug: slug || undefined }
+  })
+  .handler(async ({ data }): Promise<PublicWeddingSettings> => {
+    const { getPublicWeddingSettingsHandler } = await import('./settings.server')
+    return getPublicWeddingSettingsHandler(data.slug)
+  })
 
 export const updateWedding = createServerFn({ method: 'POST' })
   .validator((data: UpdateWeddingInput) => parseUpdateWeddingInput(data))

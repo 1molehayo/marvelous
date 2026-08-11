@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WeddingSlugRouteImport } from './routes/$weddingSlug'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as DesignRouteImport } from './routes/design'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
@@ -27,6 +28,11 @@ import { Route as AdminInviteTokenRouteImport } from './routes/admin/invite.$tok
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WeddingSlugRoute = WeddingSlugRouteImport.update({
+  id: '/$weddingSlug',
+  path: '/$weddingSlug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRouteRoute = AdminRouteRouteImport.update({
@@ -98,6 +104,7 @@ const AdminInviteTokenRoute = AdminInviteTokenRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/$weddingSlug': typeof WeddingSlugRoute
   '/design': typeof DesignRoute
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/guests': typeof AdminGuestsRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$weddingSlug': typeof WeddingSlugRoute
   '/design': typeof DesignRoute
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/guests': typeof AdminGuestsRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/$weddingSlug': typeof WeddingSlugRoute
   '/design': typeof DesignRoute
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/guests': typeof AdminGuestsRoute
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/$weddingSlug'
     | '/design'
     | '/admin/admins'
     | '/admin/guests'
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/$weddingSlug'
     | '/design'
     | '/admin/admins'
     | '/admin/guests'
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/$weddingSlug'
     | '/design'
     | '/admin/admins'
     | '/admin/guests'
@@ -196,6 +208,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  WeddingSlugRoute: typeof WeddingSlugRoute
   DesignRoute: typeof DesignRoute
   RsvpTokenRoute: typeof RsvpTokenRoute
 }
@@ -207,6 +220,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$weddingSlug': {
+      id: '/$weddingSlug'
+      path: '/$weddingSlug'
+      fullPath: '/$weddingSlug'
+      preLoaderRoute: typeof WeddingSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -336,18 +356,10 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRouteRoute: AdminRouteRouteWithChildren,
+  WeddingSlugRoute: WeddingSlugRoute,
   DesignRoute: DesignRoute,
   RsvpTokenRoute: RsvpTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

@@ -105,7 +105,11 @@ function AdminOverviewPage() {
           </div>
         </div>
         <Button asChild size="sm">
-          <a href="/" target="_blank" rel="noreferrer">
+          <a
+            href={`/${wedding.public_slug}`}
+            target="_blank"
+            rel="noreferrer"
+          >
             <ArrowSquareOut />
             Preview site
           </a>

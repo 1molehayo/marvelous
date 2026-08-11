@@ -1,6 +1,7 @@
 import { PUBLIC_THEMES } from '#/lib/site-settings'
 import type { PublicThemeId } from '#/lib/site-settings'
 import type { WeddingStatus } from '#/lib/supabase/types'
+import { parsePublicSlug } from '#/lib/wedding/slug'
 
 export const WEDDING_STATUSES = [
   'planning',
@@ -25,6 +26,7 @@ export type UpdateWeddingInput = {
   venue_location: string | null
   dress_code: string | null
   active_public_theme: PublicThemeId
+  public_slug: string
 }
 
 function requiredName(value: unknown, label: string): string {
@@ -110,5 +112,6 @@ export function parseUpdateWeddingInput(data: unknown): UpdateWeddingInput {
     venue_location: optionalText(input.venue_location, 'Venue location'),
     dress_code: optionalText(input.dress_code, 'Dress code'),
     active_public_theme: parseTheme(input.active_public_theme),
+    public_slug: parsePublicSlug(input.public_slug),
   }
 }

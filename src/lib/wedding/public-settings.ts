@@ -11,6 +11,7 @@ export type PublicWeddingSettings = {
   dress_code: string | null
   active_public_theme: PublicThemeId
   status: WeddingStatus
+  public_slug: string | null
 }
 
 export const FALLBACK_PUBLIC_WEDDING: PublicWeddingSettings = {
@@ -22,6 +23,7 @@ export const FALLBACK_PUBLIC_WEDDING: PublicWeddingSettings = {
   dress_code: null,
   active_public_theme: FALLBACK_PUBLIC_THEME,
   status: 'planning',
+  public_slug: null,
 }
 
 export function toPublicSettings(
@@ -35,6 +37,7 @@ export function toPublicSettings(
     | 'dress_code'
     | 'active_public_theme'
     | 'status'
+    | 'public_slug'
   > | null,
 ): PublicWeddingSettings {
   if (!wedding) {
@@ -50,6 +53,7 @@ export function toPublicSettings(
     dress_code: wedding.dress_code,
     active_public_theme: wedding.active_public_theme,
     status: wedding.status,
+    public_slug: wedding.public_slug,
   }
 }
 

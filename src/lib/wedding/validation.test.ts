@@ -12,6 +12,7 @@ describe('parseUpdateWeddingInput', () => {
       venue_location: ' Chicago ',
       dress_code: ' Formal attire ',
       active_public_theme: 'botanica',
+      public_slug: 'lillian-marvelous-2027',
     })
 
     expect(result).toEqual({
@@ -23,6 +24,7 @@ describe('parseUpdateWeddingInput', () => {
       venue_location: 'Chicago',
       dress_code: 'Formal attire',
       active_public_theme: 'botanica',
+      public_slug: 'lillian-marvelous-2027',
     })
   })
 
@@ -36,6 +38,7 @@ describe('parseUpdateWeddingInput', () => {
       venue_location: null,
       dress_code: undefined,
       active_public_theme: 'celeste',
+      public_slug: 'lillian-marvelous-2026',
     })
 
     expect(result.wedding_date).toBeNull()
@@ -55,6 +58,7 @@ describe('parseUpdateWeddingInput', () => {
         venue_location: null,
         dress_code: null,
         active_public_theme: 'celeste',
+        public_slug: 'lillian-marvelous-2026',
       }),
     ).toThrow(/invalid|YYYY-MM-DD/i)
   })
@@ -70,6 +74,7 @@ describe('parseUpdateWeddingInput', () => {
         venue_location: null,
         dress_code: null,
         active_public_theme: 'celeste',
+        public_slug: 'lillian-marvelous-2026',
       }),
     ).toThrow(/status/i)
 
@@ -83,6 +88,7 @@ describe('parseUpdateWeddingInput', () => {
         venue_location: null,
         dress_code: null,
         active_public_theme: 'lavender',
+        public_slug: 'lillian-marvelous-2026',
       }),
     ).toThrow(/theme/i)
   })

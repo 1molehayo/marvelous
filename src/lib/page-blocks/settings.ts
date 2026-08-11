@@ -19,10 +19,21 @@ export const updatePageBlocks = createServerFn({ method: 'POST' })
     return updatePageBlocksHandler(data.page_blocks)
   })
 
-export const getPublicHomeData = createServerFn({ method: 'GET' }).handler(
-  async () => {
+export const getPublicHomeData = createServerFn({ method: 'GET' })
+  .validator((data: { slug: string }) => {
+    const slug = String(data.slug).trim().toLowerCase()
+    if (!slug) throw new Error('Wedding slug is required.')
+    return { slug }
+  })
+  .handler(async ({ data }) => {
     const { getPublicHomeDataHandler } = await import('./settings.server')
-    return getPublicHomeDataHandler()
+    return getPublicHomeDataHandler(data.slug)
+  })
+
+export const getFeaturedWeddingSlug = createServerFn({ method: 'GET' }).handler(
+  async (): Promise<string | null> => {
+    const { getFeaturedWeddingSlugHandler } = await import('./settings.server')
+    return getFeaturedWeddingSlugHandler()
   },
 )
 

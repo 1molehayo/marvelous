@@ -10,6 +10,10 @@
   Admin surfaces: data-surface="admin"
 */
 
+html {
+  scroll-behavior: smooth;
+}
+
 @theme {
   --font-ui: 'Inter Variable', Inter, ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-ui);

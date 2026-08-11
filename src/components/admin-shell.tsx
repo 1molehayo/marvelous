@@ -105,7 +105,11 @@ function SidebarFooter({
           variant="outline"
           className="border-white/20 bg-transparent text-sidebar-foreground hover:bg-white/10"
         >
-          <a href="/" target="_blank" rel="noreferrer">
+          <a
+            href={`/${wedding.public_slug}`}
+            target="_blank"
+            rel="noreferrer"
+          >
             <ArrowSquareOut />
             Preview site
           </a>

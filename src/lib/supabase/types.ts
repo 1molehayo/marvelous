@@ -22,6 +22,7 @@ export type Wedding = {
   venue_location: string | null
   dress_code: string | null
   active_public_theme: PublicThemeId
+  public_slug: string
   page_blocks: PageBlock[]
   created_at: string
   updated_at: string

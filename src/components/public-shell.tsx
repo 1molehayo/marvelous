@@ -1,10 +1,33 @@
-import { Link } from '@tanstack/react-router'
 import { ColorModeToggle } from '#/components/color-mode-toggle'
 import { FALLBACK_PUBLIC_THEME } from '#/lib/site-settings'
 import type { PublicThemeId } from '#/lib/site-settings'
 import type { PublicSectionNavItem } from '#/lib/page-blocks/types'
 import { formatWeddingDate } from '#/lib/wedding/public-settings'
 import { cn } from '#/lib/utils'
+
+function scrollToSection(sectionId: string) {
+  const el = document.getElementById(sectionId)
+  if (!el) return
+
+  const reduceMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)',
+  ).matches
+
+  el.scrollIntoView({
+    behavior: reduceMotion ? 'auto' : 'smooth',
+    block: 'start',
+  })
+
+  window.history.pushState(null, '', `#${sectionId}`)
+}
+
+function onSectionNavClick(
+  event: React.MouseEvent<HTMLAnchorElement>,
+  sectionId: string,
+) {
+  event.preventDefault()
+  scrollToSection(sectionId)
+}
 
 export function PublicShell({
   children,
@@ -13,6 +36,7 @@ export function PublicShell({
   coupleLabel = 'Marvelous & Lillian',
   weddingDate = null,
   sectionNav = [],
+  homePath = '/',
 }: {
   children: React.ReactNode
   className?: string
@@ -20,6 +44,8 @@ export function PublicShell({
   coupleLabel?: string
   weddingDate?: string | null
   sectionNav?: PublicSectionNavItem[]
+  /** Couple brand link target (wedding slug path). */
+  homePath?: string
 }) {
   return (
     <div
@@ -31,12 +57,12 @@ export function PublicShell({
     >
       <header className="border-border sticky top-0 z-30 border-b bg-background/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4 md:gap-4 md:px-6">
-          <Link
-            to="/"
+          <a
+            href={homePath}
             className="font-serif truncate text-lg italic md:text-xl"
           >
             {coupleLabel}
-          </Link>
+          </a>
           <div className="flex min-w-0 items-center gap-2 md:gap-4">
             {sectionNav.length > 1 ? (
               <nav
@@ -47,6 +73,7 @@ export function PublicShell({
                   <a
                     key={item.id}
                     href={`#${item.id}`}
+                    onClick={(event) => onSectionNavClick(event, item.id)}
                     className="text-foreground-secondary hover:text-foreground text-xs tracking-[0.16em] uppercase transition"
                   >
                     {item.label}
@@ -76,6 +103,7 @@ export function PublicShell({
                 <a
                   key={item.id}
                   href={`#${item.id}`}
+                  onClick={(event) => onSectionNavClick(event, item.id)}
                   className="text-foreground-secondary hover:text-foreground text-xs tracking-[0.14em] uppercase"
                 >
                   {item.label}

@@ -4,10 +4,7 @@ import type { PageBlock } from '#/lib/page-blocks/types'
 import { parsePageBlocks } from '#/lib/page-blocks/validation'
 import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
 import type { Wedding } from '#/lib/supabase/types'
-import {
-  FALLBACK_PUBLIC_WEDDING,
-  toPublicSettings,
-} from '#/lib/wedding/public-settings'
+import { toPublicSettings } from '#/lib/wedding/public-settings'
 import type { PublicWeddingSettings } from '#/lib/wedding/public-settings'
 import { createPhotoSignedUrl, uploadPageBlockImage } from './storage.server'
 
@@ -69,60 +66,68 @@ export async function updatePageBlocksHandler(
   }
 }
 
-export async function getPublicHomeDataHandler(): Promise<PublicHomeData> {
+export async function getPublicHomeDataHandler(
+  weddingSlug: string,
+): Promise<PublicHomeData> {
+  const admin = createAdminSupabaseClient()
+  const result = await admin
+    .from('weddings')
+    .select(
+      'groom_name, bride_name, wedding_date, venue_name, venue_location, dress_code, active_public_theme, status, public_slug, page_blocks',
+    )
+    .eq('public_slug', weddingSlug)
+    .maybeSingle()
+
+  if (result.error) {
+    throw new Error(result.error.message)
+  }
+
+  if (!result.data) {
+    throw new Error('Wedding not found.')
+  }
+
+  const page_blocks = coercePageBlocks(result.data.page_blocks)
+  const imageUrls: Record<string, string> = {}
+
+  await Promise.all(
+    page_blocks.map(async (block) => {
+      const imagePath =
+        block.type === 'image'
+          ? block.fields.imagePath
+          : block.type === 'hero'
+            ? block.fields.imagePath
+            : null
+      if (!imagePath) return
+      const url = await createPhotoSignedUrl(imagePath)
+      if (url) {
+        imageUrls[block.id] = url
+      }
+    }),
+  )
+
+  return {
+    ...toPublicSettings(result.data),
+    page_blocks,
+    imageUrls,
+  }
+}
+
+export async function getFeaturedWeddingSlugHandler(): Promise<string | null> {
   try {
     const admin = createAdminSupabaseClient()
     const result = await admin
       .from('weddings')
-      .select(
-        'groom_name, bride_name, wedding_date, venue_name, venue_location, dress_code, active_public_theme, status, page_blocks',
-      )
+      .select('public_slug')
       .order('created_at', { ascending: true })
       .limit(1)
       .maybeSingle()
 
-    if (result.error) {
-      throw new Error(result.error.message)
+    if (result.error || !result.data?.public_slug) {
+      return null
     }
-
-    if (!result.data) {
-      return {
-        ...FALLBACK_PUBLIC_WEDDING,
-        page_blocks: createDefaultPageBlocks(),
-        imageUrls: {},
-      }
-    }
-
-    const page_blocks = coercePageBlocks(result.data.page_blocks)
-    const imageUrls: Record<string, string> = {}
-
-    await Promise.all(
-      page_blocks.map(async (block) => {
-        const imagePath =
-          block.type === 'image'
-            ? block.fields.imagePath
-            : block.type === 'hero'
-              ? block.fields.imagePath
-              : null
-        if (!imagePath) return
-        const url = await createPhotoSignedUrl(imagePath)
-        if (url) {
-          imageUrls[block.id] = url
-        }
-      }),
-    )
-
-    return {
-      ...toPublicSettings(result.data),
-      page_blocks,
-      imageUrls,
-    }
+    return result.data.public_slug
   } catch {
-    return {
-      ...FALLBACK_PUBLIC_WEDDING,
-      page_blocks: createDefaultPageBlocks(),
-      imageUrls: {},
-    }
+    return null
   }
 }
 
