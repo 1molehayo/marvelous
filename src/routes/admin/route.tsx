@@ -20,6 +20,10 @@ export const Route = createFileRoute('/admin')({
       return { session: null }
     }
 
+    if (location.pathname.startsWith('/admin/invite/')) {
+      return { session: null }
+    }
+
     const session = await getAdminSession()
     if (!session) {
       throw redirect({ to: '/admin/login' })
@@ -60,7 +64,11 @@ function AdminLayout() {
   const { session } = Route.useRouteContext()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
-  if (pathname === '/admin/login' || !session) {
+  if (
+    pathname === '/admin/login' ||
+    pathname.startsWith('/admin/invite/') ||
+    !session
+  ) {
     return <Outlet />
   }
 

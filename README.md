@@ -33,7 +33,8 @@ Useful routes:
 - `/admin/pages` — page content blocks (hero, story, image, details)
 - `/admin/guests` — guest list + RSVP status (copy private `/rsvp/$token` links)
 - `/rsvp/$token` — public guest RSVP form (tokenized; no login)
-- `/admin/admins` — invite/remove admins (super admin only)
+- `/admin/admins` — invite/resend/cancel/delete admins; deletion requests (super admin only)
+- `/admin/invite/$token` — accept admin invite link from email
 - `/admin/profile` — name, optional phone; email editable for super admin only
 - `/admin/support` — admin → super admin email (hidden for super admin)
 

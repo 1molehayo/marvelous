@@ -70,11 +70,11 @@ function AdminOverviewPage() {
         <div className="bg-surface border-border space-y-4 rounded-xl border border-dashed p-6">
           <p className="font-serif text-2xl italic">Wedding not set up</p>
           <div className="flex flex-wrap gap-2">
-            <Button asChild>
+            <Button asChild size="md">
               <Link to="/admin/onboarding">Set up wedding</Link>
             </Button>
             {isSuper ? (
-              <Button asChild variant="outline">
+              <Button asChild size="md" variant="outline">
                 <Link to="/admin/admins">Invite admin</Link>
               </Button>
             ) : null}

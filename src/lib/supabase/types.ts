@@ -39,8 +39,35 @@ export type AdminProfile = {
   role: AdminRole
   deletion_requested_at: string | null
   deletion_reason: string | null
+  invite_token: string | null
+  invited_at: string | null
+  invite_accepted_at: string | null
+  cancelled_at: string | null
   created_at: string
   updated_at: string
+}
+
+export type ArchivedAdmin = {
+  id: string
+  original_user_id: string
+  email: string
+  first_name: string | null
+  last_name: string | null
+  display_name: string | null
+  phone: string | null
+  role: AdminRole
+  wedding_id: string | null
+  deletion_requested_at: string | null
+  deletion_reason: string | null
+  invite_token: string | null
+  invited_at: string | null
+  invite_accepted_at: string | null
+  cancelled_at: string | null
+  profile_created_at: string | null
+  profile_updated_at: string | null
+  archived_at: string
+  archived_by: string | null
+  archive_reason: string | null
 }
 
 export type Guest = {
@@ -87,8 +114,36 @@ export type Database = {
           role?: AdminRole
           deletion_requested_at?: string | null
           deletion_reason?: string | null
+          invite_token?: string | null
+          invited_at?: string | null
+          invite_accepted_at?: string | null
+          cancelled_at?: string | null
         }
         Update: Partial<AdminProfile>
+      }
+      archived_admins: {
+        Row: ArchivedAdmin
+        Insert: {
+          original_user_id: string
+          email: string
+          first_name?: string | null
+          last_name?: string | null
+          display_name?: string | null
+          phone?: string | null
+          role?: AdminRole
+          wedding_id?: string | null
+          deletion_requested_at?: string | null
+          deletion_reason?: string | null
+          invite_token?: string | null
+          invited_at?: string | null
+          invite_accepted_at?: string | null
+          cancelled_at?: string | null
+          profile_created_at?: string | null
+          profile_updated_at?: string | null
+          archived_by?: string | null
+          archive_reason?: string | null
+        }
+        Update: Partial<ArchivedAdmin>
       }
       guests: {
         Row: Guest

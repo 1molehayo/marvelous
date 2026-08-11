@@ -10,15 +10,29 @@ import { useEffect, useMemo, useState } from 'react'
 import { Button } from '#/components/ui/button'
 import { Badge } from '#/components/ui/badge'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
+import { DropdownMenu } from '#/components/ui/dropdown-menu'
+import type { DropdownMenuItem } from '#/components/ui/dropdown-menu'
 import { Field } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
 import { SideDrawer } from '#/components/ui/side-drawer'
 import { TableView } from '#/components/ui/table-view'
 import { toast } from '#/components/ui/toaster'
-import { inviteAdmin, listAdmins, removeAdmin } from '#/lib/auth/admins'
+import {
+  cancelAdminInvite,
+  inviteAdmin,
+  listAdmins,
+  reinviteAdmin,
+  removeAdmin,
+  resendAdminInvite,
+  updateAdminNames,
+} from '#/lib/auth/admins'
 import type { AdminListItem } from '#/lib/auth/admins'
 import { requireSuperAdmin } from '#/lib/auth/require-access'
-import { ADMIN_STATUS_LABELS, adminFullName } from '#/lib/auth/types'
+import {
+  ADMIN_STATUS_LABELS,
+  DEFAULT_VISIBLE_ADMIN_STATUSES,
+  adminFullName,
+} from '#/lib/auth/types'
 import type { AdminAccountStatus } from '#/lib/auth/types'
 import { internalError, raiseRouteError } from '#/lib/errors/route-error'
 
@@ -44,12 +58,14 @@ export const Route = createFileRoute('/admin/admins')({
 
 function statusBadgeVariant(
   status: AdminAccountStatus,
-): 'success' | 'warning' | 'neutral' {
+): 'success' | 'warning' | 'neutral' | 'error' {
   switch (status) {
     case 'active':
       return 'success'
     case 'deletion_requested':
       return 'warning'
+    case 'cancelled':
+      return 'error'
     case 'pending':
       return 'neutral'
   }
@@ -69,6 +85,7 @@ function AdminAdminsPage() {
   const [lastName, setLastName] = useState('')
   const [isInviting, setIsInviting] = useState(false)
   const [search, setSearch] = useState('')
+  const [showAllStatuses, setShowAllStatuses] = useState(false)
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'name', desc: false },
   ])
@@ -76,6 +93,10 @@ function AdminAdminsPage() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [removeOpen, setRemoveOpen] = useState(false)
   const [isRemoving, setIsRemoving] = useState(false)
+  const [editFirstName, setEditFirstName] = useState('')
+  const [editLastName, setEditLastName] = useState('')
+  const [isSavingNames, setIsSavingNames] = useState(false)
+  const [actionBusyId, setActionBusyId] = useState<string | null>(null)
 
   useEffect(() => {
     setAdmins(initialAdmins)
@@ -85,6 +106,118 @@ function AdminAdminsPage() {
     () => admins.find((admin) => admin.id === selectedId) ?? null,
     [admins, selectedId],
   )
+
+  useEffect(() => {
+    if (!selectedAdmin) return
+    setEditFirstName(selectedAdmin.first_name ?? '')
+    setEditLastName(selectedAdmin.last_name ?? '')
+  }, [selectedAdmin])
+
+  const visibleAdmins = useMemo(() => {
+    if (showAllStatuses) return admins
+    return admins.filter((admin) =>
+      DEFAULT_VISIBLE_ADMIN_STATUSES.includes(admin.status),
+    )
+  }, [admins, showAllStatuses])
+
+  const openDrawer = (admin: AdminListItem) => {
+    setSelectedId(admin.id)
+    setDrawerOpen(true)
+  }
+
+  const runAction = async (
+    adminId: string,
+    action: () => Promise<unknown>,
+    successMessage: string,
+  ) => {
+    setActionBusyId(adminId)
+    try {
+      await action()
+      toast.success(successMessage)
+      await router.invalidate()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Action failed.')
+    } finally {
+      setActionBusyId(null)
+    }
+  }
+
+  const menuItemsFor = (admin: AdminListItem): DropdownMenuItem[] => {
+    const items: DropdownMenuItem[] = [
+      {
+        id: 'view',
+        label: 'View',
+        onSelect: () => openDrawer(admin),
+      },
+    ]
+
+    if (admin.role === 'super_admin') {
+      return items
+    }
+
+    if (admin.status === 'pending') {
+      items.push(
+        {
+          id: 'resend',
+          label: 'Resend invite',
+          disabled: actionBusyId === admin.id,
+          onSelect: () =>
+            void runAction(
+              admin.id,
+              () => resendAdminInvite({ data: { adminId: admin.id } }),
+              'Invite resent.',
+            ),
+        },
+        {
+          id: 'cancel',
+          label: 'Cancel invite',
+          tone: 'destructive',
+          disabled: actionBusyId === admin.id,
+          onSelect: () =>
+            void runAction(
+              admin.id,
+              () => cancelAdminInvite({ data: { adminId: admin.id } }),
+              'Invite cancelled.',
+            ),
+        },
+      )
+    }
+
+    if (admin.status === 'cancelled') {
+      items.push({
+        id: 'reinvite',
+        label: 'Send new invitation',
+        disabled: actionBusyId === admin.id,
+        onSelect: () =>
+          void runAction(
+            admin.id,
+            () => reinviteAdmin({ data: { adminId: admin.id } }),
+            'Invitation sent.',
+          ),
+      })
+    }
+
+    if (admin.status === 'active' || admin.status === 'deletion_requested') {
+      items.push(
+        {
+          id: 'edit',
+          label: 'Edit details',
+          onSelect: () => openDrawer(admin),
+        },
+        {
+          id: 'delete',
+          label: 'Delete admin',
+          tone: 'destructive',
+          onSelect: () => {
+            setSelectedId(admin.id)
+            setRemoveOpen(true)
+          },
+        },
+      )
+    }
+
+    return items
+  }
 
   const columns = useMemo<ColumnDef<AdminListItem>[]>(
     () => [
@@ -134,28 +267,18 @@ function AdminAdminsPage() {
         enableSorting: false,
         header: '',
         cell: ({ row }) => (
-          <div data-row-stop className="flex justify-end">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setSelectedId(row.original.id)
-                setDrawerOpen(true)
-              }}
-            >
-              View
-            </Button>
+          <div className="flex justify-end">
+            <DropdownMenu items={menuItemsFor(row.original)} />
           </div>
         ),
-        meta: { minWidth: 96, className: 'w-28' },
+        meta: { minWidth: 64, className: 'w-16' },
       },
     ],
-    [],
+    [actionBusyId, admins],
   )
 
   const table = useReactTable({
-    data: admins,
+    data: visibleAdmins,
     columns,
     state: {
       sorting,
@@ -196,9 +319,7 @@ function AdminAdminsPage() {
       setEmail('')
       setFirstName('')
       setLastName('')
-      toast.success(
-        'Admin invited. They can sign in at /admin/login with email + OTP.',
-      )
+      toast.success('Invite sent. They’ll get an email with an accept link.')
       await router.invalidate()
     } catch (err) {
       toast.error(
@@ -209,12 +330,35 @@ function AdminAdminsPage() {
     }
   }
 
+  const onSaveNames = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!selectedAdmin) return
+    setIsSavingNames(true)
+    try {
+      await updateAdminNames({
+        data: {
+          adminId: selectedAdmin.id,
+          first_name: editFirstName,
+          last_name: editLastName,
+        },
+      })
+      toast.success('Admin details updated.')
+      await router.invalidate()
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to update admin.',
+      )
+    } finally {
+      setIsSavingNames(false)
+    }
+  }
+
   const onRemove = async () => {
     if (!selectedAdmin) return
     setIsRemoving(true)
     try {
       await removeAdmin({ data: { adminId: selectedAdmin.id } })
-      toast.success('Admin removed.')
+      toast.success('Admin archived and removed.')
       setRemoveOpen(false)
       setDrawerOpen(false)
       setSelectedId(null)
@@ -228,13 +372,21 @@ function AdminAdminsPage() {
     }
   }
 
+  const canEditNames =
+    selectedAdmin &&
+    selectedAdmin.role === 'admin' &&
+    (selectedAdmin.status === 'active' ||
+      selectedAdmin.status === 'deletion_requested' ||
+      selectedAdmin.status === 'pending')
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
         <h1 className="admin-page-title">Admins</h1>
         <p className="text-foreground-secondary mt-2 text-sm">
-          Invite admins, track invite status, and review deletion requests.
-          Remove an admin from their detail drawer.
+          Invite admins, resend or cancel pending invites, and review deletion
+          requests. Deleted admins are archived so the email can be invited
+          again.
         </p>
       </div>
 
@@ -253,7 +405,6 @@ function AdminAdminsPage() {
                 value={firstName}
                 onChange={(event) => setFirstName(event.target.value)}
                 required
-                autoComplete="off"
               />
             </Field.Control>
           </Field>
@@ -264,7 +415,6 @@ function AdminAdminsPage() {
                 value={lastName}
                 onChange={(event) => setLastName(event.target.value)}
                 required
-                autoComplete="off"
               />
             </Field.Control>
           </Field>
@@ -274,27 +424,38 @@ function AdminAdminsPage() {
           <Field.Control>
             <Input
               type="email"
-              autoComplete="off"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
             />
           </Field.Control>
         </Field>
-        <Button type="submit" isLoading={isInviting}>
+        <Button type="submit" size="md" isLoading={isInviting}>
           Invite admin
         </Button>
       </form>
 
       <div className="space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
-            Current admins
-          </p>
+          <div className="space-y-2">
+            <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
+              Current admins
+            </p>
+            <label className="text-foreground-secondary flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={showAllStatuses}
+                onChange={(event) => setShowAllStatuses(event.target.checked)}
+                className="accent-accent size-4"
+              />
+              Show all statuses (including cancelled)
+            </label>
+          </div>
           <Field className="w-full max-w-xs">
             <Field.Label>Search</Field.Label>
             <Field.Control>
               <Input
+                size="sm"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Name, email, status…"
@@ -305,11 +466,8 @@ function AdminAdminsPage() {
 
         <TableView
           table={table}
-          emptyMessage="No admins match your search."
-          onRowClick={(admin) => {
-            setSelectedId(admin.id)
-            setDrawerOpen(true)
-          }}
+          emptyMessage="No admins match your filters."
+          onRowClick={openDrawer}
         />
       </div>
 
@@ -338,17 +496,83 @@ function AdminAdminsPage() {
                 )}
               </div>
 
+              {canEditNames ? (
+                <form className="space-y-3" onSubmit={onSaveNames}>
+                  <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
+                    Edit details
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field>
+                      <Field.Label required>First name</Field.Label>
+                      <Field.Control>
+                        <Input
+                          value={editFirstName}
+                          onChange={(event) =>
+                            setEditFirstName(event.target.value)
+                          }
+                          required
+                        />
+                      </Field.Control>
+                    </Field>
+                    <Field>
+                      <Field.Label required>Last name</Field.Label>
+                      <Field.Control>
+                        <Input
+                          value={editLastName}
+                          onChange={(event) =>
+                            setEditLastName(event.target.value)
+                          }
+                          required
+                        />
+                      </Field.Control>
+                    </Field>
+                  </div>
+                  <Field>
+                    <Field.Label>Email</Field.Label>
+                    <Field.Control>
+                      <Input
+                        value={selectedAdmin.email ?? ''}
+                        disabled
+                        readOnly
+                      />
+                    </Field.Control>
+                    <Field.Description>
+                      Admin email can’t be changed. Invite a new address
+                      instead.
+                    </Field.Description>
+                  </Field>
+                  <Button type="submit" size="md" isLoading={isSavingNames}>
+                    Save name
+                  </Button>
+                </form>
+              ) : (
+                <dl className="space-y-4 text-sm">
+                  <div>
+                    <dt className="text-foreground-secondary">Email</dt>
+                    <dd className="mt-1 font-medium break-all">
+                      {selectedAdmin.email ?? '—'}
+                    </dd>
+                  </div>
+                </dl>
+              )}
+
               <dl className="space-y-4 text-sm">
-                <div>
-                  <dt className="text-foreground-secondary">Email</dt>
-                  <dd className="mt-1 font-medium break-all">
-                    {selectedAdmin.email ?? '—'}
-                  </dd>
-                </div>
                 <div>
                   <dt className="text-foreground-secondary">Created</dt>
                   <dd className="mt-1 font-medium">
                     {formatDateTime(selectedAdmin.created_at)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-foreground-secondary">Invited</dt>
+                  <dd className="mt-1 font-medium">
+                    {formatDateTime(selectedAdmin.invited_at)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-foreground-secondary">Accepted</dt>
+                  <dd className="mt-1 font-medium">
+                    {formatDateTime(selectedAdmin.invite_accepted_at)}
                   </dd>
                 </div>
                 <div>
@@ -377,14 +601,17 @@ function AdminAdminsPage() {
                 ) : null}
               </dl>
             </SideDrawer.Content>
-            {selectedAdmin.role === 'admin' ? (
+            {selectedAdmin.role === 'admin' &&
+            (selectedAdmin.status === 'active' ||
+              selectedAdmin.status === 'deletion_requested') ? (
               <SideDrawer.Footer>
                 <Button
                   type="button"
+                  size="md"
                   variant="destructive"
                   onClick={() => setRemoveOpen(true)}
                 >
-                  Remove admin
+                  Delete admin
                 </Button>
               </SideDrawer.Footer>
             ) : null}
@@ -394,9 +621,9 @@ function AdminAdminsPage() {
 
       <ConfirmDialog
         open={removeOpen}
-        title="Remove this admin?"
-        description="They will lose access immediately. This cannot be undone."
-        confirmLabel="Remove"
+        title="Delete this admin?"
+        description="They’ll lose access immediately. Their profile is archived so activity history can still resolve them later, and the email can be invited again."
+        confirmLabel="Delete admin"
         tone="destructive"
         isConfirming={isRemoving}
         onOpenChange={setRemoveOpen}

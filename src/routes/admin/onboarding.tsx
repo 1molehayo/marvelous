@@ -169,7 +169,7 @@ function AdminOnboardingPage() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Button type="submit" isLoading={isSubmitting}>
+          <Button type="submit" size="md" isLoading={isSubmitting}>
             Create wedding
           </Button>
           {isSuper ? (

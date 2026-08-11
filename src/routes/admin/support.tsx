@@ -129,7 +129,7 @@ function AdminSupportPage() {
           </Field.Description>
         </Field>
 
-        <Button type="submit" isLoading={isSubmitting}>
+        <Button type="submit" size="md" isLoading={isSubmitting}>
           Send to super admin
         </Button>
       </form>

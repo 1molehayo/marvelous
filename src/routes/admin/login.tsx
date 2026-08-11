@@ -113,7 +113,7 @@ function AdminLoginPage() {
               </Field.Control>
             </Field>
 
-            <Button type="submit" className="w-full" isLoading={isSubmitting}>
+            <Button type="submit" size="md" className="w-full" isLoading={isSubmitting}>
               Send code
             </Button>
           </form>
@@ -148,7 +148,7 @@ function AdminLoginPage() {
               </Field.Description>
             </Field>
 
-            <Button type="submit" className="w-full" isLoading={isSubmitting}>
+            <Button type="submit" size="md" className="w-full" isLoading={isSubmitting}>
               Verify &amp; sign in
             </Button>
             <Button

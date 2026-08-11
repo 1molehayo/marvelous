@@ -502,7 +502,7 @@ function AdminPagesPage() {
             save.
           </p>
         </div>
-        <Button type="button" onClick={onSave} isLoading={isSaving}>
+        <Button type="button" size="md" onClick={onSave} isLoading={isSaving}>
           Save page
         </Button>
       </div>

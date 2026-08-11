@@ -240,7 +240,7 @@ function AdminWeddingSettingsPage() {
           </Field>
         </div>
 
-        <Button type="submit" isLoading={isSubmitting}>
+        <Button type="submit" size="md" isLoading={isSubmitting}>
           Save settings
         </Button>
       </form>

@@ -74,6 +74,8 @@ async function createBootstrapProfile(
       phone: null,
       email: normalizedEmail,
       role,
+      invite_accepted_at: new Date().toISOString(),
+      invited_at: new Date().toISOString(),
     })
     .select('*')
     .single()
@@ -205,7 +207,7 @@ async function isAuthorizedAdminEmail(email: string): Promise<boolean> {
   const admin = createAdminSupabaseClient()
   const result = await admin
     .from('admin_profiles')
-    .select('id')
+    .select('id, cancelled_at')
     .eq('email', email)
     .maybeSingle()
 
@@ -213,7 +215,11 @@ async function isAuthorizedAdminEmail(email: string): Promise<boolean> {
     throw new Error(result.error.message)
   }
 
-  return Boolean(result.data)
+  if (!result.data || result.data.cancelled_at) {
+    return false
+  }
+
+  return true
 }
 
 async function ensureAuthUserExists(email: string) {
@@ -245,7 +251,17 @@ export async function getAdminSessionHandler(): Promise<AdminSession | null> {
     return null
   }
 
-  return loadAdminSession(user.id, user.email)
+  const session = await loadAdminSession(user.id, user.email)
+  if (!session) {
+    return null
+  }
+
+  if (session.profile.cancelled_at) {
+    await supabase.auth.signOut({ scope: 'local' })
+    return null
+  }
+
+  return session
 }
 
 export async function requestAdminOtpHandler(email: string) {

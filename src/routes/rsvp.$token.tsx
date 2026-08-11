@@ -334,7 +334,7 @@ function RsvpFormView({ initial }: { initial: PublicRsvpPageData }) {
               )}
             </form.Subscribe>
 
-            <Button type="submit" isLoading={isSaving}>
+            <Button type="submit" size="md" isLoading={isSaving}>
               {page.rsvpStatus === 'pending'
                 ? 'Send RSVP'
                 : 'Update RSVP'}

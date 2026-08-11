@@ -719,7 +719,7 @@ function AdminGuestsPage() {
           ) : (
             <span />
           )}
-          <Button type="submit" form="guest-form" isLoading={isSaving}>
+          <Button type="submit" form="guest-form" size="md" isLoading={isSaving}>
             {isCreating ? 'Add guest' : 'Save changes'}
           </Button>
         </SideDrawer.Footer>
