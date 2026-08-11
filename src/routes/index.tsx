@@ -1,18 +1,23 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { ColorModeToggle } from '#/components/color-mode-toggle'
 import { Button } from '#/components/ui/button'
+import { getAdminSession } from '#/lib/auth/session'
 import {
+  CREATOR_NAME,
+  CREATOR_URL,
   PRODUCT_NAME,
   PRODUCT_TAGLINE,
-  STUDIO_NAME,
 } from '#/lib/constants'
 import { getFeaturedWeddingSlug } from '#/lib/page-blocks/settings'
 import { FALLBACK_PUBLIC_THEME } from '#/lib/site-settings'
 
 export const Route = createFileRoute('/')({
   loader: async () => {
-    const featuredSlug = await getFeaturedWeddingSlug()
-    return { featuredSlug }
+    const [featuredSlug, session] = await Promise.all([
+      getFeaturedWeddingSlug(),
+      getAdminSession(),
+    ])
+    return { featuredSlug, isSignedIn: Boolean(session) }
   },
   head: () => ({
     meta: [
@@ -28,7 +33,7 @@ export const Route = createFileRoute('/')({
 })
 
 function LandingPage() {
-  const { featuredSlug } = Route.useLoaderData()
+  const { featuredSlug, isSignedIn } = Route.useLoaderData()
 
   return (
     <div
@@ -38,12 +43,21 @@ function LandingPage() {
       <header className="relative z-10 mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-6 py-6">
         <p className="font-serif text-xl italic md:text-2xl">{PRODUCT_NAME}</p>
         <div className="flex items-center gap-3">
-          <Link
-            to="/admin/login"
-            className="text-foreground-secondary hover:text-foreground text-xs tracking-[0.16em] uppercase transition"
-          >
-            Admin
-          </Link>
+          {isSignedIn ? (
+            <Link
+              to="/admin"
+              className="text-foreground-secondary hover:text-foreground text-xs tracking-[0.16em] uppercase transition"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <Link
+              to="/admin/login"
+              className="text-foreground-secondary hover:text-foreground text-xs tracking-[0.16em] uppercase transition"
+            >
+              Get started
+            </Link>
+          )}
           <ColorModeToggle />
         </div>
       </header>
@@ -66,14 +80,29 @@ function LandingPage() {
             </Button>
           ) : null}
           <Button asChild size="md" variant={featuredSlug ? 'outline' : 'primary'}>
-            <Link to="/admin/login">Open admin</Link>
+            {isSignedIn ? (
+              <Link to="/admin">Build your wedding</Link>
+            ) : (
+              <Link to="/admin/login">Get started</Link>
+            )}
           </Button>
         </div>
       </main>
 
       <footer className="border-border relative z-10 border-t px-6 py-8 text-center">
         <p className="text-foreground-secondary text-xs tracking-[0.14em] uppercase">
-          {PRODUCT_NAME} · by {STUDIO_NAME}
+          © {new Date().getFullYear()} {PRODUCT_NAME}
+        </p>
+        <p className="text-foreground-secondary mt-2 text-sm">
+          Made with love by{' '}
+          <a
+            href={CREATOR_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground underline-offset-4 transition hover:underline"
+          >
+            {CREATOR_NAME}
+          </a>
         </p>
       </footer>
     </div>

@@ -3,12 +3,17 @@
  * Domain catalogs (themes, wedding statuses) stay in their dedicated modules.
  */
 
-/** Product brand (Igbeyawowa) — platform domain & public chrome. */
-export const PRODUCT_NAME = 'Igbeyawowa'
-export const PRODUCT_SHORT_NAME = 'Igbeyawowa'
+/** Product brand — Yoruba tone marks for UI (`ìgbéyàwó` + wa ≈ our wedding). */
+export const PRODUCT_NAME = 'Ìgbéyàwówa'
+export const PRODUCT_SHORT_NAME = 'Ìgbéyàwówa'
+/** ASCII form for domains / slug-safe contexts. */
+export const PRODUCT_NAME_ASCII = 'Igbeyawowa'
 export const PRODUCT_TAGLINE = 'Wedding websites'
-/** Studio credit (optional, landing footer). */
+/** Studio credit (optional). */
 export const STUDIO_NAME = 'Onemole'
+/** Personal creator credit (landing footer). */
+export const CREATOR_NAME = 'Olusegun Omilabu'
+export const CREATOR_URL = 'https://olusegunomilabu.com'
 
 export const ADMIN_PREVIEW_NAV_LABELS = [
   'Overview',
