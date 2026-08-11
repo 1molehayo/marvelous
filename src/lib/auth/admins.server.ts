@@ -37,13 +37,25 @@ async function withAuthSignInTimes(
 
   const admin = createAdminSupabaseClient()
   const signInById = new Map<string, string | null>()
+  const wanted = new Set(rows.map((row) => row.id))
 
-  await Promise.all(
-    rows.map(async (row) => {
-      const result = await admin.auth.admin.getUserById(row.id)
-      signInById.set(row.id, result.data.user?.last_sign_in_at ?? null)
-    }),
-  )
+  // One (paginated) Auth list instead of N getUserById calls — keeps /admin/admins fast
+  // so intent-preload is less likely to abort mid-flight and flash the error page.
+  let page = 1
+  const perPage = 200
+  while (signInById.size < wanted.size && page <= 10) {
+    const result = await admin.auth.admin.listUsers({ page, perPage })
+    if (result.error) {
+      break
+    }
+    for (const user of result.data.users) {
+      if (wanted.has(user.id)) {
+        signInById.set(user.id, user.last_sign_in_at ?? null)
+      }
+    }
+    if (result.data.users.length < perPage) break
+    page += 1
+  }
 
   return rows.map((row) => {
     const last_sign_in_at = signInById.get(row.id) ?? null

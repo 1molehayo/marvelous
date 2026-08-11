@@ -1,4 +1,10 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  isNotFound,
+  isRedirect,
+  redirect,
+  useRouter,
+} from '@tanstack/react-router'
 import {
   getCoreRowModel,
   getFilteredRowModel,
@@ -7,14 +13,15 @@ import {
 } from '@tanstack/react-table'
 import type { ColumnDef, SortingState } from '@tanstack/react-table'
 import { useEffect, useMemo, useState } from 'react'
-import { Button } from '#/components/ui/button'
 import { Badge } from '#/components/ui/badge'
+import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
 import { DropdownMenu } from '#/components/ui/dropdown-menu'
 import type { DropdownMenuItem } from '#/components/ui/dropdown-menu'
 import { Field } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
 import { SideDrawer } from '#/components/ui/side-drawer'
+import { Spinner } from '#/components/ui/spinner'
 import { TableView } from '#/components/ui/table-view'
 import { toast } from '#/components/ui/toaster'
 import {
@@ -27,7 +34,7 @@ import {
   updateAdminNames,
 } from '#/lib/auth/admins'
 import type { AdminListItem } from '#/lib/auth/admins'
-import { requireSuperAdmin } from '#/lib/auth/require-access'
+import { isSuperAdminProfile } from '#/lib/auth/roles'
 import {
   ADMIN_STATUS_LABELS,
   DEFAULT_VISIBLE_ADMIN_STATUSES,
@@ -36,14 +43,28 @@ import {
 import type { AdminAccountStatus } from '#/lib/auth/types'
 import { internalError, raiseRouteError } from '#/lib/errors/route-error'
 
+function isAbortError(cause: unknown) {
+  if (!cause || typeof cause !== 'object') return false
+  const name = 'name' in cause ? String(cause.name) : ''
+  return name === 'AbortError'
+}
+
 export const Route = createFileRoute('/admin/admins')({
   beforeLoad: ({ context }) => {
-    requireSuperAdmin(context.session)
+    // Soft gate — redirect instead of RouteError so a preload race never
+    // flashes the full-page “Something went wrong” UI.
+    if (!context.session || !isSuperAdminProfile(context.session.profile)) {
+      throw redirect({ to: '/admin' })
+    }
   },
+  pendingComponent: AdminAdminsPending,
   loader: async () => {
     try {
       return await listAdmins()
     } catch (cause) {
+      if (isRedirect(cause) || isNotFound(cause) || isAbortError(cause)) {
+        throw cause
+      }
       throw raiseRouteError(
         internalError({
           message: 'Failed to load admin list for /admin/admins',
@@ -55,6 +76,14 @@ export const Route = createFileRoute('/admin/admins')({
   },
   component: AdminAdminsPage,
 })
+
+function AdminAdminsPending() {
+  return (
+    <div className="flex min-h-48 items-center justify-center">
+      <Spinner size="lg" />
+    </div>
+  )
+}
 
 function statusBadgeVariant(
   status: AdminAccountStatus,
