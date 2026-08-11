@@ -11,6 +11,8 @@ import { createPhotoSignedUrl, uploadPageBlockImage } from './storage.server'
 export type PublicHomeData = PublicWeddingSettings & {
   page_blocks: PageBlock[]
   imageUrls: Record<string, string>
+  /** Storage path for OG/social image (use /api/photo?path=… for durable URL). */
+  ogImagePath: string | null
 }
 
 function coercePageBlocks(value: unknown): PageBlock[] {
@@ -88,6 +90,7 @@ export async function getPublicHomeDataHandler(
 
   const page_blocks = coercePageBlocks(result.data.page_blocks)
   const imageUrls: Record<string, string> = {}
+  let ogImagePath: string | null = null
 
   await Promise.all(
     page_blocks.map(async (block) => {
@@ -97,7 +100,10 @@ export async function getPublicHomeDataHandler(
           : block.type === 'hero'
             ? block.fields.imagePath
             : null
-      if (!imagePath) return
+      if (!imagePath?.trim()) return
+      if (!ogImagePath) {
+        ogImagePath = imagePath.trim()
+      }
       const url = await createPhotoSignedUrl(imagePath)
       if (url) {
         imageUrls[block.id] = url
@@ -109,6 +115,7 @@ export async function getPublicHomeDataHandler(
     ...toPublicSettings(result.data),
     page_blocks,
     imageUrls,
+    ogImagePath,
   }
 }
 

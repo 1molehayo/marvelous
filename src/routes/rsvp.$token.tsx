@@ -60,7 +60,12 @@ function PublicRsvpPage() {
 
   if (!result.ok) {
     return (
-      <PublicShell sectionNav={[]}>
+      <PublicShell
+        coupleLabel="RSVP"
+        showWeddingDate={false}
+        sectionNav={[]}
+        homePath="/"
+      >
         <main className="public-section mx-auto max-w-xl px-6 py-16 text-center md:py-24">
           <p className="public-kicker mb-4">RSVP</p>
           <h1 className="public-section-title">Link unavailable</h1>

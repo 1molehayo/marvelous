@@ -1,11 +1,36 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
 import { DynamicBlock } from '#/components/blocks/dynamic-block'
 import { PublicShell } from '#/components/public-shell'
+import { getAppUrl } from '#/lib/app-url'
 import { formatCoupleNames } from '#/lib/constants'
 import { getPublicHomeData } from '#/lib/page-blocks/settings'
 import { getPublicSectionNav } from '#/lib/page-blocks/types'
 import { isReservedPublicSlug } from '#/lib/wedding/slug'
 import { formatWeddingDate } from '#/lib/wedding/public-settings'
+
+function buildPublicDescription(input: {
+  coupleLabel: string
+  weddingDate: string | null
+  venueName: string | null
+  venueLocation: string | null
+}) {
+  const dateLabel = formatWeddingDate(input.weddingDate)
+  const venue =
+    [input.venueName, input.venueLocation].filter(Boolean).join(' · ') || null
+
+  const parts = [input.coupleLabel]
+  if (dateLabel !== 'Date to be announced') {
+    parts.push(dateLabel)
+  }
+  if (venue) {
+    parts.push(venue)
+  }
+
+  if (parts.length === 1) {
+    return `${input.coupleLabel} — wedding website.`
+  }
+  return `${parts.join(' · ')}.`
+}
 
 export const Route = createFileRoute('/$weddingSlug')({
   beforeLoad: ({ params }) => {
@@ -20,25 +45,36 @@ export const Route = createFileRoute('/$weddingSlug')({
       throw notFound()
     }
   },
-  head: ({ loaderData }) => {
+  head: ({ loaderData, params }) => {
     const coupleLabel = loaderData
       ? formatCoupleNames(loaderData.groom_name, loaderData.bride_name)
       : 'Wedding'
-    const dateLabel = formatWeddingDate(loaderData?.wedding_date ?? null)
-    const description =
-      dateLabel === 'Date to be announced'
-        ? `${coupleLabel} — wedding website.`
-        : `${coupleLabel} — ${dateLabel}.`
-    const ogImage =
-      loaderData?.page_blocks
-        .map((block) => loaderData.imageUrls[block.id])
-        .find((url): url is string => Boolean(url)) ?? undefined
+    const description = loaderData
+      ? buildPublicDescription({
+          coupleLabel,
+          weddingDate: loaderData.wedding_date,
+          venueName: loaderData.venue_name,
+          venueLocation: loaderData.venue_location,
+        })
+      : `${coupleLabel} — wedding website.`
+
+    const origin = getAppUrl()
+    const canonicalPath = `/${params.weddingSlug}`
+    const canonicalUrl = `${origin}${canonicalPath}`
+    const ogImage = loaderData?.ogImagePath
+      ? `${origin}/api/photo?path=${encodeURIComponent(loaderData.ogImagePath)}`
+      : undefined
+    const isPlanning = loaderData?.status === 'planning'
 
     return {
       meta: [
         { title: coupleLabel },
         { name: 'description', content: description },
+        ...(isPlanning
+          ? [{ name: 'robots', content: 'noindex,nofollow' }]
+          : []),
         { property: 'og:type', content: 'website' },
+        { property: 'og:url', content: canonicalUrl },
         { property: 'og:title', content: coupleLabel },
         { property: 'og:description', content: description },
         ...(ogImage
@@ -51,6 +87,7 @@ export const Route = createFileRoute('/$weddingSlug')({
         { name: 'twitter:title', content: coupleLabel },
         { name: 'twitter:description', content: description },
       ],
+      links: [{ rel: 'canonical', href: canonicalUrl }],
     }
   },
   component: WeddingPublicPage,

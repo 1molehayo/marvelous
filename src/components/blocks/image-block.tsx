@@ -16,7 +16,7 @@ export function ImageBlock({
   return (
     <section
       id={publicSectionId(block)}
-      className="public-section mx-auto max-w-5xl scroll-mt-24 px-6"
+      className="public-section mx-auto max-w-5xl scroll-mt-28 px-6 sm:scroll-mt-24"
     >
       <figure className="public-reveal">
         <div
@@ -31,6 +31,7 @@ export function ImageBlock({
               alt={block.fields.title ?? 'Wedding photo'}
               loading="lazy"
               decoding="async"
+              sizes="(min-width: 1024px) 64rem, 100vw"
               className="public-image h-full w-full object-cover"
               onError={() => setFailed(true)}
             />

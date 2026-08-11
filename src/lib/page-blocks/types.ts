@@ -117,6 +117,16 @@ export type PublicSectionNavItem = {
   label: string
 }
 
+/** Default CMS placeholder — never show to public guests. */
+const PLACEHOLDER_STORY_BODIES = new Set([
+  'share how you met.',
+  'share how you met',
+])
+
+export function isPlaceholderStoryBody(body: string): boolean {
+  return PLACEHOLDER_STORY_BODIES.has(body.trim().toLowerCase())
+}
+
 /** Stable section ids for public anchors / in-page nav. */
 export function publicSectionId(block: PageBlock): string {
   switch (block.type) {

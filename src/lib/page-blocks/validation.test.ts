@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { createDefaultPageBlocks } from '#/lib/page-blocks/types'
+import {
+  createDefaultPageBlocks,
+  isPlaceholderStoryBody,
+} from '#/lib/page-blocks/types'
 import {
   parsePageBlocks,
   parsePageBlocksStrict,
@@ -7,6 +10,12 @@ import {
 } from '#/lib/page-blocks/validation'
 
 describe('page blocks validation', () => {
+  it('detects default story placeholder copy', () => {
+    expect(isPlaceholderStoryBody('Share how you met.')).toBe(true)
+    expect(isPlaceholderStoryBody('  share how you met  ')).toBe(true)
+    expect(isPlaceholderStoryBody('We met in Lagos.')).toBe(false)
+  })
+
   it('accepts the default seed blocks (loose + strict)', () => {
     const blocks = createDefaultPageBlocks()
     expect(parsePageBlocks(blocks)).toHaveLength(3)

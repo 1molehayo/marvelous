@@ -1,10 +1,20 @@
 import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
 
 const PHOTOS_BUCKET = 'photos'
+/** In-page render TTL — pages re-sign on each load. */
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 6
+/** Proxy redirects use a short fresh signature per request. */
+const PROXY_SIGNED_URL_TTL_SECONDS = 60 * 10
+
+export function isAllowedPhotoStoragePath(imagePath: string): boolean {
+  const path = imagePath.trim()
+  if (!path || path.includes('..') || path.startsWith('/')) return false
+  return path.startsWith('page-blocks/')
+}
 
 export async function createPhotoSignedUrl(
   imagePath: string,
+  ttlSeconds: number = SIGNED_URL_TTL_SECONDS,
 ): Promise<string | null> {
   const path = imagePath.trim()
   if (!path) return null
@@ -12,13 +22,21 @@ export async function createPhotoSignedUrl(
   const admin = createAdminSupabaseClient()
   const result = await admin.storage
     .from(PHOTOS_BUCKET)
-    .createSignedUrl(path, SIGNED_URL_TTL_SECONDS)
+    .createSignedUrl(path, ttlSeconds)
 
   if (result.error) {
     return null
   }
 
   return result.data.signedUrl
+}
+
+/** Fresh short-lived signed URL for the public photo proxy. */
+export async function createProxiedPhotoSignedUrl(
+  imagePath: string,
+): Promise<string | null> {
+  if (!isAllowedPhotoStoragePath(imagePath)) return null
+  return createPhotoSignedUrl(imagePath, PROXY_SIGNED_URL_TTL_SECONDS)
 }
 
 export async function uploadPageBlockImage(file: {

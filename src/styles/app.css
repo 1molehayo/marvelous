@@ -301,6 +301,16 @@ body {
   padding-block: clamp(4rem, 10vw, 7rem);
 }
 
+.public-section-nav-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.public-section-nav-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 .public-hero-atmosphere {
   background:
     radial-gradient(

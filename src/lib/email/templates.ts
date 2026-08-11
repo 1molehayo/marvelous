@@ -1,16 +1,7 @@
+import { getAppUrl } from '#/lib/app-url'
 import { PRODUCT_NAME } from '#/lib/constants'
 
-/** Public app origin for invite / email links. */
-export function getAppUrl(): string {
-  const fromEnv =
-    process.env.APP_URL?.trim() ||
-    process.env.VITE_APP_URL?.trim() ||
-    process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim()
-  if (fromEnv) {
-    return fromEnv.startsWith('http') ? fromEnv.replace(/\/$/, '') : `https://${fromEnv.replace(/\/$/, '')}`
-  }
-  return 'http://localhost:3000'
-}
+export { getAppUrl }
 
 export function adminInviteAcceptUrl(token: string): string {
   return `${getAppUrl()}/admin/invite/${encodeURIComponent(token)}`

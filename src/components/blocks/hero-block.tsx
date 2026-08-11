@@ -21,7 +21,7 @@ export function HeroBlock({
     <section
       id={publicSectionId(block)}
       className={cn(
-        'public-hero relative flex min-h-[calc(100dvh-4.5rem)] scroll-mt-24 items-center justify-center overflow-hidden px-6 py-20 md:py-24',
+        'public-hero relative flex min-h-[calc(100dvh-5.5rem)] scroll-mt-28 items-center justify-center overflow-hidden px-6 py-20 sm:min-h-[calc(100dvh-4.5rem)] sm:scroll-mt-24 md:py-24',
         hasPhoto && 'text-white',
       )}
     >
@@ -30,10 +30,13 @@ export function HeroBlock({
           <img
             src={imageUrl}
             alt=""
+            fetchPriority="high"
+            decoding="async"
+            sizes="100vw"
             className="absolute inset-0 -z-20 h-full w-full object-cover"
           />
           <div
-            className="absolute inset-0 -z-10 bg-gradient-to-b from-black/45 via-black/35 to-black/55"
+            className="absolute inset-0 -z-10 bg-gradient-to-b from-black/50 via-black/40 to-black/60"
             aria-hidden
           />
         </>
@@ -57,11 +60,11 @@ export function HeroBlock({
           </p>
         ) : null}
         {title ? (
-          <h1 className="public-display text-[clamp(3.5rem,11vw,7.5rem)]">
+          <h1 className="public-display text-[clamp(3.25rem,11vw,7.5rem)]">
             {title}
           </h1>
         ) : (
-          <h1 className="public-display text-[clamp(3.5rem,11vw,7.5rem)]">
+          <h1 className="public-display text-[clamp(3.25rem,11vw,7.5rem)]">
             {wedding.groom_name}
             <br />
             <span className={hasPhoto ? 'text-white' : 'text-highlight'}>

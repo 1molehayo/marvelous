@@ -22,6 +22,7 @@ import { Route as AdminPagesRouteImport } from './routes/admin/pages'
 import { Route as AdminProfileRouteImport } from './routes/admin/profile'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminSupportRouteImport } from './routes/admin/support'
+import { Route as ApiPhotoRouteImport } from './routes/api/photo'
 import { Route as RsvpTokenRouteImport } from './routes/rsvp.$token'
 import { Route as AdminInviteTokenRouteImport } from './routes/admin/invite.$token'
 
@@ -90,6 +91,11 @@ const AdminSupportRoute = AdminSupportRouteImport.update({
   path: '/support',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const ApiPhotoRoute = ApiPhotoRouteImport.update({
+  id: '/api/photo',
+  path: '/api/photo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RsvpTokenRoute = RsvpTokenRouteImport.update({
   id: '/rsvp/$token',
   path: '/rsvp/$token',
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/admin/profile': typeof AdminProfileRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/support': typeof AdminSupportRoute
+  '/api/photo': typeof ApiPhotoRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/invite/$token': typeof AdminInviteTokenRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/admin/profile': typeof AdminProfileRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/support': typeof AdminSupportRoute
+  '/api/photo': typeof ApiPhotoRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/admin': typeof AdminIndexRoute
   '/admin/invite/$token': typeof AdminInviteTokenRoute
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/admin/profile': typeof AdminProfileRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/support': typeof AdminSupportRoute
+  '/api/photo': typeof ApiPhotoRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/invite/$token': typeof AdminInviteTokenRoute
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/admin/profile'
     | '/admin/settings'
     | '/admin/support'
+    | '/api/photo'
     | '/rsvp/$token'
     | '/admin/'
     | '/admin/invite/$token'
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/admin/profile'
     | '/admin/settings'
     | '/admin/support'
+    | '/api/photo'
     | '/rsvp/$token'
     | '/admin'
     | '/admin/invite/$token'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/admin/profile'
     | '/admin/settings'
     | '/admin/support'
+    | '/api/photo'
     | '/rsvp/$token'
     | '/admin/'
     | '/admin/invite/$token'
@@ -210,6 +222,7 @@ export interface RootRouteChildren {
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   WeddingSlugRoute: typeof WeddingSlugRoute
   DesignRoute: typeof DesignRoute
+  ApiPhotoRoute: typeof ApiPhotoRoute
   RsvpTokenRoute: typeof RsvpTokenRoute
 }
 
@@ -306,6 +319,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSupportRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/api/photo': {
+      id: '/api/photo'
+      path: '/api/photo'
+      fullPath: '/api/photo'
+      preLoaderRoute: typeof ApiPhotoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rsvp/$token': {
       id: '/rsvp/$token'
       path: '/rsvp/$token'
@@ -358,6 +378,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRouteRoute: AdminRouteRouteWithChildren,
   WeddingSlugRoute: WeddingSlugRoute,
   DesignRoute: DesignRoute,
+  ApiPhotoRoute: ApiPhotoRoute,
   RsvpTokenRoute: RsvpTokenRoute,
 }
 export const routeTree = rootRouteImport
