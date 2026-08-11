@@ -9,7 +9,7 @@ const PROXY_SIGNED_URL_TTL_SECONDS = 60 * 10
 export function isAllowedPhotoStoragePath(imagePath: string): boolean {
   const path = imagePath.trim()
   if (!path || path.includes('..') || path.startsWith('/')) return false
-  return path.startsWith('page-blocks/')
+  return path.startsWith('page-blocks/') || path.startsWith('media/')
 }
 
 export async function createPhotoSignedUrl(

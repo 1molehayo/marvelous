@@ -1,5 +1,6 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { ColorModeToggle } from '#/components/color-mode-toggle'
+import { PublicRevealObserver } from '#/components/public-reveal-observer'
 import { Button } from '#/components/ui/button'
 import { getAdminSession } from '#/lib/auth/session'
 import {
@@ -40,6 +41,7 @@ function LandingPage() {
       className="public-shell flex min-h-dvh flex-col bg-background text-foreground"
       data-public-theme={FALLBACK_PUBLIC_THEME}
     >
+      <PublicRevealObserver />
       <header className="relative z-10 mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-6 py-6">
         <p className="font-serif text-xl italic md:text-2xl">{PRODUCT_NAME}</p>
         <div className="flex items-center gap-3">
@@ -64,14 +66,14 @@ function LandingPage() {
 
       <main className="public-hero-atmosphere relative flex flex-1 flex-col items-center justify-center overflow-hidden px-6 py-20 text-center">
         <p className="public-kicker public-reveal mb-8">{PRODUCT_TAGLINE}</p>
-        <h1 className="public-display public-reveal-delay-1 text-[clamp(3.5rem,12vw,7rem)]">
+        <h1 className="public-display public-reveal public-reveal-delay-1 text-[clamp(3.5rem,12vw,7rem)]">
           {PRODUCT_NAME}
         </h1>
-        <p className="text-foreground-secondary public-reveal-delay-2 mx-auto mt-6 max-w-md text-base leading-relaxed md:text-lg">
+        <p className="text-foreground-secondary public-reveal public-reveal-delay-2 mx-auto mt-6 max-w-md text-base leading-relaxed md:text-lg">
           A calm, beautiful home for your wedding story — share details, welcome
           guests, and celebrate together.
         </p>
-        <div className="public-reveal-delay-3 mt-10 flex flex-wrap items-center justify-center gap-3">
+        <div className="public-reveal public-reveal-delay-3 mt-10 flex flex-wrap items-center justify-center gap-3">
           {featuredSlug ? (
             <Button asChild size="md">
               <Link to="/$weddingSlug" params={{ weddingSlug: featuredSlug }}>

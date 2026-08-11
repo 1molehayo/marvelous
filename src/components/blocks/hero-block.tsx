@@ -76,11 +76,11 @@ export function HeroBlock({
         )}
         <div
           className={cn(
-            'public-reveal-delay-1 mx-auto my-10 h-px w-20',
+            'public-reveal public-reveal-delay-1 mx-auto my-10 h-px w-20',
             hasPhoto ? 'bg-white/80' : 'bg-highlight',
           )}
         />
-        <p className="public-reveal-delay-2 font-serif text-2xl md:text-3xl">
+        <p className="public-reveal public-reveal-delay-2 font-serif text-2xl md:text-3xl">
           {formatWeddingDate(wedding.wedding_date)}
         </p>
       </div>

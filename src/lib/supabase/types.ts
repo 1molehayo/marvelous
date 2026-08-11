@@ -91,6 +91,26 @@ export type Guest = {
   updated_at: string
 }
 
+export type MediaAsset = {
+  id: string
+  wedding_id: string
+  storage_path: string
+  filename: string
+  content_type: string | null
+  byte_size: number | null
+  created_by: string | null
+  created_at: string
+}
+
+export type PhotoShareGroup = {
+  id: string
+  wedding_id: string
+  name: string
+  share_token: string
+  created_at: string
+  updated_at: string
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -166,6 +186,31 @@ export type Database = {
         }
         Update: Partial<
           Omit<Guest, 'id' | 'wedding_id' | 'created_at' | 'updated_at'>
+        >
+      }
+      media_assets: {
+        Row: MediaAsset
+        Insert: {
+          wedding_id: string
+          storage_path: string
+          filename: string
+          content_type?: string | null
+          byte_size?: number | null
+          created_by?: string | null
+        }
+        Update: Partial<
+          Omit<MediaAsset, 'id' | 'wedding_id' | 'created_at'>
+        >
+      }
+      photo_share_groups: {
+        Row: PhotoShareGroup
+        Insert: {
+          wedding_id: string
+          name: string
+          share_token: string
+        }
+        Update: Partial<
+          Omit<PhotoShareGroup, 'id' | 'wedding_id' | 'created_at' | 'updated_at'>
         >
       }
     }

@@ -17,7 +17,9 @@ function isPlatformPath(pathname: string): boolean {
     pathname === '/design' ||
     pathname.startsWith('/design/') ||
     pathname === '/rsvp' ||
-    pathname.startsWith('/rsvp/')
+    pathname.startsWith('/rsvp/') ||
+    pathname === '/photos' ||
+    pathname.startsWith('/photos/')
   ) {
     return true
   }

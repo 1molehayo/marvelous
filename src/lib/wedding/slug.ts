@@ -9,6 +9,9 @@ export const RESERVED_PUBLIC_SLUGS = new Set([
   'www',
   'static',
   'health',
+  'photos',
+  'share',
+  'media',
 ])
 
 export function slugifySegment(value: string): string {

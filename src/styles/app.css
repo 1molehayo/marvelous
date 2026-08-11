@@ -350,15 +350,28 @@ body {
 }
 
 .public-reveal {
+  opacity: 0;
+  transform: translateY(0.75rem);
+}
+
+.public-reveal.public-reveal-visible {
   animation: public-reveal 700ms var(--ease-emphasized-decelerate) both;
 }
 
-.public-reveal-delay-1 {
-  animation: public-reveal 700ms var(--ease-emphasized-decelerate) 120ms both;
+.public-reveal-delay-1.public-reveal-visible {
+  animation-delay: 120ms;
 }
 
-.public-reveal-delay-2 {
-  animation: public-reveal 700ms var(--ease-emphasized-decelerate) 220ms both;
+.public-reveal-delay-2.public-reveal-visible {
+  animation-delay: 220ms;
+}
+
+.public-reveal-delay-3.public-reveal-visible {
+  animation-delay: 320ms;
+}
+
+.public-section-nav-link[data-active='true'] {
+  color: var(--color-foreground);
 }
 
 .public-image {

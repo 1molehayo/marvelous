@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { ColorModeToggle } from '#/components/color-mode-toggle'
+import { PublicRevealObserver } from '#/components/public-reveal-observer'
 import { FALLBACK_PUBLIC_THEME } from '#/lib/site-settings'
 import type { PublicThemeId } from '#/lib/site-settings'
 import type { PublicSectionNavItem } from '#/lib/page-blocks/types'
@@ -25,9 +26,11 @@ function scrollToSection(sectionId: string, behavior?: ScrollBehavior) {
 function onSectionNavClick(
   event: React.MouseEvent<HTMLAnchorElement>,
   sectionId: string,
+  setActiveId: (id: string) => void,
 ) {
   event.preventDefault()
   if (scrollToSection(sectionId)) {
+    setActiveId(sectionId)
     window.history.pushState(null, '', `#${sectionId}`)
   }
 }
@@ -36,10 +39,14 @@ function SectionNav({
   items,
   className,
   ariaLabel,
+  activeId,
+  setActiveId,
 }: {
   items: PublicSectionNavItem[]
   className?: string
   ariaLabel: string
+  activeId: string | null
+  setActiveId: (id: string) => void
 }) {
   return (
     <nav aria-label={ariaLabel} className={className}>
@@ -47,8 +54,9 @@ function SectionNav({
         <a
           key={item.id}
           href={`#${item.id}`}
-          onClick={(event) => onSectionNavClick(event, item.id)}
-          className="text-foreground-secondary hover:text-foreground shrink-0 text-xs tracking-[0.16em] uppercase transition"
+          data-active={activeId === item.id ? 'true' : 'false'}
+          onClick={(event) => onSectionNavClick(event, item.id, setActiveId)}
+          className="public-section-nav-link text-foreground-secondary hover:text-foreground shrink-0 text-xs tracking-[0.16em] uppercase transition"
         >
           {item.label}
         </a>
@@ -79,6 +87,9 @@ export function PublicShell({
   homePath?: string
 }) {
   const showSectionNav = sectionNav.length > 1
+  const [activeId, setActiveId] = useState<string | null>(
+    sectionNav[0]?.id ?? null,
+  )
 
   useEffect(() => {
     const hash = window.location.hash.replace(/^#/, '')
@@ -86,9 +97,34 @@ export function PublicShell({
 
     const frame = window.requestAnimationFrame(() => {
       scrollToSection(hash, 'auto')
+      setActiveId(hash)
     })
     return () => window.cancelAnimationFrame(frame)
   }, [])
+
+  useEffect(() => {
+    if (!showSectionNav) return
+
+    const sections = sectionNav
+      .map((item) => document.getElementById(item.id))
+      .filter((el): el is HTMLElement => Boolean(el))
+
+    if (sections.length === 0) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
+        const entry = visible.at(0)
+        if (entry) setActiveId(entry.target.id)
+      },
+      { rootMargin: '-30% 0px -55% 0px', threshold: [0.1, 0.35, 0.6] },
+    )
+
+    for (const section of sections) observer.observe(section)
+    return () => observer.disconnect()
+  }, [sectionNav, showSectionNav])
 
   return (
     <div
@@ -98,6 +134,7 @@ export function PublicShell({
       )}
       data-public-theme={theme}
     >
+      <PublicRevealObserver />
       <header className="border-border sticky top-0 z-30 border-b bg-background/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4 md:gap-4 md:px-6">
           <a
@@ -112,6 +149,8 @@ export function PublicShell({
                 items={sectionNav}
                 ariaLabel="Page sections"
                 className="hidden items-center gap-4 sm:flex"
+                activeId={activeId}
+                setActiveId={setActiveId}
               />
             ) : null}
             <ColorModeToggle />
@@ -123,6 +162,8 @@ export function PublicShell({
               items={sectionNav}
               ariaLabel="Page sections"
               className="public-section-nav-scroll mx-auto flex max-w-5xl items-center gap-4"
+              activeId={activeId}
+              setActiveId={setActiveId}
             />
           </div>
         ) : null}

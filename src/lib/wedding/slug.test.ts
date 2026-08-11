@@ -29,6 +29,7 @@ describe('wedding public slug', () => {
 
   it('rejects reserved slugs', () => {
     expect(() => parsePublicSlug('admin')).toThrow(/reserved/)
+    expect(() => parsePublicSlug('photos')).toThrow(/reserved/)
   })
 
   it('normalizes input', () => {

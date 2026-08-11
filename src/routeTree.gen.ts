@@ -17,12 +17,14 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAdminsRouteImport } from './routes/admin/admins'
 import { Route as AdminGuestsRouteImport } from './routes/admin/guests'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminMediaRouteImport } from './routes/admin/media'
 import { Route as AdminOnboardingRouteImport } from './routes/admin/onboarding'
 import { Route as AdminPagesRouteImport } from './routes/admin/pages'
 import { Route as AdminProfileRouteImport } from './routes/admin/profile'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminSupportRouteImport } from './routes/admin/support'
 import { Route as ApiPhotoRouteImport } from './routes/api/photo'
+import { Route as PhotosTokenRouteImport } from './routes/photos.$token'
 import { Route as RsvpTokenRouteImport } from './routes/rsvp.$token'
 import { Route as AdminInviteTokenRouteImport } from './routes/admin/invite.$token'
 
@@ -66,6 +68,11 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminMediaRoute = AdminMediaRouteImport.update({
+  id: '/media',
+  path: '/media',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminOnboardingRoute = AdminOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -96,6 +103,11 @@ const ApiPhotoRoute = ApiPhotoRouteImport.update({
   path: '/api/photo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PhotosTokenRoute = PhotosTokenRouteImport.update({
+  id: '/photos/$token',
+  path: '/photos/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RsvpTokenRoute = RsvpTokenRouteImport.update({
   id: '/rsvp/$token',
   path: '/rsvp/$token',
@@ -115,12 +127,14 @@ export interface FileRoutesByFullPath {
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/media': typeof AdminMediaRoute
   '/admin/onboarding': typeof AdminOnboardingRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/support': typeof AdminSupportRoute
   '/api/photo': typeof ApiPhotoRoute
+  '/photos/$token': typeof PhotosTokenRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/invite/$token': typeof AdminInviteTokenRoute
@@ -132,12 +146,14 @@ export interface FileRoutesByTo {
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/media': typeof AdminMediaRoute
   '/admin/onboarding': typeof AdminOnboardingRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/support': typeof AdminSupportRoute
   '/api/photo': typeof ApiPhotoRoute
+  '/photos/$token': typeof PhotosTokenRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/admin': typeof AdminIndexRoute
   '/admin/invite/$token': typeof AdminInviteTokenRoute
@@ -151,12 +167,14 @@ export interface FileRoutesById {
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/media': typeof AdminMediaRoute
   '/admin/onboarding': typeof AdminOnboardingRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/support': typeof AdminSupportRoute
   '/api/photo': typeof ApiPhotoRoute
+  '/photos/$token': typeof PhotosTokenRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/invite/$token': typeof AdminInviteTokenRoute
@@ -171,12 +189,14 @@ export interface FileRouteTypes {
     | '/admin/admins'
     | '/admin/guests'
     | '/admin/login'
+    | '/admin/media'
     | '/admin/onboarding'
     | '/admin/pages'
     | '/admin/profile'
     | '/admin/settings'
     | '/admin/support'
     | '/api/photo'
+    | '/photos/$token'
     | '/rsvp/$token'
     | '/admin/'
     | '/admin/invite/$token'
@@ -188,12 +208,14 @@ export interface FileRouteTypes {
     | '/admin/admins'
     | '/admin/guests'
     | '/admin/login'
+    | '/admin/media'
     | '/admin/onboarding'
     | '/admin/pages'
     | '/admin/profile'
     | '/admin/settings'
     | '/admin/support'
     | '/api/photo'
+    | '/photos/$token'
     | '/rsvp/$token'
     | '/admin'
     | '/admin/invite/$token'
@@ -206,12 +228,14 @@ export interface FileRouteTypes {
     | '/admin/admins'
     | '/admin/guests'
     | '/admin/login'
+    | '/admin/media'
     | '/admin/onboarding'
     | '/admin/pages'
     | '/admin/profile'
     | '/admin/settings'
     | '/admin/support'
     | '/api/photo'
+    | '/photos/$token'
     | '/rsvp/$token'
     | '/admin/'
     | '/admin/invite/$token'
@@ -223,6 +247,7 @@ export interface RootRouteChildren {
   WeddingSlugRoute: typeof WeddingSlugRoute
   DesignRoute: typeof DesignRoute
   ApiPhotoRoute: typeof ApiPhotoRoute
+  PhotosTokenRoute: typeof PhotosTokenRoute
   RsvpTokenRoute: typeof RsvpTokenRoute
 }
 
@@ -284,6 +309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/media': {
+      id: '/admin/media'
+      path: '/media'
+      fullPath: '/admin/media'
+      preLoaderRoute: typeof AdminMediaRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/onboarding': {
       id: '/admin/onboarding'
       path: '/onboarding'
@@ -326,6 +358,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPhotoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/photos/$token': {
+      id: '/photos/$token'
+      path: '/photos/$token'
+      fullPath: '/photos/$token'
+      preLoaderRoute: typeof PhotosTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rsvp/$token': {
       id: '/rsvp/$token'
       path: '/rsvp/$token'
@@ -347,6 +386,7 @@ interface AdminRouteRouteChildren {
   AdminAdminsRoute: typeof AdminAdminsRoute
   AdminGuestsRoute: typeof AdminGuestsRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminMediaRoute: typeof AdminMediaRoute
   AdminOnboardingRoute: typeof AdminOnboardingRoute
   AdminPagesRoute: typeof AdminPagesRoute
   AdminProfileRoute: typeof AdminProfileRoute
@@ -360,6 +400,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminAdminsRoute: AdminAdminsRoute,
   AdminGuestsRoute: AdminGuestsRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminMediaRoute: AdminMediaRoute,
   AdminOnboardingRoute: AdminOnboardingRoute,
   AdminPagesRoute: AdminPagesRoute,
   AdminProfileRoute: AdminProfileRoute,
@@ -379,6 +420,7 @@ const rootRouteChildren: RootRouteChildren = {
   WeddingSlugRoute: WeddingSlugRoute,
   DesignRoute: DesignRoute,
   ApiPhotoRoute: ApiPhotoRoute,
+  PhotosTokenRoute: PhotosTokenRoute,
   RsvpTokenRoute: RsvpTokenRoute,
 }
 export const routeTree = rootRouteImport
