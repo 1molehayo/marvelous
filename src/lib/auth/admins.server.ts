@@ -497,7 +497,7 @@ export async function acceptAdminInviteHandler(token: string): Promise<{
 
   if (link.error) throw new Error(link.error.message)
 
-  const hashedToken = link.data.properties?.hashed_token
+  const hashedToken = link.data.properties.hashed_token
   if (!hashedToken) {
     throw new Error('Unable to establish a session from this invite.')
   }

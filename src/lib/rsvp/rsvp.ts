@@ -6,7 +6,7 @@ export type { PublicRsvpPageData }
 
 export const getRsvpByToken = createServerFn({ method: 'GET' })
   .validator((data: { token: string }) => {
-    const token = String(data.token ?? '').trim()
+    const token = String(data.token).trim()
     if (!token) throw new Error('RSVP token is required.')
     return { token }
   })
@@ -17,7 +17,7 @@ export const getRsvpByToken = createServerFn({ method: 'GET' })
 
 export const submitRsvp = createServerFn({ method: 'POST' })
   .validator((data: { token: string } & Record<string, unknown>) => {
-    const token = String(data.token ?? '').trim()
+    const token = String(data.token).trim()
     if (!token) throw new Error('RSVP token is required.')
     return { token, payload: data }
   })
@@ -28,7 +28,7 @@ export const submitRsvp = createServerFn({ method: 'POST' })
 
 export const updateGuestRsvp = createServerFn({ method: 'POST' })
   .validator((data: { guestId: string } & Record<string, unknown>) => {
-    const guestId = String(data.guestId ?? '').trim()
+    const guestId = String(data.guestId).trim()
     if (!guestId) throw new Error('Guest id is required.')
     return { guestId, payload: data }
   })

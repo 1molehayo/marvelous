@@ -650,7 +650,7 @@ function AdminGuestsPage() {
                                 type="number"
                                 min={1}
                                 max={maxAttendingForPlusOnes(
-                                  selectedGuest?.plus_ones ?? 0,
+                                  selectedGuest.plus_ones,
                                 )}
                                 value={String(field.state.value)}
                                 onBlur={field.handleBlur}

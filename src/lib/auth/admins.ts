@@ -102,7 +102,7 @@ export const removeAdmin = createServerFn({ method: 'POST' })
 
 export const acceptAdminInvite = createServerFn({ method: 'POST' })
   .validator((data: { token: string }) => {
-    const token = String(data.token ?? '').trim()
+    const token = String(data.token).trim()
     if (!token) throw new Error('Invite token is required.')
     return { token }
   })

@@ -78,7 +78,7 @@ async function sendResendEmail(input: {
     throw new Error(result.error.message)
   }
 
-  return { ok: true as const, id: result.data?.id ?? null }
+  return { ok: true as const, id: result.data.id }
 }
 
 export type SupportEmailInput = {
