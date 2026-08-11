@@ -3,8 +3,8 @@ import {
   redirect,
   useRouter,
 } from '@tanstack/react-router'
-import { CopySimple, Trash } from '@phosphor-icons/react'
-import { useEffect, useState } from 'react'
+import { CopySimple, Trash, UploadSimple } from '@phosphor-icons/react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
 import { Field } from '#/components/ui/field'
@@ -69,6 +69,7 @@ function AdminMediaPage() {
   const [groups, setGroups] = useState(initial.groups)
   const [guests, setGuests] = useState(initial.guests)
   const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [deleteAssetId, setDeleteAssetId] = useState<string | null>(null)
   const [isDeletingAsset, setIsDeletingAsset] = useState(false)
 
@@ -137,39 +138,51 @@ function AdminMediaPage() {
           </p>
         </div>
         {tab === 'library' ? (
-          <Input
-            type="file"
-            accept="image/*"
-            disabled={isUploading}
-            className="max-w-xs"
-            onChange={async (event) => {
-              const file = event.target.files?.[0]
-              if (!file) return
-              setIsUploading(true)
-              try {
-                const dataBase64 = await fileToBase64(file)
-                const uploaded = await uploadMediaAsset({
-                  data: {
-                    name: file.name,
-                    type: file.type,
-                    dataBase64,
-                  },
-                })
-                setAssets((current) => [uploaded, ...current])
-                toast.success('Photo uploaded.')
-                await refresh()
-              } catch (err) {
-                toast.error(
-                  err instanceof Error
-                    ? err.message
-                    : 'Unable to upload photo.',
-                )
-              } finally {
-                setIsUploading(false)
-                event.target.value = ''
-              }
-            }}
-          />
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              tabIndex={-1}
+              onChange={async (event) => {
+                const file = event.target.files?.[0]
+                if (!file) return
+                setIsUploading(true)
+                try {
+                  const dataBase64 = await fileToBase64(file)
+                  const uploaded = await uploadMediaAsset({
+                    data: {
+                      name: file.name,
+                      type: file.type,
+                      dataBase64,
+                    },
+                  })
+                  setAssets((current) => [uploaded, ...current])
+                  toast.success('Photo uploaded.')
+                  await refresh()
+                } catch (err) {
+                  toast.error(
+                    err instanceof Error
+                      ? err.message
+                      : 'Unable to upload photo.',
+                  )
+                } finally {
+                  setIsUploading(false)
+                  event.target.value = ''
+                }
+              }}
+            />
+            <Button
+              type="button"
+              size="md"
+              isLoading={isUploading}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <UploadSimple />
+              Upload photo
+            </Button>
+          </>
         ) : (
           <Button type="button" size="md" onClick={openCreateShare}>
             New share
