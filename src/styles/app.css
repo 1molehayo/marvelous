@@ -93,7 +93,7 @@ html[data-theme='celeste']:not([data-mode]) {
   --theme-background-secondary: var(--cream);
   --theme-surface: #ffffff;
   --theme-foreground: var(--navy);
-  --theme-foreground-secondary: color-mix(in oklab, var(--navy) 62%, white);
+  --theme-foreground-secondary: color-mix(in oklab, var(--navy) 78%, white);
   --theme-accent: var(--powder-deep);
   --theme-accent-foreground: #ffffff;
   --theme-highlight: var(--champagne);
@@ -126,7 +126,7 @@ html[data-theme='botanica'][data-mode='light'] {
   --theme-background-secondary: #efe8d8;
   --theme-surface: #ffffff;
   --theme-foreground: var(--navy);
-  --theme-foreground-secondary: color-mix(in oklab, var(--navy) 58%, white);
+  --theme-foreground-secondary: color-mix(in oklab, var(--navy) 76%, white);
   --theme-accent: var(--moss);
   --theme-accent-foreground: #ffffff;
   --theme-highlight: var(--champagne);
@@ -155,7 +155,7 @@ html[data-theme='rosewater'][data-mode='light'] {
   --theme-background-secondary: #f3e8e3;
   --theme-surface: #ffffff;
   --theme-foreground: var(--navy);
-  --theme-foreground-secondary: color-mix(in oklab, var(--navy) 58%, white);
+  --theme-foreground-secondary: color-mix(in oklab, var(--navy) 76%, white);
   --theme-accent: var(--dusty-rose);
   --theme-accent-foreground: #ffffff;
   --theme-highlight: var(--champagne);
@@ -184,7 +184,7 @@ html[data-theme='nocturne'][data-mode='light'] {
   --theme-background-secondary: #e7ecf4;
   --theme-surface: #ffffff;
   --theme-foreground: var(--navy-deep);
-  --theme-foreground-secondary: color-mix(in oklab, var(--navy) 60%, white);
+  --theme-foreground-secondary: color-mix(in oklab, var(--navy) 76%, white);
   --theme-accent: var(--navy);
   --theme-accent-foreground: #ffffff;
   --theme-highlight: var(--champagne);

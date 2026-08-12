@@ -2,6 +2,7 @@ import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import {
   CopySimple,
   EnvelopeSimple,
+  Info,
   Plus,
   Trash,
   UploadSimple,
@@ -14,6 +15,7 @@ import { Field } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
 import { SideDrawer } from '#/components/ui/side-drawer'
 import { toast } from '#/components/ui/toaster'
+import { Tooltip } from '#/components/ui/tooltip'
 import {
   createMediaUpload,
   deleteMediaAsset,
@@ -666,10 +668,31 @@ function AdminMediaPage() {
             </Field>
 
             <div className="space-y-2">
-              <p className="text-foreground text-base font-medium">Photos</p>
-              <p className="text-foreground-secondary text-sm">
-                Photos in this private album. Add from your library, then save.
-              </p>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-foreground text-base font-medium">Photos</p>
+                  <Tooltip delayIn={200}>
+                    <Tooltip.Trigger
+                      type="button"
+                      className="text-foreground-secondary hover:text-foreground inline-flex"
+                      aria-label="Photos help"
+                    >
+                      <Info className="size-4" />
+                    </Tooltip.Trigger>
+                    <Tooltip.Content>
+                      Choose library photos for this private album, then save.
+                      Uploading in Library does not add photos here
+                      automatically.
+                    </Tooltip.Content>
+                  </Tooltip>
+                </div>
+                {selectedShareAssets.length > 0 ? (
+                  <p className="text-foreground-secondary text-xs">
+                    {selectedShareAssets.length} photo
+                    {selectedShareAssets.length === 1 ? '' : 's'}
+                  </p>
+                ) : null}
+              </div>
               {selectedShareAssets.length === 0 ? (
                 <p className="text-foreground-secondary text-sm">
                   No photos in this album yet.
@@ -756,7 +779,7 @@ function AdminMediaPage() {
                           ) : (
                             <div className="bg-background-secondary h-full w-full" />
                           )}
-                          <span className="absolute inset-x-0 bottom-0 bg-black/55 py-1 text-center text-2xs text-white">
+                          <span className="absolute inset-x-0 bottom-0 bg-black/55 py-1 text-center text-[10px] text-white">
                             Add
                           </span>
                         </button>
@@ -767,12 +790,23 @@ function AdminMediaPage() {
               ) : null}
             </div>
 
-            <div className="space-y-2">
-              <p className="text-foreground text-base font-medium">Guests</p>
-              <p className="text-foreground-secondary text-sm">
-                Guests who can open this album. Each guest can only be in one
-                share.
-              </p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-1.5">
+                <p className="text-foreground text-base font-medium">Guests</p>
+                <Tooltip delayIn={200}>
+                  <Tooltip.Trigger
+                    type="button"
+                    className="text-foreground-secondary hover:text-foreground inline-flex"
+                    aria-label="Guests help"
+                  >
+                    <Info className="size-4" />
+                  </Tooltip.Trigger>
+                  <Tooltip.Content>
+                    Select guests for this album. Each guest can only be in one
+                    share. Invite sends their personal tracked link.
+                  </Tooltip.Content>
+                </Tooltip>
+              </div>
               <div className="max-h-56 space-y-1 overflow-y-auto">
                 {guests.length === 0 ? (
                   <p className="text-foreground-secondary text-sm">
@@ -813,46 +847,8 @@ function AdminMediaPage() {
                   })
                 )}
               </div>
-            </div>
-
-            {editing ? (
-              <>
-                <div className="space-y-3">
-                  <p className="text-foreground text-base font-medium">
-                    Share link & QR
-                  </p>
-                  <p className="text-foreground-secondary text-sm">
-                    Anyone with this link can view the album photos.
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        void copyText(editing.groupUrl, 'Share link')
-                      }
-                    >
-                      <CopySimple />
-                      Copy link
-                    </Button>
-                  </div>
-                  <img
-                    src={qrImageUrl(editing.groupUrl)}
-                    alt="QR code for share link"
-                    className="border-border mx-auto rounded-lg border bg-white p-2"
-                    width={160}
-                    height={160}
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <p className="text-foreground text-base font-medium">
-                    Email guests
-                  </p>
-                  <p className="text-foreground-secondary text-sm">
-                    Send each selected guest their personal tracked link.
-                  </p>
+              {editing ? (
+                <>
                   <Button
                     type="button"
                     size="sm"
@@ -865,15 +861,43 @@ function AdminMediaPage() {
                     onClick={() => void emailShareGuests(editing.id)}
                   >
                     <EnvelopeSimple />
-                    Email guests
+                    Invite guests
                   </Button>
                   <GuestLinks
                     group={editing}
                     guests={guests}
                     onCopy={copyText}
                   />
+                </>
+              ) : null}
+            </div>
+
+            {editing ? (
+              <div className="space-y-3">
+                <p className="text-foreground text-base font-medium">
+                  Share link & QR
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      void copyText(editing.groupUrl, 'Share link')
+                    }
+                  >
+                    <CopySimple />
+                    Copy link
+                  </Button>
                 </div>
-              </>
+                <img
+                  src={qrImageUrl(editing.groupUrl)}
+                  alt="QR code for share link"
+                  className="border-border rounded-lg border bg-white p-2"
+                  width={160}
+                  height={160}
+                />
+              </div>
             ) : null}
           </form>
         </SideDrawer.Content>

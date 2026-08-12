@@ -5,8 +5,9 @@ import {
   CaretDoubleUp,
   CaretUp,
   Trash,
+  UploadSimple,
 } from '@phosphor-icons/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { Field } from '#/components/ui/field'
@@ -68,6 +69,7 @@ function BlockEditor({
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -137,10 +139,13 @@ function BlockEditor({
         </Field>
         <Field>
           <Field.Label>Background photo</Field.Label>
-          <Field.Control>
-            <Input
+          <div className="space-y-2">
+            <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
+              className="sr-only"
+              tabIndex={-1}
               disabled={isUploading}
               onChange={async (event) => {
                 const file = event.target.files?.[0]
@@ -176,10 +181,20 @@ function BlockEditor({
                 }
               }}
             />
-          </Field.Control>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              isLoading={isUploading}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <UploadSimple />
+              {block.fields.imagePath ? 'Replace photo' : 'Upload photo'}
+            </Button>
+          </div>
           <Field.Description>
             Optional full-bleed hero photo. Leave empty for the theme atmosphere
-            only.
+            only. Remember to save the page after uploading.
           </Field.Description>
         </Field>
         {previewUrl ? (
@@ -257,12 +272,14 @@ function BlockEditor({
       <div className="space-y-4">
         <Field invalid={imageInvalid}>
           <Field.Label required>Image</Field.Label>
-          <Field.Control>
-            <Input
+          <div className="space-y-2">
+            <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
+              className="sr-only"
+              tabIndex={-1}
               disabled={isUploading}
-              invalid={imageInvalid}
               onChange={async (event) => {
                 const file = event.target.files?.[0]
                 if (!file) return
@@ -297,7 +314,17 @@ function BlockEditor({
                 }
               }}
             />
-          </Field.Control>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              isLoading={isUploading}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <UploadSimple />
+              {block.fields.imagePath ? 'Replace image' : 'Upload image'}
+            </Button>
+          </div>
           {imageInvalid ? (
             <Field.Error>{fieldErrors.imagePath}</Field.Error>
           ) : (

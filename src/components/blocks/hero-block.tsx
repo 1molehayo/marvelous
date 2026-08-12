@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { HeroPageBlock } from '#/lib/page-blocks/types'
 import { publicSectionId } from '#/lib/page-blocks/types'
 import { formatWeddingDate } from '#/lib/wedding/public-settings'
@@ -15,17 +16,18 @@ export function HeroBlock({
 }) {
   const title = block.fields.title?.trim()
   const tagline = block.fields.tagline?.trim()
-  const hasPhoto = Boolean(imageUrl)
+  const [photoFailed, setPhotoFailed] = useState(false)
+  const showPhoto = Boolean(imageUrl) && !photoFailed
 
   return (
     <section
       id={publicSectionId(block)}
       className={cn(
-        'public-hero relative flex min-h-[calc(100dvh-5.5rem)] scroll-mt-28 items-center justify-center overflow-hidden px-6 py-20 sm:min-h-[calc(100dvh-4.5rem)] sm:scroll-mt-24 md:py-24',
-        hasPhoto && 'text-white',
+        'public-hero relative isolate flex min-h-[calc(100dvh-5.5rem)] scroll-mt-28 items-center justify-center overflow-hidden px-6 py-20 sm:min-h-[calc(100dvh-4.5rem)] sm:scroll-mt-24 md:py-24',
+        showPhoto && 'text-white',
       )}
     >
-      {hasPhoto && imageUrl ? (
+      {showPhoto && imageUrl ? (
         <>
           <img
             src={imageUrl}
@@ -33,28 +35,29 @@ export function HeroBlock({
             fetchPriority="high"
             decoding="async"
             sizes="100vw"
-            className="absolute inset-0 -z-20 h-full w-full object-cover"
+            className="absolute inset-0 z-0 h-full w-full object-cover"
+            onError={() => setPhotoFailed(true)}
           />
           <div
-            className="absolute inset-0 -z-10 bg-gradient-to-b from-black/50 via-black/40 to-black/60"
+            className="absolute inset-0 z-[1] bg-gradient-to-b from-black/50 via-black/40 to-black/60"
             aria-hidden
           />
         </>
       ) : (
-        <div className="public-hero-atmosphere absolute inset-0 -z-10" aria-hidden />
+        <div
+          className="public-hero-atmosphere absolute inset-0 z-0"
+          aria-hidden
+        />
       )}
       <div
         className={cn(
-          'public-reveal relative mx-auto max-w-3xl text-center',
-          hasPhoto && 'drop-shadow-[0_2px_24px_rgba(0,0,0,0.35)]',
+          'public-reveal relative z-10 mx-auto max-w-3xl text-center',
+          showPhoto && 'drop-shadow-[0_2px_24px_rgba(0,0,0,0.35)]',
         )}
       >
         {tagline ? (
           <p
-            className={cn(
-              'public-kicker mb-8',
-              hasPhoto && 'text-white/90',
-            )}
+            className={cn('public-kicker mb-8', showPhoto && 'text-white/90')}
           >
             {tagline}
           </p>
@@ -67,7 +70,7 @@ export function HeroBlock({
           <h1 className="public-display text-[clamp(3.25rem,11vw,7.5rem)]">
             {wedding.groom_name}
             <br />
-            <span className={hasPhoto ? 'text-white' : 'text-highlight'}>
+            <span className={showPhoto ? 'text-white' : 'text-highlight'}>
               &amp;
             </span>
             <br />
@@ -77,7 +80,7 @@ export function HeroBlock({
         <div
           className={cn(
             'public-reveal public-reveal-delay-1 mx-auto my-10 h-px w-20',
-            hasPhoto ? 'bg-white/80' : 'bg-highlight',
+            showPhoto ? 'bg-white/80' : 'bg-highlight',
           )}
         />
         <p className="public-reveal public-reveal-delay-2 font-serif text-2xl md:text-3xl">
