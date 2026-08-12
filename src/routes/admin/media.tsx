@@ -1,8 +1,4 @@
-import {
-  createFileRoute,
-  redirect,
-  useRouter,
-} from '@tanstack/react-router'
+import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import {
   CopySimple,
   EnvelopeSimple,
@@ -105,6 +101,7 @@ function AdminMediaPage() {
   const [deleteGroupId, setDeleteGroupId] = useState<string | null>(null)
   const [isDeletingGroup, setIsDeletingGroup] = useState(false)
   const [emailingGroupId, setEmailingGroupId] = useState<string | null>(null)
+  const [showLibraryPicker, setShowLibraryPicker] = useState(false)
 
   useEffect(() => {
     setAssets(initial.assets)
@@ -170,7 +167,10 @@ function AdminMediaPage() {
         },
       })
 
-      setAssets((current) => [asset, ...current.filter((a) => a.id !== asset.id)])
+      setAssets((current) => [
+        asset,
+        ...current.filter((a) => a.id !== asset.id),
+      ])
       removeUpload(id)
     } catch (err) {
       patchUpload(id, {
@@ -256,6 +256,7 @@ function AdminMediaPage() {
     setShareName('')
     setSelectedAssetIds([])
     setSelectedGuestIds([])
+    setShowLibraryPicker(false)
     setDrawerOpen(true)
   }
 
@@ -264,6 +265,7 @@ function AdminMediaPage() {
     setShareName(group.name)
     setSelectedAssetIds(group.assetIds)
     setSelectedGuestIds(group.guestIds)
+    setShowLibraryPicker(false)
     setDrawerOpen(true)
   }
 
@@ -303,9 +305,7 @@ function AdminMediaPage() {
       } else if (result.failed.length === 0) {
         toast.success(
           `Sent ${result.sent} photo email${result.sent === 1 ? '' : 's'}${
-            result.skipped
-              ? ` · ${result.skipped} skipped (no email)`
-              : ''
+            result.skipped ? ` · ${result.skipped} skipped (no email)` : ''
           }.`,
         )
       } else {
@@ -453,9 +453,7 @@ function AdminMediaPage() {
                     </div>
                   ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/55 px-3 text-center text-white">
-                      <p className="text-xs">
-                        {job.error ?? 'Upload failed.'}
-                      </p>
+                      <p className="text-xs">{job.error ?? 'Upload failed.'}</p>
                       <div className="flex gap-2">
                         <Button
                           type="button"
@@ -480,7 +478,9 @@ function AdminMediaPage() {
                   )}
                 </div>
                 <figcaption className="space-y-2 p-3">
-                  <p className="truncate text-sm font-medium">{job.file.name}</p>
+                  <p className="truncate text-sm font-medium">
+                    {job.file.name}
+                  </p>
                 </figcaption>
               </figure>
             ))}
@@ -503,7 +503,9 @@ function AdminMediaPage() {
                   )}
                 </div>
                 <figcaption className="space-y-2 p-3">
-                  <p className="truncate text-sm font-medium">{asset.filename}</p>
+                  <p className="truncate text-sm font-medium">
+                    {asset.filename}
+                  </p>
                   <div className="flex gap-2">
                     <Button
                       type="button"
@@ -560,8 +562,7 @@ function AdminMediaPage() {
                   size="sm"
                   variant="outline"
                   disabled={
-                    group.guestIds.length === 0 ||
-                    emailingGroupId === group.id
+                    group.guestIds.length === 0 || emailingGroupId === group.id
                   }
                   isLoading={emailingGroupId === group.id}
                   onClick={() => void emailShareGuests(group.id)}
@@ -601,15 +602,21 @@ function AdminMediaPage() {
         </div>
       )}
 
-      <SideDrawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+      <SideDrawer
+        open={drawerOpen}
+        onOpenChange={(open) => {
+          setDrawerOpen(open)
+          if (!open) setShowLibraryPicker(false)
+        }}
+      >
         <SideDrawer.Header
           title={editing ? 'Edit photo share' : 'New photo share'}
-          drawerDescription="Choose which library photos belong in this album, then invite guests. Each guest can only be in one share."
+          drawerDescription="Build a private album, invite guests, then share the link or QR."
         />
         <SideDrawer.Content>
           <form
             id="photo-share-form"
-            className="space-y-5"
+            className="space-y-6"
             onSubmit={async (event) => {
               event.preventDefault()
               setIsSavingShare(true)
@@ -635,6 +642,7 @@ function AdminMediaPage() {
                   toast.success('Share created.')
                 }
                 setDrawerOpen(false)
+                setShowLibraryPicker(false)
                 await refresh()
               } catch (err) {
                 toast.error(
@@ -657,141 +665,194 @@ function AdminMediaPage() {
               </Field.Control>
             </Field>
 
-            <div className="space-y-3">
-              <div className="flex items-baseline justify-between gap-2">
-                <p className="text-sm font-medium">In this album</p>
-                <p className="text-foreground-secondary text-xs">
-                  {selectedShareAssets.length} photo
-                  {selectedShareAssets.length === 1 ? '' : 's'}
-                </p>
-              </div>
+            <div className="space-y-2">
+              <p className="text-foreground text-base font-medium">Photos</p>
+              <p className="text-foreground-secondary text-sm">
+                Photos in this private album. Add from your library, then save.
+              </p>
               {selectedShareAssets.length === 0 ? (
-                <p className="text-foreground-secondary border-border rounded-lg border border-dashed px-3 py-4 text-sm">
-                  No photos in this album yet. Add from your library below, then
-                  save.
+                <p className="text-foreground-secondary text-sm">
+                  No photos in this album yet.
                 </p>
-              ) : (
-                <div className="grid max-h-56 grid-cols-3 gap-2 overflow-y-auto">
-                  {selectedShareAssets.map((asset) => (
-                    <div
-                      key={asset.id}
-                      className="border-border relative aspect-square overflow-hidden rounded-lg border"
+              ) : null}
+              <div className="grid max-h-64 grid-cols-3 gap-2 overflow-y-auto">
+                {selectedShareAssets.map((asset) => (
+                  <div
+                    key={asset.id}
+                    className="border-border relative aspect-square overflow-hidden rounded-lg border"
+                  >
+                    {asset.signedUrl ? (
+                      <img
+                        src={asset.signedUrl}
+                        alt={asset.filename}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="bg-background-secondary h-full w-full" />
+                    )}
+                    <button
+                      type="button"
+                      aria-label={`Remove ${asset.filename} from album`}
+                      onClick={() => removeAssetFromShare(asset.id)}
+                      className="absolute top-1 right-1 inline-flex size-7 items-center justify-center rounded-full bg-black/70 text-white"
                     >
-                      {asset.signedUrl ? (
-                        <img
-                          src={asset.signedUrl}
-                          alt={asset.filename}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="bg-background-secondary h-full w-full" />
-                      )}
-                      <button
-                        type="button"
-                        aria-label={`Remove ${asset.filename} from album`}
-                        onClick={() => removeAssetFromShare(asset.id)}
-                        className="absolute top-1 right-1 inline-flex size-7 items-center justify-center rounded-full bg-black/70 text-white"
-                      >
-                        <X className="size-3.5" weight="bold" />
-                      </button>
+                      <X className="size-3.5" weight="bold" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (assets.length === 0) {
+                      toast.message('Upload photos in the Library tab first.')
+                      return
+                    }
+                    if (availableShareAssets.length === 0) {
+                      toast.message(
+                        'Every library photo is already in this album.',
+                      )
+                      return
+                    }
+                    setShowLibraryPicker(true)
+                  }}
+                  className="border-border text-foreground-secondary hover:border-accent hover:text-foreground flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed px-2 text-center text-xs transition"
+                >
+                  <Plus className="size-5" weight="bold" />
+                  Add photos
+                </button>
+              </div>
+              {showLibraryPicker ? (
+                <div className="border-border space-y-3 rounded-xl border p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium">Choose from library</p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowLibraryPicker(false)}
+                    >
+                      Done
+                    </Button>
+                  </div>
+                  {availableShareAssets.length === 0 ? (
+                    <p className="text-foreground-secondary text-sm">
+                      Every library photo is already in this album.
+                    </p>
+                  ) : (
+                    <div className="grid max-h-48 grid-cols-3 gap-2 overflow-y-auto">
+                      {availableShareAssets.map((asset) => (
+                        <button
+                          key={asset.id}
+                          type="button"
+                          onClick={() => addAssetToShare(asset.id)}
+                          className="border-border relative aspect-square overflow-hidden rounded-lg border"
+                        >
+                          {asset.signedUrl ? (
+                            <img
+                              src={asset.signedUrl}
+                              alt={asset.filename}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="bg-background-secondary h-full w-full" />
+                          )}
+                          <span className="absolute inset-x-0 bottom-0 bg-black/55 py-1 text-center text-2xs text-white">
+                            Add
+                          </span>
+                        </button>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
+              ) : null}
+            </div>
 
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Add from library</p>
-                {assets.length === 0 ? (
+            <div className="space-y-2">
+              <p className="text-foreground text-base font-medium">Guests</p>
+              <p className="text-foreground-secondary text-sm">
+                Guests who can open this album. Each guest can only be in one
+                share.
+              </p>
+              <div className="max-h-56 space-y-1 overflow-y-auto">
+                {guests.length === 0 ? (
                   <p className="text-foreground-secondary text-sm">
-                    Upload photos in the Library tab first.
-                  </p>
-                ) : availableShareAssets.length === 0 ? (
-                  <p className="text-foreground-secondary text-sm">
-                    Every library photo is already in this album.
+                    Add guests on the Guests page first.
                   </p>
                 ) : (
-                  <div className="grid max-h-56 grid-cols-3 gap-2 overflow-y-auto">
-                    {availableShareAssets.map((asset) => (
-                      <button
-                        key={asset.id}
-                        type="button"
-                        onClick={() => addAssetToShare(asset.id)}
-                        className="border-border group relative aspect-square overflow-hidden rounded-lg border"
-                      >
-                        {asset.signedUrl ? (
-                          <img
-                            src={asset.signedUrl}
-                            alt={asset.filename}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="bg-background-secondary h-full w-full" />
+                  guests.map((guest) => {
+                    const blocked =
+                      Boolean(guest.assignedGroupId) &&
+                      guest.assignedGroupId !== editing?.id
+                    const selected = selectedGuestIds.includes(guest.id)
+                    return (
+                      <label
+                        key={guest.id}
+                        className={cn(
+                          'border-border flex items-center gap-2 rounded-lg border px-3 py-2 text-sm',
+                          blocked && 'opacity-50',
                         )}
-                        <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-white opacity-0 transition group-hover:bg-black/40 group-hover:opacity-100">
-                          <Plus className="size-6" weight="bold" />
+                      >
+                        <input
+                          type="checkbox"
+                          disabled={blocked}
+                          checked={selected}
+                          onChange={() =>
+                            toggleId(
+                              guest.id,
+                              selectedGuestIds,
+                              setSelectedGuestIds,
+                            )
+                          }
+                        />
+                        <span>
+                          {guestFullName(guest)}
+                          {blocked ? ' · in another share' : ''}
                         </span>
-                        <span className="sr-only">
-                          Add {asset.filename} to album
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+                      </label>
+                    )
+                  })
                 )}
               </div>
             </div>
 
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Guests</p>
-              <div className="max-h-56 space-y-1 overflow-y-auto">
-                {guests.map((guest) => {
-                  const blocked =
-                    Boolean(guest.assignedGroupId) &&
-                    guest.assignedGroupId !== editing?.id
-                  const selected = selectedGuestIds.includes(guest.id)
-                  return (
-                    <label
-                      key={guest.id}
-                      className={cn(
-                        'border-border flex items-center gap-2 rounded-lg border px-3 py-2 text-sm',
-                        blocked && 'opacity-50',
-                      )}
-                    >
-                      <input
-                        type="checkbox"
-                        disabled={blocked}
-                        checked={selected}
-                        onChange={() =>
-                          toggleId(
-                            guest.id,
-                            selectedGuestIds,
-                            setSelectedGuestIds,
-                          )
-                        }
-                      />
-                      <span>
-                        {guestFullName(guest)}
-                        {blocked ? ' · in another share' : ''}
-                      </span>
-                    </label>
-                  )
-                })}
-              </div>
-            </div>
-
             {editing ? (
-              <div className="border-border space-y-3 rounded-xl border p-3">
-                <p className="text-sm font-medium">Share link & QR</p>
-                <p className="text-foreground-secondary break-all text-xs">
-                  {editing.groupUrl}
-                </p>
-                <img
-                  src={qrImageUrl(editing.groupUrl)}
-                  alt="QR code for share link"
-                  className="border-border mx-auto rounded-lg border bg-white p-2"
-                  width={180}
-                  height={180}
-                />
-                <div className="flex flex-wrap gap-2">
+              <>
+                <div className="space-y-3">
+                  <p className="text-foreground text-base font-medium">
+                    Share link & QR
+                  </p>
+                  <p className="text-foreground-secondary text-sm">
+                    Anyone with this link can view the album photos.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        void copyText(editing.groupUrl, 'Share link')
+                      }
+                    >
+                      <CopySimple />
+                      Copy link
+                    </Button>
+                  </div>
+                  <img
+                    src={qrImageUrl(editing.groupUrl)}
+                    alt="QR code for share link"
+                    className="border-border mx-auto rounded-lg border bg-white p-2"
+                    width={160}
+                    height={160}
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-foreground text-base font-medium">
+                    Email guests
+                  </p>
+                  <p className="text-foreground-secondary text-sm">
+                    Send each selected guest their personal tracked link.
+                  </p>
                   <Button
                     type="button"
                     size="sm"
@@ -806,13 +867,13 @@ function AdminMediaPage() {
                     <EnvelopeSimple />
                     Email guests
                   </Button>
+                  <GuestLinks
+                    group={editing}
+                    guests={guests}
+                    onCopy={copyText}
+                  />
                 </div>
-                <GuestLinks
-                  group={editing}
-                  guests={guests}
-                  onCopy={copyText}
-                />
-              </div>
+              </>
             ) : null}
           </form>
         </SideDrawer.Content>
