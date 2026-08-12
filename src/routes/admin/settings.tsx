@@ -48,7 +48,7 @@ function weddingToForm(wedding: Wedding): FormState {
     venue_location: wedding.venue_location ?? '',
     dress_code: wedding.dress_code ?? '',
     active_public_theme: wedding.active_public_theme,
-    public_slug: wedding.public_slug,
+    public_slug: wedding.public_slug ?? '',
   }
 }
 

@@ -14,6 +14,7 @@ import {
   formatCoupleNames,
   getAdminNavItems,
 } from '#/lib/constants'
+import { publicWeddingPath } from '#/lib/wedding/public-settings'
 import { cn } from '#/lib/utils'
 
 function SidebarBrand() {
@@ -68,6 +69,7 @@ function SidebarFooter({
   isLoggingOut?: boolean
 }) {
   const wedding = session.wedding
+  const previewHref = publicWeddingPath(wedding?.public_slug)
   const dateLabel = wedding?.wedding_date
     ? new Date(`${wedding.wedding_date}T00:00:00`).toLocaleDateString(
         undefined,
@@ -98,18 +100,14 @@ function SidebarFooter({
           </p>
         ) : null}
       </div>
-      {wedding ? (
+      {previewHref ? (
         <Button
           asChild
           size="sm"
           variant="outline"
           className="border-white/20 bg-transparent text-sidebar-foreground hover:bg-white/10"
         >
-          <a
-            href={`/${wedding.public_slug}`}
-            target="_blank"
-            rel="noreferrer"
-          >
+          <a href={previewHref} target="_blank" rel="noreferrer">
             <ArrowSquareOut />
             Preview site
           </a>

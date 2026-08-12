@@ -10,6 +10,7 @@ import {
 import { formatCoupleNames } from '#/lib/constants'
 import { PUBLIC_THEME_META } from '#/lib/site-settings'
 import type { WeddingStatus } from '#/lib/supabase/types'
+import { publicWeddingPath } from '#/lib/wedding/public-settings'
 import { WEDDING_STATUS_LABELS } from '#/lib/wedding/validation'
 import { Route as AdminRoute } from './route'
 
@@ -84,6 +85,8 @@ function AdminOverviewPage() {
     )
   }
 
+  const previewHref = publicWeddingPath(wedding.public_slug)
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -104,16 +107,18 @@ function AdminOverviewPage() {
             </Badge>
           </div>
         </div>
-        <Button asChild size="sm">
-          <a
-            href={`/${wedding.public_slug}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <ArrowSquareOut />
-            Preview site
-          </a>
-        </Button>
+        {previewHref ? (
+          <Button asChild size="sm">
+            <a href={previewHref} target="_blank" rel="noreferrer">
+              <ArrowSquareOut />
+              Preview site
+            </a>
+          </Button>
+        ) : (
+          <Button asChild size="sm" variant="outline">
+            <Link to="/admin/settings">Set public URL</Link>
+          </Button>
+        )}
       </div>
 
       {isSuper && profileIncomplete ? (

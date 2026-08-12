@@ -53,6 +53,7 @@ export function AddressSearchField({
   const [query, setQuery] = useState(value)
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([])
   const [open, setOpen] = useState(false)
+  const [isFocused, setIsFocused] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const [error, setError] = useState<string | null>(null)
@@ -65,6 +66,7 @@ export function AddressSearchField({
     const onPointerDown = (event: MouseEvent) => {
       if (!rootRef.current?.contains(event.target as Node)) {
         setOpen(false)
+        setIsFocused(false)
         setActiveIndex(-1)
       }
     }
@@ -84,6 +86,8 @@ export function AddressSearchField({
     const cached = clientCache.get(normalized)
     if (cached) {
       setSuggestions(cached)
+      // Prefill on page load must not open the list — only while editing.
+      if (isFocused) setOpen(true)
       setIsSearching(false)
       setError(null)
       return
@@ -95,7 +99,7 @@ export function AddressSearchField({
         .then((next) => {
           if (normalizeAddressQuery(query) !== normalized) return
           setSuggestions(next)
-          setOpen(true)
+          if (isFocused) setOpen(true)
           setError(null)
         })
         .catch((err) => {
@@ -113,7 +117,7 @@ export function AddressSearchField({
     }, 300)
 
     return () => window.clearTimeout(timer)
-  }, [query])
+  }, [query, isFocused])
 
   const selectSuggestion = (suggestion: AddressSuggestion) => {
     onChange(suggestion.label)
@@ -148,6 +152,7 @@ export function AddressSearchField({
               setActiveIndex(-1)
             }}
             onFocus={() => {
+              setIsFocused(true)
               if (suggestions.length > 0) setOpen(true)
             }}
             onKeyDown={(event) => {

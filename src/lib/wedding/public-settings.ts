@@ -64,3 +64,11 @@ export function formatWeddingDate(date: string | null): string {
     dateStyle: 'long',
   })
 }
+
+/** Public site path for a wedding slug, or null when the slug is missing. */
+export function publicWeddingPath(
+  slug: string | null | undefined,
+): string | null {
+  const trimmed = typeof slug === 'string' ? slug.trim() : ''
+  return trimmed ? `/${trimmed}` : null
+}
