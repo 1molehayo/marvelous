@@ -271,7 +271,7 @@ export async function sendPhotoShareEmailsHandler(
 
   if (members.error) throw new Error(members.error.message)
 
-  const guestIds = (members.data ?? []).map((row) => row.guest_id)
+  const guestIds = members.data.map((row) => row.guest_id)
   if (guestIds.length === 0) {
     return { sent: 0, skipped: 0, failed: [] }
   }
@@ -295,7 +295,7 @@ export async function sendPhotoShareEmailsHandler(
   let skipped = 0
   const failed: SendPhotoShareEmailsResult['failed'] = []
 
-  for (const guest of guestsResult.data ?? []) {
+  for (const guest of guestsResult.data) {
     const email = guest.email?.trim().toLowerCase()
     if (!email) {
       skipped += 1

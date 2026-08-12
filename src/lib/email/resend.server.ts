@@ -12,8 +12,10 @@ import {
   guestRsvpInviteEmailText,
   inviteEmailHtml,
   inviteEmailText,
-  type GuestPhotoShareEmailInput,
-  type GuestRsvpInviteEmailInput,
+} from '#/lib/email/templates'
+import type {
+  GuestPhotoShareEmailInput,
+  GuestRsvpInviteEmailInput,
 } from '#/lib/email/templates'
 
 function getResendApiKey(): string | null {

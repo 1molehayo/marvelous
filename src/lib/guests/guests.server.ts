@@ -211,7 +211,7 @@ export async function sendGuestInvitesBulkHandler(input: {
 
   if (result.error) throw new Error(result.error.message)
 
-  const guests = result.data ?? []
+  const guests = result.data
   let sent = 0
   let skipped = 0
   const failed: SendGuestInvitesBulkResult['failed'] = []
