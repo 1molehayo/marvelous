@@ -17,6 +17,8 @@ export type PublicRsvpPageData = {
   dietaryNotes: string | null
   message: string | null
   respondedAt: string | null
+  /** Guest may edit when pending, or after admin unlock. */
+  canEdit: boolean
   isOpen: boolean
   closedReason: string | null
   coupleLabel: string

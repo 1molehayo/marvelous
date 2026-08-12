@@ -1,6 +1,13 @@
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
-import { CopySimple, EnvelopeSimple, LinkSimple } from '@phosphor-icons/react'
+import { Route as AdminRoute } from './route'
+import {
+  CopySimple,
+  EnvelopeSimple,
+  LinkSimple,
+  LockOpen,
+  WhatsappLogo,
+} from '@phosphor-icons/react'
 import {
   getCoreRowModel,
   getFilteredRowModel,
@@ -21,20 +28,24 @@ import { Textarea } from '#/components/ui/textarea'
 import { toast } from '#/components/ui/toaster'
 import { fieldErrorMessage } from '#/lib/forms/field-error'
 import { zodFormFieldErrors } from '#/lib/forms/zod-form-errors'
+import { formatCoupleNames } from '#/lib/constants'
 import {
   createGuest,
   deleteGuest,
   listGuests,
   sendGuestInvite,
   sendGuestInvitesBulk,
+  unlockGuestRsvp,
   updateGuest,
 } from '#/lib/guests/guests'
+import type { GuestConflictMatch } from '#/lib/guests/guests'
 import {
   guestFormSchema,
   guestFullName,
   toGuestFormValues,
 } from '#/lib/guests/schema'
 import type { GuestFormValues } from '#/lib/guests/schema'
+import { whatsappRsvpShareUrl } from '#/lib/guests/whatsapp'
 import { updateGuestRsvp } from '#/lib/rsvp/rsvp'
 import {
   RSVP_STATUS_LABELS,
@@ -91,9 +102,22 @@ function guestRsvpPath(token: string) {
   return `/rsvp/${token}`
 }
 
+function guestAdminDisplayName(guest: Guest) {
+  const name = guestFullName(guest)
+  return guest.admin_label ? `${name} (${guest.admin_label})` : name
+}
+
 function AdminGuestsPage() {
   const initialGuests = Route.useLoaderData()
+  const { session } = AdminRoute.useRouteContext()
   const router = useRouter()
+  const coupleLabel =
+    session?.wedding
+      ? formatCoupleNames(
+          session.wedding.groom_name,
+          session.wedding.bride_name,
+        )
+      : 'us'
   const [guests, setGuests] = useState<Guest[]>(initialGuests)
   const [search, setSearch] = useState('')
   const [sorting, setSorting] = useState<SortingState>([
@@ -108,6 +132,21 @@ function AdminGuestsPage() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isUnlocking, setIsUnlocking] = useState(false)
+  const [adminLabelDraft, setAdminLabelDraft] = useState('')
+  const [conflictMatches, setConflictMatches] = useState<GuestConflictMatch[]>(
+    [],
+  )
+  const [conflictOpen, setConflictOpen] = useState(false)
+  const [conflictNeedsLabels, setConflictNeedsLabels] = useState(false)
+  const [newAdminLabel, setNewAdminLabel] = useState('')
+  const [existingLabels, setExistingLabels] = useState<Record<string, string>>(
+    {},
+  )
+  const [pendingPayload, setPendingPayload] = useState<Record<
+    string,
+    unknown
+  > | null>(null)
 
   useEffect(() => {
     setGuests(initialGuests)
@@ -143,9 +182,26 @@ function AdminGuestsPage() {
           party_name: parsed.partyName ?? '',
           plus_ones: parsed.plusOnes,
           notes: parsed.notes ?? '',
+          admin_label: adminLabelDraft.trim() || null,
         }
         if (isCreating) {
-          await createGuest({ data: payload })
+          const result = await createGuest({ data: payload })
+          if (result.status === 'conflict') {
+            setPendingPayload(payload)
+            setConflictMatches(result.matches)
+            setConflictNeedsLabels(false)
+            setNewAdminLabel(adminLabelDraft.trim())
+            setExistingLabels(
+              Object.fromEntries(
+                result.matches.map((match) => [
+                  match.id,
+                  match.admin_label ?? '',
+                ]),
+              ),
+            )
+            setConflictOpen(true)
+            return
+          }
           toast.success('Guest added.')
         } else if (selectedGuest) {
           const rsvpValues = rsvpForm.state.values
@@ -172,9 +228,25 @@ function AdminGuestsPage() {
             )
           }
 
-          await updateGuest({
+          const result = await updateGuest({
             data: { guestId: selectedGuest.id, ...payload },
           })
+          if (result.status === 'conflict') {
+            setPendingPayload({ guestId: selectedGuest.id, ...payload })
+            setConflictMatches(result.matches)
+            setConflictNeedsLabels(false)
+            setNewAdminLabel(adminLabelDraft.trim())
+            setExistingLabels(
+              Object.fromEntries(
+                result.matches.map((match) => [
+                  match.id,
+                  match.admin_label ?? '',
+                ]),
+              ),
+            )
+            setConflictOpen(true)
+            return
+          }
           await updateGuestRsvp({
             data: {
               guestId: selectedGuest.id,
@@ -200,9 +272,71 @@ function AdminGuestsPage() {
     },
   })
 
+  const resolveConflictAsDifferentPeople = async () => {
+    if (!pendingPayload) return
+    const newLabel = newAdminLabel.trim()
+    if (!newLabel) {
+      toast.error('Add a label for the guest you’re saving.')
+      return
+    }
+    const existingLabelList = conflictMatches.map((match) => ({
+      guestId: match.id,
+      adminLabel: (existingLabels[match.id] ?? '').trim(),
+    }))
+    if (existingLabelList.some((item) => !item.adminLabel)) {
+      toast.error('Add a label for each existing matching guest.')
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const conflictResolution = {
+        newAdminLabel: newLabel,
+        existingLabels: existingLabelList,
+      }
+      if (isCreating) {
+        const result = await createGuest({
+          data: { ...pendingPayload, conflictResolution },
+        })
+        if (result.status === 'conflict') {
+          toast.error('Still conflicting — check labels and try again.')
+          return
+        }
+        toast.success('Guest added with distinguishing labels.')
+      } else {
+        const guestId = String(pendingPayload.guestId ?? '')
+        const result = await updateGuest({
+          data: {
+            ...pendingPayload,
+            guestId,
+            conflictResolution,
+          },
+        })
+        if (result.status === 'conflict') {
+          toast.error('Still conflicting — check labels and try again.')
+          return
+        }
+        toast.success('Guest updated with distinguishing labels.')
+      }
+      setConflictOpen(false)
+      setPendingPayload(null)
+      setDrawerOpen(false)
+      setSelectedId(null)
+      setIsCreating(false)
+      await router.invalidate()
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to save guest.',
+      )
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const openCreate = () => {
     setIsCreating(true)
     setSelectedId(null)
+    setAdminLabelDraft('')
     form.reset(emptyGuestForm)
     rsvpForm.reset(emptyRsvpForm)
     setDrawerOpen(true)
@@ -211,6 +345,7 @@ function AdminGuestsPage() {
   const openEdit = (guest: Guest) => {
     setIsCreating(false)
     setSelectedId(guest.id)
+    setAdminLabelDraft(guest.admin_label ?? '')
     form.reset(toGuestFormValues(guest))
     rsvpForm.reset(toAdminRsvpFormValues(guest))
     setDrawerOpen(true)
@@ -224,6 +359,55 @@ function AdminGuestsPage() {
     } catch {
       toast.error('Could not copy link.')
     }
+  }
+
+  const shareWhatsApp = (guest: Guest) => {
+    const url = whatsappRsvpShareUrl({
+      phone: guest.phone ?? '',
+      guestFirstName: guest.first_name,
+      coupleLabel,
+      rsvpUrl: `${window.location.origin}${guestRsvpPath(guest.rsvp_token)}`,
+    })
+    if (!url) {
+      toast.error('Add a valid phone number before sharing on WhatsApp.')
+      return
+    }
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
+  const unlockGuestForUpdate = async (guest: Guest) => {
+    setIsUnlocking(true)
+    try {
+      const updated = await unlockGuestRsvp({ data: { guestId: guest.id } })
+      setGuests((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)),
+      )
+      toast.success('Guest can update their RSVP again.')
+      await router.invalidate()
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to unlock RSVP.',
+      )
+    } finally {
+      setIsUnlocking(false)
+    }
+  }
+
+  const openExistingConflictMatch = () => {
+    const match = conflictMatches[0]
+    if (!match) return
+    const guest = guests.find((item) => item.id === match.id)
+    setConflictOpen(false)
+    setPendingPayload(null)
+    setConflictNeedsLabels(false)
+    if (guest) {
+      openEdit(guest)
+      toast.message('Opened the matching guest instead of creating a duplicate.')
+      return
+    }
+    toast.message('Use the matching guest already on your list.')
+    setDrawerOpen(false)
+    setIsCreating(false)
   }
 
   const emailGuestInvite = async (guest: Guest) => {
@@ -294,7 +478,7 @@ function AdminGuestsPage() {
         cell: ({ row }) => (
           <div className="min-w-0">
             <p className="truncate font-medium">
-              {guestFullName(row.original)}
+              {guestAdminDisplayName(row.original)}
             </p>
             {row.original.party_name ? (
               <p className="text-foreground-secondary truncate text-sm">
@@ -357,6 +541,16 @@ function AdminGuestsPage() {
               type="button"
               size="sm"
               variant="outline"
+              disabled={!row.original.phone?.trim()}
+              onClick={() => shareWhatsApp(row.original)}
+            >
+              <WhatsappLogo />
+              WhatsApp
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
               onClick={() => void copyRsvpLink(row.original)}
             >
               <LinkSimple />
@@ -372,10 +566,10 @@ function AdminGuestsPage() {
             </Button>
           </div>
         ),
-        meta: { minWidth: 260, className: 'w-64' },
+        meta: { minWidth: 340, className: 'w-80' },
       },
     ],
-    [isEmailing],
+    [coupleLabel, isEmailing],
   )
 
   const table = useReactTable({
@@ -393,6 +587,7 @@ function AdminGuestsPage() {
       const guest = row.original
       const haystack = [
         guestFullName(guest),
+        guest.admin_label ?? '',
         guest.email ?? '',
         guest.phone ?? '',
         guest.party_name ?? '',
@@ -437,7 +632,8 @@ function AdminGuestsPage() {
         <div>
           <h1 className="admin-page-title">Guests</h1>
           <p className="text-foreground-secondary mt-2 text-sm">
-            Manage the guest list, email RSVP invites, or copy private links.
+            Manage the guest list, email invites, share via WhatsApp, or copy
+            private RSVP links.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -496,10 +692,13 @@ function AdminGuestsPage() {
         }}
       >
         <SideDrawer.Header
-          title={isCreating ? 'Add guest' : guestFullName(selectedGuest ?? {
-            first_name: 'Guest',
-            last_name: '',
-          })}
+          title={
+            isCreating
+              ? 'Add guest'
+              : selectedGuest
+                ? guestAdminDisplayName(selectedGuest)
+                : 'Guest'
+          }
           drawerDescription="Guest details"
         />
         <SideDrawer.Content>
@@ -670,6 +869,23 @@ function AdminGuestsPage() {
                       </Field>
                     )}
                   </form.Field>
+
+                  <Field>
+                    <Field.Label>Admin label</Field.Label>
+                    <Field.Control>
+                      <Input
+                        value={adminLabelDraft}
+                        placeholder="Optional — only you see this"
+                        onChange={(event) =>
+                          setAdminLabelDraft(event.target.value)
+                        }
+                      />
+                    </Field.Control>
+                    <p className="text-foreground-secondary mt-1 text-xs">
+                      Helps tell apart guests with the same name. Never shown to
+                      guests.
+                    </p>
+                  </Field>
                 </>
               )}
             </form.Subscribe>
@@ -696,6 +912,16 @@ function AdminGuestsPage() {
                       type="button"
                       size="sm"
                       variant="outline"
+                      disabled={!selectedGuest.phone?.trim()}
+                      onClick={() => shareWhatsApp(selectedGuest)}
+                    >
+                      <WhatsappLogo />
+                      WhatsApp
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
                       onClick={() => void copyRsvpLink(selectedGuest)}
                     >
                       <CopySimple />
@@ -703,6 +929,26 @@ function AdminGuestsPage() {
                     </Button>
                   </div>
                 </div>
+
+                {!selectedGuest.allow_rsvp_update &&
+                selectedGuest.rsvp_status !== 'pending' ? (
+                  <div className="border-border bg-background flex flex-wrap items-center justify-between gap-3 rounded-xl border px-3 py-3">
+                    <p className="text-foreground-secondary text-sm">
+                      This guest already responded. Their RSVP page is locked
+                      until you unlock it.
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      isLoading={isUnlocking}
+                      onClick={() => void unlockGuestForUpdate(selectedGuest)}
+                    >
+                      <LockOpen />
+                      Unlock for update
+                    </Button>
+                  </div>
+                ) : null}
 
                 <rsvpForm.Field name="status">
                   {(field) => (
@@ -843,6 +1089,98 @@ function AdminGuestsPage() {
         onOpenChange={setBulkConfirmOpen}
         onConfirm={() => void emailPendingInvites()}
       />
+
+      <ConfirmDialog
+        open={conflictOpen}
+        title="Possible duplicate guest"
+        description="We found an existing guest that looks similar by name, email, or phone. Choose whether this is the same person or different people."
+        confirmLabel={
+          conflictNeedsLabels ? 'Save with labels' : 'These are different people'
+        }
+        cancelLabel="Cancel"
+        isConfirming={isSaving}
+        onOpenChange={(open) => {
+          setConflictOpen(open)
+          if (!open) {
+            setPendingPayload(null)
+            setConflictNeedsLabels(false)
+          }
+        }}
+        onConfirm={() => {
+          if (!conflictNeedsLabels) {
+            setConflictNeedsLabels(true)
+            return
+          }
+          void resolveConflictAsDifferentPeople()
+        }}
+      >
+        <ul className="space-y-2 text-sm">
+          {conflictMatches.map((match) => (
+            <li
+              key={match.id}
+              className="border-border rounded-lg border px-3 py-2"
+            >
+              <p className="font-medium">
+                {match.admin_label
+                  ? `${guestFullName(match)} (${match.admin_label})`
+                  : guestFullName(match)}
+              </p>
+              <p className="text-foreground-secondary mt-1 text-xs">
+                Match on {match.reasons.join(', ')}
+                {match.email ? ` · ${match.email}` : ''}
+                {match.phone ? ` · ${match.phone}` : ''}
+              </p>
+            </li>
+          ))}
+        </ul>
+
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="w-full"
+          disabled={isSaving}
+          onClick={openExistingConflictMatch}
+        >
+          It’s the same person — open existing
+        </Button>
+
+        {conflictNeedsLabels ? (
+          <div className="space-y-3">
+            <Field>
+              <Field.Label required>
+                Label for {isCreating ? 'new guest' : 'this guest'}
+              </Field.Label>
+              <Field.Control>
+                <Input
+                  value={newAdminLabel}
+                  placeholder="e.g. Cousin on groom’s side"
+                  onChange={(event) => setNewAdminLabel(event.target.value)}
+                />
+              </Field.Control>
+            </Field>
+            {conflictMatches.map((match) => (
+              <Field key={match.id}>
+                <Field.Label required>
+                  Label for {guestFullName(match)}
+                </Field.Label>
+                <Field.Control>
+                  <Input
+                    value={existingLabels[match.id] ?? ''}
+                    placeholder="e.g. College friend"
+                    onChange={(event) =>
+                      setExistingLabels((current) => ({
+                        ...current,
+                        [match.id]: event.target.value,
+                      }))
+                    }
+                  />
+                </Field.Control>
+              </Field>
+            ))}
+          </div>
+        ) : null}
+      </ConfirmDialog>
     </div>
   )
 }

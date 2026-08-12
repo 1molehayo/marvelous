@@ -1,6 +1,7 @@
 import type { DetailsPageBlock } from '#/lib/page-blocks/types'
 import { publicSectionId } from '#/lib/page-blocks/types'
 import type { PublicWeddingSettings } from '#/lib/wedding/public-settings'
+import { cn } from '#/lib/utils'
 
 function mapsSearchUrl(query: string) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
@@ -19,8 +20,11 @@ export function DetailsBlock({
     block.fields.showDressCode && wedding.dress_code ? wedding.dress_code : null
   const sectionId = publicSectionId(block)
   const mapsQuery = [venueName, venueLocation].filter(Boolean).join(', ')
+  const hasVenue = Boolean(venueName || venueLocation)
+  const hasDressCode = Boolean(dressCode)
+  const twoColumns = hasVenue && hasDressCode
 
-  if (!venueName && !venueLocation && !dressCode) {
+  if (!hasVenue && !hasDressCode) {
     return (
       <section
         id={sectionId}
@@ -47,9 +51,14 @@ export function DetailsBlock({
           <p className="public-kicker mb-4">Details</p>
           <h2 className="public-section-title">Celebrate with us</h2>
         </div>
-        <div className="grid gap-10 md:grid-cols-2 md:gap-12">
-          {venueName || venueLocation ? (
-            <div>
+        <div
+          className={cn(
+            'grid gap-10 md:gap-12',
+            twoColumns ? 'md:grid-cols-2' : 'mx-auto max-w-xl',
+          )}
+        >
+          {hasVenue ? (
+            <div className={cn(!twoColumns && 'text-center')}>
               <p className="public-kicker mb-3">Venue</p>
               {venueName ? (
                 <p className="font-serif text-3xl italic md:text-4xl">
@@ -75,8 +84,8 @@ export function DetailsBlock({
               ) : null}
             </div>
           ) : null}
-          {dressCode ? (
-            <div>
+          {hasDressCode ? (
+            <div className={cn(!twoColumns && 'text-center')}>
               <p className="public-kicker mb-3">Dress code</p>
               <p className="text-foreground-secondary whitespace-pre-wrap text-base leading-relaxed md:text-lg">
                 {dressCode}

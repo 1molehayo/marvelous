@@ -15,7 +15,14 @@ import type { Guest, WeddingStatus } from '#/lib/supabase/types'
 import { formatWeddingDate } from '#/lib/wedding/public-settings'
 
 const GUEST_RSVP_SELECT =
-  'id, wedding_id, first_name, last_name, email, phone, party_name, plus_ones, notes, rsvp_token, rsvp_status, rsvp_responded_at, attending_count, dietary_notes, rsvp_message, created_at, updated_at'
+  'id, wedding_id, first_name, last_name, email, phone, party_name, plus_ones, notes, admin_label, rsvp_token, rsvp_status, rsvp_responded_at, attending_count, dietary_notes, rsvp_message, allow_rsvp_update, created_at, updated_at'
+
+function guestCanEditRsvp(guest: {
+  rsvp_status: Guest['rsvp_status']
+  allow_rsvp_update: boolean
+}): boolean {
+  return guest.rsvp_status === 'pending' || guest.allow_rsvp_update
+}
 
 export type { PublicRsvpPageData }
 
@@ -76,6 +83,7 @@ export async function getRsvpByTokenHandler(
     dietaryNotes: guest.dietary_notes,
     message: guest.rsvp_message,
     respondedAt: guest.rsvp_responded_at,
+    canEdit: guestCanEditRsvp(guest),
     isOpen: open,
     closedReason: open
       ? null
@@ -128,6 +136,12 @@ export async function submitRsvpHandler(
     throw new Error('RSVP is closed for this wedding.')
   }
 
+  if (!guestCanEditRsvp(guest)) {
+    throw new Error(
+      'Your RSVP is already submitted. Contact the couple if you need to update it.',
+    )
+  }
+
   const maxAttending = maxAttendingForPlusOnes(guest.plus_ones)
   const input: PublicRsvpInput = parsePublicRsvpInput(data, maxAttending)
 
@@ -140,6 +154,7 @@ export async function submitRsvpHandler(
       dietary_notes: input.dietary_notes,
       rsvp_message: input.rsvp_message,
       rsvp_responded_at: new Date().toISOString(),
+      allow_rsvp_update: false,
     })
     .eq('id', guest.id)
     .eq('rsvp_token', normalized)

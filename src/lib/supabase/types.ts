@@ -81,12 +81,14 @@ export type Guest = {
   party_name: string | null
   plus_ones: number
   notes: string | null
+  admin_label: string | null
   rsvp_token: string
   rsvp_status: RsvpStatus
   rsvp_responded_at: string | null
   attending_count: number | null
   dietary_notes: string | null
   rsvp_message: string | null
+  allow_rsvp_update: boolean
   created_at: string
   updated_at: string
 }
@@ -177,12 +179,14 @@ export type Database = {
           party_name?: string | null
           plus_ones?: number
           notes?: string | null
+          admin_label?: string | null
           rsvp_token?: string
           rsvp_status?: RsvpStatus
           rsvp_responded_at?: string | null
           attending_count?: number | null
           dietary_notes?: string | null
           rsvp_message?: string | null
+          allow_rsvp_update?: boolean
         }
         Update: Partial<
           Omit<Guest, 'id' | 'wedding_id' | 'created_at' | 'updated_at'>

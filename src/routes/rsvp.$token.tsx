@@ -182,22 +182,37 @@ function RsvpFormView({ initial }: { initial: PublicRsvpPageData }) {
           </p>
         ) : null}
 
-        {page.rsvpStatus !== 'pending' ? (
-          <p className="mt-6 text-sm">
-            Current response:{' '}
-            <span className="font-medium">
-              {RSVP_STATUS_LABELS[page.rsvpStatus]}
-            </span>
-            {page.rsvpStatus === 'attending' && page.attendingCount != null
-              ? ` · ${page.attendingCount} attending`
-              : null}
-          </p>
-        ) : null}
-
         {!page.isOpen ? (
           <p className="border-border bg-surface mt-8 rounded-xl border border-dashed p-4 text-sm leading-relaxed">
             {page.closedReason}
           </p>
+        ) : !page.canEdit ? (
+          <div className="border-border bg-surface mt-8 space-y-3 rounded-xl border p-5">
+            <p className="text-sm font-medium">Your RSVP is submitted</p>
+            <p className="text-sm">
+              Response:{' '}
+              <span className="font-medium">
+                {RSVP_STATUS_LABELS[page.rsvpStatus]}
+              </span>
+              {page.rsvpStatus === 'attending' && page.attendingCount != null
+                ? ` · ${page.attendingCount} attending`
+                : null}
+            </p>
+            {page.dietaryNotes ? (
+              <p className="text-foreground-secondary text-sm">
+                Dietary notes: {page.dietaryNotes}
+              </p>
+            ) : null}
+            {page.message ? (
+              <p className="text-foreground-secondary text-sm">
+                Message: {page.message}
+              </p>
+            ) : null}
+            <p className="text-foreground-secondary text-xs leading-relaxed">
+              Need to change this? Contact {page.coupleLabel} and they can unlock
+              your RSVP.
+            </p>
+          </div>
         ) : (
           <form
             className="mt-10 space-y-5"
@@ -207,6 +222,13 @@ function RsvpFormView({ initial }: { initial: PublicRsvpPageData }) {
               void form.handleSubmit()
             }}
           >
+            {page.rsvpStatus !== 'pending' ? (
+              <p className="text-foreground-secondary text-sm">
+                You can update your previous response (
+                {RSVP_STATUS_LABELS[page.rsvpStatus]}
+                ).
+              </p>
+            ) : null}
             <form.Subscribe selector={(state) => state.submissionAttempts > 0}>
               {(submitted) => (
                 <>

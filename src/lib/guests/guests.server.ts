@@ -2,13 +2,107 @@ import { requireWeddingSession } from '#/lib/auth/session.server'
 import { getAppUrl } from '#/lib/app-url'
 import { formatCoupleNames } from '#/lib/constants'
 import { sendGuestRsvpInviteEmail } from '#/lib/email/resend.server'
+import { guestNameKey } from '#/lib/guests/name-key'
 import type { GuestInput } from '#/lib/guests/schema'
 import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
 import type { Guest } from '#/lib/supabase/types'
 import { formatWeddingDate } from '#/lib/wedding/public-settings'
 
 const GUEST_SELECT =
-  'id, wedding_id, first_name, last_name, email, phone, party_name, plus_ones, notes, rsvp_token, rsvp_status, rsvp_responded_at, attending_count, dietary_notes, rsvp_message, created_at, updated_at'
+  'id, wedding_id, first_name, last_name, email, phone, party_name, plus_ones, notes, admin_label, rsvp_token, rsvp_status, rsvp_responded_at, attending_count, dietary_notes, rsvp_message, allow_rsvp_update, created_at, updated_at'
+
+export type GuestConflictMatch = {
+  id: string
+  first_name: string
+  last_name: string
+  email: string | null
+  phone: string | null
+  admin_label: string | null
+  reasons: Array<'name' | 'email' | 'phone'>
+}
+
+export type CreateGuestResult =
+  | { status: 'created'; guest: Guest }
+  | { status: 'conflict'; matches: GuestConflictMatch[] }
+
+export type UpdateGuestResult =
+  | { status: 'updated'; guest: Guest }
+  | { status: 'conflict'; matches: GuestConflictMatch[] }
+
+export type GuestConflictResolution = {
+  newAdminLabel: string
+  existingLabels: Array<{ guestId: string; adminLabel: string }>
+}
+
+function normalizePhone(phone: string | null | undefined): string | null {
+  if (!phone) return null
+  const digits = phone.replace(/\D/g, '')
+  return digits.length > 0 ? digits : null
+}
+
+function findConflicts(
+  guests: Guest[],
+  input: GuestInput,
+  excludeGuestId?: string,
+): GuestConflictMatch[] {
+  const nameKey = guestNameKey(input.first_name, input.last_name)
+  const email = input.email?.trim().toLowerCase() || null
+  const phone = normalizePhone(input.phone)
+  const matches: GuestConflictMatch[] = []
+
+  for (const guest of guests) {
+    if (excludeGuestId && guest.id === excludeGuestId) continue
+    const reasons: GuestConflictMatch['reasons'] = []
+    if (guestNameKey(guest.first_name, guest.last_name) === nameKey) {
+      reasons.push('name')
+    }
+    if (email && guest.email?.trim().toLowerCase() === email) {
+      reasons.push('email')
+    }
+    if (phone && normalizePhone(guest.phone) === phone) {
+      reasons.push('phone')
+    }
+    if (reasons.length === 0) continue
+    matches.push({
+      id: guest.id,
+      first_name: guest.first_name,
+      last_name: guest.last_name,
+      email: guest.email,
+      phone: guest.phone,
+      admin_label: guest.admin_label,
+      reasons,
+    })
+  }
+
+  return matches
+}
+
+async function listWeddingGuests(weddingId: string): Promise<Guest[]> {
+  const admin = createAdminSupabaseClient()
+  const result = await admin
+    .from('guests')
+    .select(GUEST_SELECT)
+    .eq('wedding_id', weddingId)
+  if (result.error) throw new Error(result.error.message)
+  return result.data
+}
+
+async function applyExistingLabels(
+  weddingId: string,
+  updates: Array<{ guestId: string; adminLabel: string }>,
+) {
+  const admin = createAdminSupabaseClient()
+  for (const update of updates) {
+    const label = update.adminLabel.trim()
+    if (!label) throw new Error('Admin labels are required for both guests.')
+    const result = await admin
+      .from('guests')
+      .update({ admin_label: label })
+      .eq('id', update.guestId)
+      .eq('wedding_id', weddingId)
+    if (result.error) throw new Error(result.error.message)
+  }
+}
 
 export async function listGuestsHandler(): Promise<Guest[]> {
   const session = await requireWeddingSession()
@@ -28,15 +122,55 @@ export async function listGuestsHandler(): Promise<Guest[]> {
   return result.data
 }
 
-export async function createGuestHandler(input: GuestInput): Promise<Guest> {
+export async function createGuestHandler(
+  input: GuestInput & { admin_label?: string | null },
+  resolution?: GuestConflictResolution,
+): Promise<CreateGuestResult> {
   const session = await requireWeddingSession()
   const admin = createAdminSupabaseClient()
+  const existing = await listWeddingGuests(session.wedding.id)
+  const matches = findConflicts(existing, input)
+  const {
+    admin_label: inputAdminLabel,
+    ...guestFields
+  } = input
+
+  if (matches.length > 0 && !resolution) {
+    return { status: 'conflict', matches }
+  }
+
+  if (matches.length > 0 && resolution) {
+    const newLabel = resolution.newAdminLabel.trim()
+    if (!newLabel) throw new Error('Add a label for the new guest.')
+    if (resolution.existingLabels.length !== matches.length) {
+      throw new Error('Add a label for each existing matching guest.')
+    }
+    for (const match of matches) {
+      const label = resolution.existingLabels.find((item) => item.guestId === match.id)
+      if (!label?.adminLabel.trim()) {
+        throw new Error('Add a label for each existing matching guest.')
+      }
+    }
+    await applyExistingLabels(session.wedding.id, resolution.existingLabels)
+    const result = await admin
+      .from('guests')
+      .insert({
+        wedding_id: session.wedding.id,
+        ...guestFields,
+        admin_label: newLabel,
+      })
+      .select(GUEST_SELECT)
+      .single()
+    if (result.error) throw new Error(result.error.message)
+    return { status: 'created', guest: result.data }
+  }
 
   const result = await admin
     .from('guests')
     .insert({
       wedding_id: session.wedding.id,
-      ...input,
+      ...guestFields,
+      admin_label: inputAdminLabel?.trim() || null,
     })
     .select(GUEST_SELECT)
     .single()
@@ -45,19 +179,47 @@ export async function createGuestHandler(input: GuestInput): Promise<Guest> {
     throw new Error(result.error.message)
   }
 
-  return result.data
+  return { status: 'created', guest: result.data }
 }
 
 export async function updateGuestHandler(
   guestId: string,
-  input: GuestInput,
-): Promise<Guest> {
+  input: GuestInput & { admin_label?: string | null },
+  resolution?: GuestConflictResolution,
+): Promise<UpdateGuestResult> {
   const session = await requireWeddingSession()
   const admin = createAdminSupabaseClient()
+  const existing = await listWeddingGuests(session.wedding.id)
+  const matches = findConflicts(existing, input, guestId)
+
+  if (matches.length > 0 && !resolution) {
+    return { status: 'conflict', matches }
+  }
+
+  const adminLabel =
+    resolution?.newAdminLabel.trim() ||
+    input.admin_label?.trim() ||
+    null
+
+  if (matches.length > 0 && resolution) {
+    if (!resolution.newAdminLabel.trim()) {
+      throw new Error('Add a label for this guest.')
+    }
+    await applyExistingLabels(session.wedding.id, resolution.existingLabels)
+  }
 
   const result = await admin
     .from('guests')
-    .update(input)
+    .update({
+      first_name: input.first_name,
+      last_name: input.last_name,
+      email: input.email,
+      phone: input.phone,
+      party_name: input.party_name,
+      plus_ones: input.plus_ones,
+      notes: input.notes,
+      admin_label: adminLabel,
+    })
     .eq('id', guestId)
     .eq('wedding_id', session.wedding.id)
     .select(GUEST_SELECT)
@@ -67,7 +229,7 @@ export async function updateGuestHandler(
     throw new Error(result.error.message)
   }
 
-  return result.data
+  return { status: 'updated', guest: result.data }
 }
 
 export async function deleteGuestHandler(guestId: string): Promise<{ ok: true }> {
@@ -85,6 +247,24 @@ export async function deleteGuestHandler(guestId: string): Promise<{ ok: true }>
   }
 
   return { ok: true as const }
+}
+
+export async function unlockGuestRsvpHandler(
+  guestId: string,
+): Promise<Guest> {
+  const session = await requireWeddingSession()
+  const admin = createAdminSupabaseClient()
+
+  const result = await admin
+    .from('guests')
+    .update({ allow_rsvp_update: true })
+    .eq('id', guestId)
+    .eq('wedding_id', session.wedding.id)
+    .select(GUEST_SELECT)
+    .single()
+
+  if (result.error) throw new Error(result.error.message)
+  return result.data
 }
 
 export type SendGuestInviteResult = {
@@ -234,4 +414,8 @@ export async function sendGuestInvitesBulkHandler(input: {
   }
 
   return { sent, skipped, failed }
+}
+
+export function guestRsvpUrl(rsvpToken: string): string {
+  return `${getAppUrl()}/rsvp/${encodeURIComponent(rsvpToken)}`
 }
