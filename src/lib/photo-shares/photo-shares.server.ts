@@ -1,6 +1,7 @@
 import { requireWeddingSession } from '#/lib/auth/session.server'
 import { getAppUrl } from '#/lib/app-url'
 import { formatCoupleNames } from '#/lib/constants'
+import { sendGuestPhotoShareEmail } from '#/lib/email/resend.server'
 import { createPhotoSignedUrl } from '#/lib/page-blocks/storage.server'
 import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
 import { formatWeddingDate } from '#/lib/wedding/public-settings'
@@ -239,6 +240,86 @@ export async function deletePhotoShareGroupHandler(
 
   if (removed.error) throw new Error(removed.error.message)
   return { ok: true }
+}
+
+export type SendPhotoShareEmailsResult = {
+  sent: number
+  skipped: number
+  failed: Array<{ guestId: string; email: string; error: string }>
+}
+
+export async function sendPhotoShareEmailsHandler(
+  groupId: string,
+): Promise<SendPhotoShareEmailsResult> {
+  const session = await requireWeddingSession()
+  const admin = createAdminSupabaseClient()
+
+  const groupResult = await admin
+    .from('photo_share_groups')
+    .select('id, name, share_token')
+    .eq('id', groupId)
+    .eq('wedding_id', session.wedding.id)
+    .maybeSingle()
+
+  if (groupResult.error) throw new Error(groupResult.error.message)
+  if (!groupResult.data) throw new Error('Share group not found.')
+
+  const members = await admin
+    .from('photo_share_group_guests')
+    .select('guest_id')
+    .eq('group_id', groupId)
+
+  if (members.error) throw new Error(members.error.message)
+
+  const guestIds = (members.data ?? []).map((row) => row.guest_id)
+  if (guestIds.length === 0) {
+    return { sent: 0, skipped: 0, failed: [] }
+  }
+
+  const guestsResult = await admin
+    .from('guests')
+    .select('id, first_name, email, rsvp_token')
+    .eq('wedding_id', session.wedding.id)
+    .in('id', guestIds)
+
+  if (guestsResult.error) throw new Error(guestsResult.error.message)
+
+  const coupleLabel = formatCoupleNames(
+    session.wedding.groom_name,
+    session.wedding.bride_name,
+  )
+  const origin = getAppUrl()
+  const group = groupResult.data
+
+  let sent = 0
+  let skipped = 0
+  const failed: SendPhotoShareEmailsResult['failed'] = []
+
+  for (const guest of guestsResult.data ?? []) {
+    const email = guest.email?.trim().toLowerCase()
+    if (!email) {
+      skipped += 1
+      continue
+    }
+    try {
+      await sendGuestPhotoShareEmail({
+        to: email,
+        guestName: guest.first_name,
+        coupleLabel,
+        shareName: group.name,
+        photosUrl: `${origin}/photos/${group.share_token}?g=${encodeURIComponent(guest.rsvp_token)}`,
+      })
+      sent += 1
+    } catch (err) {
+      failed.push({
+        guestId: guest.id,
+        email,
+        error: err instanceof Error ? err.message : 'Unable to send email.',
+      })
+    }
+  }
+
+  return { sent, skipped, failed }
 }
 
 export async function getPhotoShareViewerHandler(input: {

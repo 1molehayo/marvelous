@@ -1,6 +1,6 @@
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
-import { CopySimple, LinkSimple } from '@phosphor-icons/react'
+import { CopySimple, EnvelopeSimple, LinkSimple } from '@phosphor-icons/react'
 import {
   getCoreRowModel,
   getFilteredRowModel,
@@ -25,6 +25,8 @@ import {
   createGuest,
   deleteGuest,
   listGuests,
+  sendGuestInvite,
+  sendGuestInvitesBulk,
   updateGuest,
 } from '#/lib/guests/guests'
 import {
@@ -98,6 +100,9 @@ function AdminGuestsPage() {
     { id: 'name', desc: false },
   ])
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [isEmailing, setIsEmailing] = useState(false)
+  const [isBulkEmailing, setIsBulkEmailing] = useState(false)
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -221,6 +226,65 @@ function AdminGuestsPage() {
     }
   }
 
+  const emailGuestInvite = async (guest: Guest) => {
+    if (!guest.email?.trim()) {
+      toast.error('Add an email address before sending an invite.')
+      return
+    }
+    setIsEmailing(true)
+    try {
+      const result = await sendGuestInvite({ data: { guestId: guest.id } })
+      toast.success(
+        result.includedPhotos
+          ? `Invite emailed to ${result.email} (includes photo link).`
+          : `Invite emailed to ${result.email}.`,
+      )
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to send invite email.',
+      )
+    } finally {
+      setIsEmailing(false)
+    }
+  }
+
+  const emailPendingInvites = async () => {
+    setIsBulkEmailing(true)
+    try {
+      const result = await sendGuestInvitesBulk({
+        data: { onlyPending: true },
+      })
+      if (result.sent === 0 && result.failed.length === 0) {
+        toast.message(
+          result.skipped > 0
+            ? 'No pending guests with email addresses to invite.'
+            : 'No pending guests to invite.',
+        )
+      } else if (result.failed.length === 0) {
+        toast.success(
+          `Sent ${result.sent} invite${result.sent === 1 ? '' : 's'}${
+            result.skipped
+              ? ` · ${result.skipped} skipped (no email)`
+              : ''
+          }.`,
+        )
+      } else {
+        toast.error(
+          `Sent ${result.sent}, failed ${result.failed.length}${
+            result.skipped ? `, skipped ${result.skipped}` : ''
+          }.`,
+        )
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to send invite emails.',
+      )
+    } finally {
+      setIsBulkEmailing(false)
+      setBulkConfirmOpen(false)
+    }
+  }
+
   const columns = useMemo<ColumnDef<Guest>[]>(
     () => [
       {
@@ -283,6 +347,16 @@ function AdminGuestsPage() {
               type="button"
               size="sm"
               variant="outline"
+              disabled={!row.original.email?.trim() || isEmailing}
+              onClick={() => void emailGuestInvite(row.original)}
+            >
+              <EnvelopeSimple />
+              Email
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
               onClick={() => void copyRsvpLink(row.original)}
             >
               <LinkSimple />
@@ -298,10 +372,10 @@ function AdminGuestsPage() {
             </Button>
           </div>
         ),
-        meta: { minWidth: 180, className: 'w-44' },
+        meta: { minWidth: 260, className: 'w-64' },
       },
     ],
-    [],
+    [isEmailing],
   )
 
   const table = useReactTable({
@@ -363,13 +437,24 @@ function AdminGuestsPage() {
         <div>
           <h1 className="admin-page-title">Guests</h1>
           <p className="text-foreground-secondary mt-2 text-sm">
-            Manage the guest list and RSVP responses. Share each guest’s private
-            link until email invites ship.
+            Manage the guest list, email RSVP invites, or copy private links.
           </p>
         </div>
-        <Button type="button" size="sm" onClick={openCreate}>
-          Add guest
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={isBulkEmailing || pendingCount === 0}
+            onClick={() => setBulkConfirmOpen(true)}
+          >
+            <EnvelopeSimple />
+            Email pending
+          </Button>
+          <Button type="button" size="sm" onClick={openCreate}>
+            Add guest
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-3">
@@ -595,15 +680,28 @@ function AdminGuestsPage() {
                   <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
                     RSVP
                   </p>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => void copyRsvpLink(selectedGuest)}
-                  >
-                    <CopySimple />
-                    Copy link
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={!selectedGuest.email?.trim() || isEmailing}
+                      isLoading={isEmailing}
+                      onClick={() => void emailGuestInvite(selectedGuest)}
+                    >
+                      <EnvelopeSimple />
+                      Email invite
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void copyRsvpLink(selectedGuest)}
+                    >
+                      <CopySimple />
+                      Copy link
+                    </Button>
+                  </div>
                 </div>
 
                 <rsvpForm.Field name="status">
@@ -734,6 +832,16 @@ function AdminGuestsPage() {
         isConfirming={isDeleting}
         onOpenChange={setDeleteOpen}
         onConfirm={onDelete}
+      />
+
+      <ConfirmDialog
+        open={bulkConfirmOpen}
+        title="Email pending guests?"
+        description="Sends an RSVP invite to every pending guest who has an email address. Guests without email are skipped. Private photo links are included when the guest is in a share group."
+        confirmLabel="Send emails"
+        isConfirming={isBulkEmailing}
+        onOpenChange={setBulkConfirmOpen}
+        onConfirm={() => void emailPendingInvites()}
       />
     </div>
   )

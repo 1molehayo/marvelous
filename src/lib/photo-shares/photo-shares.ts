@@ -86,6 +86,19 @@ export const deletePhotoShareGroup = createServerFn({ method: 'POST' })
     return deletePhotoShareGroupHandler(data.groupId)
   })
 
+export const sendPhotoShareEmails = createServerFn({ method: 'POST' })
+  .validator((data: { groupId: string }) => {
+    const groupId = String(data.groupId).trim()
+    if (!groupId) throw new Error('Share group id is required.')
+    return { groupId }
+  })
+  .handler(async ({ data }) => {
+    const { sendPhotoShareEmailsHandler } = await import(
+      './photo-shares.server'
+    )
+    return sendPhotoShareEmailsHandler(data.groupId)
+  })
+
 export const getPhotoShareViewer = createServerFn({ method: 'GET' })
   .validator((data: { token: string; guestRsvpToken?: string }) => {
     const token = String(data.token).trim()

@@ -37,3 +37,23 @@ export const deleteGuest = createServerFn({ method: 'POST' })
     const { deleteGuestHandler } = await import('./guests.server')
     return deleteGuestHandler(data.guestId)
   })
+
+export const sendGuestInvite = createServerFn({ method: 'POST' })
+  .validator((data: { guestId: string }) => {
+    const guestId = String(data.guestId).trim()
+    if (!guestId) throw new Error('Guest id is required.')
+    return { guestId }
+  })
+  .handler(async ({ data }) => {
+    const { sendGuestInviteHandler } = await import('./guests.server')
+    return sendGuestInviteHandler(data.guestId)
+  })
+
+export const sendGuestInvitesBulk = createServerFn({ method: 'POST' })
+  .validator((data: { onlyPending?: boolean }) => ({
+    onlyPending: Boolean(data.onlyPending),
+  }))
+  .handler(async ({ data }) => {
+    const { sendGuestInvitesBulkHandler } = await import('./guests.server')
+    return sendGuestInvitesBulkHandler(data)
+  })

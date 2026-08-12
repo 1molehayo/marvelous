@@ -6,8 +6,14 @@ import {
 import { isLocalSupabase } from '#/lib/supabase/env'
 import { PRODUCT_NAME } from '#/lib/constants'
 import {
+  guestPhotoShareEmailHtml,
+  guestPhotoShareEmailText,
+  guestRsvpInviteEmailHtml,
+  guestRsvpInviteEmailText,
   inviteEmailHtml,
   inviteEmailText,
+  type GuestPhotoShareEmailInput,
+  type GuestRsvpInviteEmailInput,
 } from '#/lib/email/templates'
 
 function getResendApiKey(): string | null {
@@ -192,6 +198,30 @@ export async function sendAdminInviteEmail(input: {
     subject,
     text: inviteEmailText(input),
     html: inviteEmailHtml(input),
+  })
+}
+
+export async function sendGuestRsvpInviteEmail(
+  input: GuestRsvpInviteEmailInput & { to: string },
+) {
+  const subject = `You’re invited — ${input.coupleLabel}`
+  return sendResendEmail({
+    to: input.to,
+    subject,
+    text: guestRsvpInviteEmailText(input),
+    html: guestRsvpInviteEmailHtml(input),
+  })
+}
+
+export async function sendGuestPhotoShareEmail(
+  input: GuestPhotoShareEmailInput & { to: string },
+) {
+  const subject = `Private photos from ${input.coupleLabel}`
+  return sendResendEmail({
+    to: input.to,
+    subject,
+    text: guestPhotoShareEmailText(input),
+    html: guestPhotoShareEmailHtml(input),
   })
 }
 

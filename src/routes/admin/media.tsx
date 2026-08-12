@@ -3,7 +3,12 @@ import {
   redirect,
   useRouter,
 } from '@tanstack/react-router'
-import { CopySimple, Trash, UploadSimple } from '@phosphor-icons/react'
+import {
+  CopySimple,
+  EnvelopeSimple,
+  Trash,
+  UploadSimple,
+} from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
@@ -20,6 +25,7 @@ import {
   createPhotoShareGroup,
   deletePhotoShareGroup,
   listPhotoShareGroups,
+  sendPhotoShareEmails,
   updatePhotoShareGroup,
 } from '#/lib/photo-shares/photo-shares'
 import type {
@@ -81,6 +87,7 @@ function AdminMediaPage() {
   const [isSavingShare, setIsSavingShare] = useState(false)
   const [deleteGroupId, setDeleteGroupId] = useState<string | null>(null)
   const [isDeletingGroup, setIsDeletingGroup] = useState(false)
+  const [emailingGroupId, setEmailingGroupId] = useState<string | null>(null)
 
   useEffect(() => {
     setAssets(initial.assets)
@@ -125,6 +132,40 @@ function AdminMediaPage() {
 
   const refresh = async () => {
     await router.invalidate()
+  }
+
+  const emailShareGuests = async (groupId: string) => {
+    setEmailingGroupId(groupId)
+    try {
+      const result = await sendPhotoShareEmails({ data: { groupId } })
+      if (result.sent === 0 && result.failed.length === 0) {
+        toast.message(
+          result.skipped > 0
+            ? 'No guests with email addresses in this share.'
+            : 'Add guests to this share before emailing.',
+        )
+      } else if (result.failed.length === 0) {
+        toast.success(
+          `Sent ${result.sent} photo email${result.sent === 1 ? '' : 's'}${
+            result.skipped
+              ? ` · ${result.skipped} skipped (no email)`
+              : ''
+          }.`,
+        )
+      } else {
+        toast.error(
+          `Sent ${result.sent}, failed ${result.failed.length}${
+            result.skipped ? `, skipped ${result.skipped}` : ''
+          }.`,
+        )
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to send photo emails.',
+      )
+    } finally {
+      setEmailingGroupId(null)
+    }
   }
 
   return (
@@ -291,6 +332,20 @@ function AdminMediaPage() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={
+                    group.guestIds.length === 0 ||
+                    emailingGroupId === group.id
+                  }
+                  isLoading={emailingGroupId === group.id}
+                  onClick={() => void emailShareGuests(group.id)}
+                >
+                  <EnvelopeSimple />
+                  Email guests
+                </Button>
                 <Button
                   type="button"
                   size="sm"
@@ -470,6 +525,22 @@ function AdminMediaPage() {
                   width={180}
                   height={180}
                 />
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={
+                      editing.guestIds.length === 0 ||
+                      emailingGroupId === editing.id
+                    }
+                    isLoading={emailingGroupId === editing.id}
+                    onClick={() => void emailShareGuests(editing.id)}
+                  >
+                    <EnvelopeSimple />
+                    Email guests
+                  </Button>
+                </div>
                 <GuestLinks
                   group={editing}
                   guests={guests}
