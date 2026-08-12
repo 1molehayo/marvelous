@@ -6,8 +6,10 @@ import {
 import {
   CopySimple,
   EnvelopeSimple,
+  Plus,
   Trash,
   UploadSimple,
+  X,
 } from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '#/components/ui/button'
@@ -17,10 +19,16 @@ import { Input } from '#/components/ui/input'
 import { SideDrawer } from '#/components/ui/side-drawer'
 import { toast } from '#/components/ui/toaster'
 import {
+  createMediaUpload,
   deleteMediaAsset,
+  finalizeMediaUpload,
   listMediaAssets,
-  uploadMediaAsset,
 } from '#/lib/media/media'
+import {
+  ALLOWED_MEDIA_MIME_TYPES,
+  MAX_MEDIA_UPLOAD_BYTES,
+} from '#/lib/media/constants'
+import { uploadFileToSignedUrl } from '#/lib/media/upload-client'
 import {
   createPhotoShareGroup,
   deletePhotoShareGroup,
@@ -53,18 +61,24 @@ export const Route = createFileRoute('/admin/media')({
 
 type TabId = 'library' | 'shares'
 
-async function fileToBase64(file: File) {
-  const buffer = await file.arrayBuffer()
-  const bytes = new Uint8Array(buffer)
-  let binary = ''
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte)
-  }
-  return btoa(binary)
+const UPLOAD_CONCURRENCY = 3
+const ALLOWED_MIME = new Set<string>(ALLOWED_MEDIA_MIME_TYPES)
+
+type UploadJob = {
+  id: string
+  file: File
+  previewUrl: string
+  status: 'queued' | 'uploading' | 'finalizing' | 'error'
+  progress: number
+  error: string | null
 }
 
 function qrImageUrl(value: string) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(value)}`
+}
+
+function newUploadId() {
+  return crypto.randomUUID()
 }
 
 function AdminMediaPage() {
@@ -74,8 +88,11 @@ function AdminMediaPage() {
   const [assets, setAssets] = useState(initial.assets)
   const [groups, setGroups] = useState(initial.groups)
   const [guests, setGuests] = useState(initial.guests)
-  const [isUploading, setIsUploading] = useState(false)
+  const [uploads, setUploads] = useState<UploadJob[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const uploadQueueRef = useRef<string[]>([])
+  const activeUploadsRef = useRef(0)
+  const uploadsRef = useRef<UploadJob[]>([])
   const [deleteAssetId, setDeleteAssetId] = useState<string | null>(null)
   const [isDeletingAsset, setIsDeletingAsset] = useState(false)
 
@@ -94,6 +111,145 @@ function AdminMediaPage() {
     setGroups(initial.groups)
     setGuests(initial.guests)
   }, [initial])
+
+  useEffect(() => {
+    return () => {
+      for (const job of uploadsRef.current) {
+        URL.revokeObjectURL(job.previewUrl)
+      }
+    }
+  }, [])
+
+  const patchUpload = (id: string, patch: Partial<UploadJob>) => {
+    setUploads((current) => {
+      const next = current.map((job) =>
+        job.id === id ? { ...job, ...patch } : job,
+      )
+      uploadsRef.current = next
+      return next
+    })
+  }
+
+  const removeUpload = (id: string) => {
+    setUploads((current) => {
+      const job = current.find((item) => item.id === id)
+      if (job) URL.revokeObjectURL(job.previewUrl)
+      const next = current.filter((item) => item.id !== id)
+      uploadsRef.current = next
+      return next
+    })
+  }
+
+  const runUploadJob = async (id: string) => {
+    const job = uploadsRef.current.find((item) => item.id === id)
+    if (!job) return
+
+    patchUpload(id, { status: 'uploading', progress: 0, error: null })
+    try {
+      const signed = await createMediaUpload({
+        data: {
+          name: job.file.name,
+          type: job.file.type,
+          byteSize: job.file.size,
+        },
+      })
+
+      await uploadFileToSignedUrl(signed.signedUrl, job.file, {
+        onProgress: (progress) => {
+          patchUpload(id, { progress, status: 'uploading' })
+        },
+      })
+
+      patchUpload(id, { status: 'finalizing', progress: 100 })
+      const asset = await finalizeMediaUpload({
+        data: {
+          path: signed.path,
+          filename: signed.filename,
+          contentType: signed.contentType,
+          byteSize: signed.byteSize,
+        },
+      })
+
+      setAssets((current) => [asset, ...current.filter((a) => a.id !== asset.id)])
+      removeUpload(id)
+    } catch (err) {
+      patchUpload(id, {
+        status: 'error',
+        error: err instanceof Error ? err.message : 'Unable to upload photo.',
+      })
+    }
+  }
+
+  const pumpUploadQueue = () => {
+    while (
+      activeUploadsRef.current < UPLOAD_CONCURRENCY &&
+      uploadQueueRef.current.length > 0
+    ) {
+      const nextId = uploadQueueRef.current.shift()
+      if (!nextId) break
+      activeUploadsRef.current += 1
+      void runUploadJob(nextId).finally(() => {
+        activeUploadsRef.current -= 1
+        pumpUploadQueue()
+      })
+    }
+  }
+
+  const enqueueFiles = (fileList: FileList | File[]) => {
+    const files = Array.from(fileList)
+    if (files.length === 0) return
+
+    const accepted: UploadJob[] = []
+    let skippedType = 0
+    let skippedSize = 0
+
+    for (const file of files) {
+      if (!ALLOWED_MIME.has(file.type)) {
+        skippedType += 1
+        continue
+      }
+      if (file.size > MAX_MEDIA_UPLOAD_BYTES) {
+        skippedSize += 1
+        continue
+      }
+      accepted.push({
+        id: newUploadId(),
+        file,
+        previewUrl: URL.createObjectURL(file),
+        status: 'queued',
+        progress: 0,
+        error: null,
+      })
+    }
+
+    if (skippedType > 0) {
+      toast.error(
+        `${skippedType} file${skippedType === 1 ? '' : 's'} skipped (use JPEG, PNG, WebP, or GIF).`,
+      )
+    }
+    if (skippedSize > 0) {
+      toast.error(
+        `${skippedSize} file${skippedSize === 1 ? '' : 's'} skipped (over 12MB).`,
+      )
+    }
+    if (accepted.length === 0) return
+
+    setUploads((current) => {
+      const next = [...accepted, ...current]
+      uploadsRef.current = next
+      return next
+    })
+    uploadQueueRef.current.push(...accepted.map((job) => job.id))
+    pumpUploadQueue()
+  }
+
+  const retryUpload = (id: string) => {
+    const job = uploadsRef.current.find((item) => item.id === id)
+    if (!job || job.status !== 'error') return
+    patchUpload(id, { status: 'queued', progress: 0, error: null })
+    uploadQueueRef.current.push(id)
+    pumpUploadQueue()
+  }
 
   const openCreateShare = () => {
     setEditing(null)
@@ -168,6 +324,23 @@ function AdminMediaPage() {
     }
   }
 
+  const selectedShareAssets = assets.filter((asset) =>
+    selectedAssetIds.includes(asset.id),
+  )
+  const availableShareAssets = assets.filter(
+    (asset) => !selectedAssetIds.includes(asset.id),
+  )
+
+  const addAssetToShare = (assetId: string) => {
+    setSelectedAssetIds((current) =>
+      current.includes(assetId) ? current : [...current, assetId],
+    )
+  }
+
+  const removeAssetFromShare = (assetId: string) => {
+    setSelectedAssetIds((current) => current.filter((id) => id !== assetId))
+  }
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -183,45 +356,23 @@ function AdminMediaPage() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept={ALLOWED_MEDIA_MIME_TYPES.join(',')}
+              multiple
               className="sr-only"
               tabIndex={-1}
-              onChange={async (event) => {
-                const file = event.target.files?.[0]
-                if (!file) return
-                setIsUploading(true)
-                try {
-                  const dataBase64 = await fileToBase64(file)
-                  const uploaded = await uploadMediaAsset({
-                    data: {
-                      name: file.name,
-                      type: file.type,
-                      dataBase64,
-                    },
-                  })
-                  setAssets((current) => [uploaded, ...current])
-                  toast.success('Photo uploaded.')
-                  await refresh()
-                } catch (err) {
-                  toast.error(
-                    err instanceof Error
-                      ? err.message
-                      : 'Unable to upload photo.',
-                  )
-                } finally {
-                  setIsUploading(false)
-                  event.target.value = ''
-                }
+              onChange={(event) => {
+                const files = event.target.files
+                if (files?.length) enqueueFiles(files)
+                event.target.value = ''
               }}
             />
             <Button
               type="button"
               size="md"
-              isLoading={isUploading}
               onClick={() => fileInputRef.current?.click()}
             >
               <UploadSimple />
-              Upload photo
+              Upload photos
             </Button>
           </>
         ) : (
@@ -255,18 +406,90 @@ function AdminMediaPage() {
       </div>
 
       {tab === 'library' ? (
-        assets.length === 0 ? (
+        assets.length === 0 && uploads.length === 0 ? (
           <p className="text-foreground-secondary text-sm">
             No photos yet. Upload images to use in private guest shares.
           </p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {uploads.map((job) => (
+              <figure
+                key={job.id}
+                className="border-border bg-surface overflow-hidden rounded-xl border"
+              >
+                <div className="bg-background-secondary relative aspect-4/3">
+                  <img
+                    src={job.previewUrl}
+                    alt={job.file.name}
+                    className={cn(
+                      'h-full w-full object-cover',
+                      job.status !== 'error' && 'opacity-70',
+                    )}
+                  />
+                  {job.status !== 'error' ? (
+                    <div className="absolute inset-x-0 bottom-0 space-y-1 bg-black/55 px-3 py-2 text-white">
+                      <div className="flex items-center justify-between gap-2 text-xs">
+                        <span>
+                          {job.status === 'queued'
+                            ? 'Waiting…'
+                            : job.status === 'finalizing'
+                              ? 'Saving…'
+                              : `Uploading ${job.progress}%`}
+                        </span>
+                        <span>{job.progress}%</span>
+                      </div>
+                      <div
+                        className="h-1.5 overflow-hidden rounded-full bg-white/25"
+                        role="progressbar"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={job.progress}
+                      >
+                        <div
+                          className="h-full rounded-full bg-white transition-[width] duration-150 ease-out"
+                          style={{ width: `${job.progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/55 px-3 text-center text-white">
+                      <p className="text-xs">
+                        {job.error ?? 'Upload failed.'}
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="border-white/40 bg-transparent text-white hover:bg-white/10"
+                          onClick={() => retryUpload(job.id)}
+                        >
+                          Retry
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="border-white/40 bg-transparent text-white hover:bg-white/10"
+                          onClick={() => removeUpload(job.id)}
+                        >
+                          Dismiss
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <figcaption className="space-y-2 p-3">
+                  <p className="truncate text-sm font-medium">{job.file.name}</p>
+                </figcaption>
+              </figure>
+            ))}
             {assets.map((asset) => (
               <figure
                 key={asset.id}
                 className="border-border bg-surface overflow-hidden rounded-xl border"
               >
-                <div className="bg-background-secondary aspect-[4/3]">
+                <div className="bg-background-secondary aspect-4/3">
                   {asset.signedUrl ? (
                     <img
                       src={asset.signedUrl}
@@ -381,7 +604,7 @@ function AdminMediaPage() {
       <SideDrawer open={drawerOpen} onOpenChange={setDrawerOpen}>
         <SideDrawer.Header
           title={editing ? 'Edit photo share' : 'New photo share'}
-          drawerDescription="Select photos and guests. Each guest can only be in one share group."
+          drawerDescription="Choose which library photos belong in this album, then invite guests. Each guest can only be in one share."
         />
         <SideDrawer.Content>
           <form
@@ -434,31 +657,66 @@ function AdminMediaPage() {
               </Field.Control>
             </Field>
 
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Photos</p>
-              {assets.length === 0 ? (
-                <p className="text-foreground-secondary text-sm">
-                  Upload photos in the Library tab first.
+            <div className="space-y-3">
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="text-sm font-medium">In this album</p>
+                <p className="text-foreground-secondary text-xs">
+                  {selectedShareAssets.length} photo
+                  {selectedShareAssets.length === 1 ? '' : 's'}
+                </p>
+              </div>
+              {selectedShareAssets.length === 0 ? (
+                <p className="text-foreground-secondary border-border rounded-lg border border-dashed px-3 py-4 text-sm">
+                  No photos in this album yet. Add from your library below, then
+                  save.
                 </p>
               ) : (
                 <div className="grid max-h-56 grid-cols-3 gap-2 overflow-y-auto">
-                  {assets.map((asset) => {
-                    const selected = selectedAssetIds.includes(asset.id)
-                    return (
+                  {selectedShareAssets.map((asset) => (
+                    <div
+                      key={asset.id}
+                      className="border-border relative aspect-square overflow-hidden rounded-lg border"
+                    >
+                      {asset.signedUrl ? (
+                        <img
+                          src={asset.signedUrl}
+                          alt={asset.filename}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="bg-background-secondary h-full w-full" />
+                      )}
+                      <button
+                        type="button"
+                        aria-label={`Remove ${asset.filename} from album`}
+                        onClick={() => removeAssetFromShare(asset.id)}
+                        className="absolute top-1 right-1 inline-flex size-7 items-center justify-center rounded-full bg-black/70 text-white"
+                      >
+                        <X className="size-3.5" weight="bold" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Add from library</p>
+                {assets.length === 0 ? (
+                  <p className="text-foreground-secondary text-sm">
+                    Upload photos in the Library tab first.
+                  </p>
+                ) : availableShareAssets.length === 0 ? (
+                  <p className="text-foreground-secondary text-sm">
+                    Every library photo is already in this album.
+                  </p>
+                ) : (
+                  <div className="grid max-h-56 grid-cols-3 gap-2 overflow-y-auto">
+                    {availableShareAssets.map((asset) => (
                       <button
                         key={asset.id}
                         type="button"
-                        onClick={() =>
-                          toggleId(
-                            asset.id,
-                            selectedAssetIds,
-                            setSelectedAssetIds,
-                          )
-                        }
-                        className={cn(
-                          'border-border aspect-square overflow-hidden rounded-lg border',
-                          selected && 'ring-accent ring-2',
-                        )}
+                        onClick={() => addAssetToShare(asset.id)}
+                        className="border-border group relative aspect-square overflow-hidden rounded-lg border"
                       >
                         {asset.signedUrl ? (
                           <img
@@ -466,12 +724,20 @@ function AdminMediaPage() {
                             alt={asset.filename}
                             className="h-full w-full object-cover"
                           />
-                        ) : null}
+                        ) : (
+                          <div className="bg-background-secondary h-full w-full" />
+                        )}
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-white opacity-0 transition group-hover:bg-black/40 group-hover:opacity-100">
+                          <Plus className="size-6" weight="bold" />
+                        </span>
+                        <span className="sr-only">
+                          Add {asset.filename} to album
+                        </span>
                       </button>
-                    )
-                  })}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">

@@ -1,7 +1,10 @@
 import { createServerFn } from '@tanstack/react-start'
-import type { MediaAssetListItem } from '#/lib/media/media.server'
+import type {
+  CreateMediaUploadResult,
+  MediaAssetListItem,
+} from '#/lib/media/media.server'
 
-export type { MediaAssetListItem }
+export type { CreateMediaUploadResult, MediaAssetListItem }
 
 export const listMediaAssets = createServerFn({ method: 'GET' }).handler(
   async (): Promise<MediaAssetListItem[]> => {
@@ -10,20 +13,54 @@ export const listMediaAssets = createServerFn({ method: 'GET' }).handler(
   },
 )
 
-export const uploadMediaAsset = createServerFn({ method: 'POST' })
-  .validator((data: { name: string; type: string; dataBase64: string }) => {
-    if (!data.name.trim() || !data.dataBase64) {
-      throw new Error('Image upload payload is incomplete.')
+export const createMediaUpload = createServerFn({ method: 'POST' })
+  .validator((data: { name: string; type: string; byteSize: number }) => {
+    const name = String(data.name).trim()
+    const type = String(data.type).trim()
+    const byteSize = Number(data.byteSize)
+    if (!name) throw new Error('Image name is required.')
+    if (!Number.isFinite(byteSize) || byteSize <= 0) {
+      throw new Error('Image data is empty.')
     }
     return {
-      name: data.name,
-      type: data.type || 'application/octet-stream',
-      dataBase64: data.dataBase64,
+      name,
+      type: type || 'application/octet-stream',
+      byteSize,
     }
   })
+  .handler(async ({ data }): Promise<CreateMediaUploadResult> => {
+    const { createMediaUploadHandler } = await import('./media.server')
+    return createMediaUploadHandler(data)
+  })
+
+export const finalizeMediaUpload = createServerFn({ method: 'POST' })
+  .validator(
+    (data: {
+      path: string
+      filename: string
+      contentType: string
+      byteSize: number
+    }) => {
+      const path = String(data.path).trim()
+      const filename = String(data.filename).trim()
+      const contentType = String(data.contentType).trim()
+      const byteSize = Number(data.byteSize)
+      if (!path) throw new Error('Upload path is required.')
+      if (!filename) throw new Error('Image name is required.')
+      if (!Number.isFinite(byteSize) || byteSize <= 0) {
+        throw new Error('Image data is empty.')
+      }
+      return {
+        path,
+        filename,
+        contentType: contentType || 'application/octet-stream',
+        byteSize,
+      }
+    },
+  )
   .handler(async ({ data }): Promise<MediaAssetListItem> => {
-    const { uploadMediaAssetHandler } = await import('./media.server')
-    return uploadMediaAssetHandler(data)
+    const { finalizeMediaUploadHandler } = await import('./media.server')
+    return finalizeMediaUploadHandler(data)
   })
 
 export const deleteMediaAsset = createServerFn({ method: 'POST' })
