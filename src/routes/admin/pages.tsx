@@ -209,6 +209,7 @@ function BlockEditor({
             type="button"
             size="sm"
             variant="outline"
+            className="w-fit"
             onClick={() => {
               onChange({
                 ...block,
@@ -217,6 +218,7 @@ function BlockEditor({
               setPreviewUrl(null)
             }}
           >
+            <Trash />
             Remove background photo
           </Button>
         ) : null}

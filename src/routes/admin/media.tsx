@@ -670,7 +670,9 @@ function AdminMediaPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5">
-                  <p className="text-foreground text-base font-medium">Photos</p>
+                  <p className="text-foreground text-base font-medium">
+                    Photos
+                  </p>
                   <Tooltip delayIn={200}>
                     <Tooltip.Trigger
                       type="button"
@@ -779,7 +781,7 @@ function AdminMediaPage() {
                           ) : (
                             <div className="bg-background-secondary h-full w-full" />
                           )}
-                          <span className="absolute inset-x-0 bottom-0 bg-black/55 py-1 text-center text-[10px] text-white">
+                          <span className="absolute inset-x-0 bottom-0 bg-black/55 py-1 text-center text-2xs text-white">
                             Add
                           </span>
                         </button>

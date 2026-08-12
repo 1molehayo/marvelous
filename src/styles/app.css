@@ -338,6 +338,24 @@ body {
   pointer-events: none;
 }
 
+/*
+  Theme-colored wash over hero photos so light/dark text stays readable
+  and the image only enhances atmosphere. Solid at the top to blend with nav.
+*/
+.public-hero-photo-overlay {
+  background:
+    linear-gradient(
+      180deg,
+      var(--color-background) 0%,
+      color-mix(in oklab, var(--color-background) 94%, transparent) 14%,
+      color-mix(in oklab, var(--color-background) 78%, transparent) 42%,
+      color-mix(in oklab, var(--color-background) 86%, transparent) 72%,
+      var(--color-background) 100%
+    ),
+    color-mix(in oklab, var(--color-background) 70%, transparent);
+  pointer-events: none;
+}
+
 @keyframes public-reveal {
   from {
     opacity: 0;

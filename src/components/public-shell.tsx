@@ -135,7 +135,7 @@ export function PublicShell({
       data-public-theme={theme}
     >
       <PublicRevealObserver />
-      <header className="border-border sticky top-0 z-30 border-b bg-background/90 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-border/40 bg-background/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4 md:gap-4 md:px-6">
           <a
             href={homePath}

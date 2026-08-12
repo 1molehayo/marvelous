@@ -15,7 +15,7 @@ const buttonStyle = cva({
       primary:
         'bg-accent [--button-text-color:var(--color-accent-foreground)] hover:bg-accent/90',
       outline:
-        'border border-border bg-background hover:bg-foreground/2 focus-visible:border-accent',
+        'border border-border bg-surface shadow-sm hover:bg-foreground/4 focus-visible:border-accent',
       ghost:
         'border-none bg-transparent shadow-none ring-0 hover:bg-foreground/5',
       destructive:
