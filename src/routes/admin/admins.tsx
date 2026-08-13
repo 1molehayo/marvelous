@@ -21,7 +21,6 @@ import type { DropdownMenuItem } from '#/components/ui/dropdown-menu'
 import { Field } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
 import { SideDrawer } from '#/components/ui/side-drawer'
-import { Spinner } from '#/components/ui/spinner'
 import { TableView } from '#/components/ui/table-view'
 import { toast } from '#/components/ui/toaster'
 import {
@@ -57,7 +56,6 @@ export const Route = createFileRoute('/admin/admins')({
       throw redirect({ to: '/admin' })
     }
   },
-  pendingComponent: AdminAdminsPending,
   loader: async () => {
     try {
       return await listAdmins()
@@ -76,14 +74,6 @@ export const Route = createFileRoute('/admin/admins')({
   },
   component: AdminAdminsPage,
 })
-
-function AdminAdminsPending() {
-  return (
-    <div className="flex min-h-48 items-center justify-center">
-      <Spinner size="lg" />
-    </div>
-  )
-}
 
 function statusBadgeVariant(
   status: AdminAccountStatus,

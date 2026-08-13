@@ -1,4 +1,4 @@
-import { createFileRoute, notFound } from '@tanstack/react-router'
+import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
 import { DynamicBlock } from '#/components/blocks/dynamic-block'
 import { PublicShell } from '#/components/public-shell'
 import { getAppUrl } from '#/lib/app-url'
@@ -34,6 +34,14 @@ function buildPublicDescription(input: {
 
 export const Route = createFileRoute('/$weddingSlug')({
   beforeLoad: ({ params }) => {
+    // Prefer redirects for platform paths so a match race never flashes 404
+    // while navigating into /admin (same rule as FCP: notFound = missing resource only).
+    if (params.weddingSlug === 'admin') {
+      throw redirect({ to: '/admin' })
+    }
+    if (params.weddingSlug === 'design') {
+      throw redirect({ to: '/design' })
+    }
     if (isReservedPublicSlug(params.weddingSlug)) {
       throw notFound()
     }

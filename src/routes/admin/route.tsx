@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-router'
 import { useState } from 'react'
 import { AdminShell } from '#/components/admin-shell'
+import { AdminOutletPending } from '#/components/route-pending'
 import { isSuperAdminProfile } from '#/lib/auth/roles'
 import { getAdminSession, logoutAdmin } from '#/lib/auth/session'
 import { hasCompleteAdminName } from '#/lib/auth/types'
@@ -26,6 +27,7 @@ export const Route = createFileRoute('/admin')({
 
     const session = await getAdminSession()
     if (!session) {
+      // Auth misses use redirect (FCP-style), never notFound / RouteError.
       throw redirect({ to: '/admin/login' })
     }
 
@@ -60,6 +62,8 @@ export const Route = createFileRoute('/admin')({
 
     return { session }
   },
+  // Keep the admin chrome mounted; only the outlet waits on loaders.
+  pendingComponent: AdminOutletPending,
   component: AdminLayout,
 })
 
