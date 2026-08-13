@@ -119,25 +119,6 @@ export async function getPublicHomeDataHandler(
   }
 }
 
-export async function getFeaturedWeddingSlugHandler(): Promise<string | null> {
-  try {
-    const admin = createAdminSupabaseClient()
-    const result = await admin
-      .from('weddings')
-      .select('public_slug')
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle()
-
-    if (result.error || !result.data?.public_slug) {
-      return null
-    }
-    return result.data.public_slug
-  } catch {
-    return null
-  }
-}
-
 export async function getSignedPhotoUrlHandler(
   imagePath: string,
 ): Promise<string | null> {

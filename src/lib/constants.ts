@@ -11,9 +11,14 @@ export const PRODUCT_NAME_ASCII = 'Igbeyawowa'
 export const PRODUCT_TAGLINE = 'Wedding websites'
 /** Studio credit (optional). */
 export const STUDIO_NAME = 'Onemole'
-/** Personal creator credit (landing footer). */
-export const CREATOR_NAME = 'Olusegun Omilabu'
-export const CREATOR_URL = 'https://olusegunomilabu.com'
+/** v1 donations (PayPal.Me). Freemium/subscriptions can replace this in v2. */
+export const DONATE_URL = 'https://paypal.me/OlusegunOmilabu641'
+export const DONATE_LABEL = 'Donate'
+
+/** Footer / marketing credit on public wedding sites + landing. */
+export function productBuiltWithCredit() {
+  return `Built with ${PRODUCT_NAME}`
+}
 
 export const ADMIN_PREVIEW_NAV_LABELS = [
   'Overview',
@@ -37,6 +42,7 @@ export type AdminNavItem = {
     | '/admin/onboarding'
     | '/admin/profile'
     | '/admin/support'
+    | '/admin/feedback'
   label: string
   exact: boolean
 }
@@ -51,6 +57,7 @@ export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
 
 export const ADMIN_SUPER_NAV_ITEMS: readonly AdminNavItem[] = [
   { to: '/admin/admins', label: 'Admins', exact: false },
+  { to: '/admin/feedback', label: 'Feedback', exact: false },
 ]
 
 export const ADMIN_ACCOUNT_NAV_ITEMS: readonly AdminNavItem[] = [

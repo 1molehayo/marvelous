@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { ColorModeToggle } from '#/components/color-mode-toggle'
 import { PublicRevealObserver } from '#/components/public-reveal-observer'
+import {
+  PRODUCT_NAME,
+  productBuiltWithCredit,
+} from '#/lib/constants'
 import { FALLBACK_PUBLIC_THEME } from '#/lib/site-settings'
 import type { PublicThemeId } from '#/lib/site-settings'
 import type { PublicSectionNavItem } from '#/lib/page-blocks/types'
@@ -179,6 +184,17 @@ export function PublicShell({
               {formatWeddingDate(weddingDate)}
             </p>
           ) : null}
+          <p className="text-foreground-secondary mt-4 text-xs tracking-[0.14em] uppercase">
+            © {new Date().getFullYear()} {PRODUCT_NAME}
+          </p>
+          <p className="text-foreground-secondary text-sm">
+            <Link
+              to="/"
+              className="text-foreground underline-offset-4 transition hover:underline"
+            >
+              {productBuiltWithCredit()}
+            </Link>
+          </p>
         </div>
       </footer>
     </div>

@@ -53,12 +53,13 @@ export function DetailsBlock({
         </div>
         <div
           className={cn(
-            'grid gap-10 md:gap-12',
-            twoColumns ? 'md:grid-cols-2' : 'mx-auto max-w-xl',
+            twoColumns
+              ? 'mx-auto grid w-full max-w-2xl grid-cols-1 gap-10 text-left md:grid-cols-2 md:gap-x-14 md:gap-y-0'
+              : 'mx-auto max-w-xl text-center',
           )}
         >
           {hasVenue ? (
-            <div className={cn(!twoColumns && 'text-center')}>
+            <div>
               <p className="public-kicker mb-3">Venue</p>
               {venueName ? (
                 <p className="font-serif text-3xl italic md:text-4xl">
@@ -85,7 +86,7 @@ export function DetailsBlock({
             </div>
           ) : null}
           {hasDressCode ? (
-            <div className={cn(!twoColumns && 'text-center')}>
+            <div>
               <p className="public-kicker mb-3">Dress code</p>
               <p className="text-foreground-secondary whitespace-pre-wrap text-base leading-relaxed md:text-lg">
                 {dressCode}

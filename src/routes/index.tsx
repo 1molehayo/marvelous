@@ -4,21 +4,16 @@ import { PublicRevealObserver } from '#/components/public-reveal-observer'
 import { Button } from '#/components/ui/button'
 import { getAdminSession } from '#/lib/auth/session'
 import {
-  CREATOR_NAME,
-  CREATOR_URL,
   PRODUCT_NAME,
   PRODUCT_TAGLINE,
+  productBuiltWithCredit,
 } from '#/lib/constants'
-import { getFeaturedWeddingSlug } from '#/lib/page-blocks/settings'
 import { FALLBACK_PUBLIC_THEME } from '#/lib/site-settings'
 
 export const Route = createFileRoute('/')({
   loader: async () => {
-    const [featuredSlug, session] = await Promise.all([
-      getFeaturedWeddingSlug(),
-      getAdminSession(),
-    ])
-    return { featuredSlug, isSignedIn: Boolean(session) }
+    const session = await getAdminSession()
+    return { isSignedIn: Boolean(session) }
   },
   head: () => ({
     meta: [
@@ -34,7 +29,7 @@ export const Route = createFileRoute('/')({
 })
 
 function LandingPage() {
-  const { featuredSlug, isSignedIn } = Route.useLoaderData()
+  const { isSignedIn } = Route.useLoaderData()
 
   return (
     <div
@@ -74,14 +69,7 @@ function LandingPage() {
           guests, and celebrate together.
         </p>
         <div className="public-reveal public-reveal-delay-3 mt-10 flex flex-wrap items-center justify-center gap-3">
-          {featuredSlug ? (
-            <Button asChild size="md">
-              <Link to="/$weddingSlug" params={{ weddingSlug: featuredSlug }}>
-                View a wedding
-              </Link>
-            </Button>
-          ) : null}
-          <Button asChild size="md" variant={featuredSlug ? 'outline' : 'primary'}>
+          <Button asChild size="md">
             {isSignedIn ? (
               <Link to="/admin">Build your wedding</Link>
             ) : (
@@ -96,15 +84,7 @@ function LandingPage() {
           © {new Date().getFullYear()} {PRODUCT_NAME}
         </p>
         <p className="text-foreground-secondary mt-2 text-sm">
-          Made with love by{' '}
-          <a
-            href={CREATOR_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-foreground underline-offset-4 transition hover:underline"
-          >
-            {CREATOR_NAME}
-          </a>
+          {productBuiltWithCredit()}
         </p>
       </footer>
     </div>

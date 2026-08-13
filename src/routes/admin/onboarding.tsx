@@ -1,16 +1,16 @@
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { AddressSearchField } from '#/components/address-search-field'
+import { ThemePicker } from '#/components/admin/theme-picker'
 import { Button } from '#/components/ui/button'
 import { Field } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
-import { Select } from '#/components/ui/select'
 import { Textarea } from '#/components/ui/textarea'
 import { toast } from '#/components/ui/toaster'
 import { isSuperAdminProfile } from '#/lib/auth/roles'
-import { PUBLIC_THEME_META, PUBLIC_THEMES } from '#/lib/site-settings'
 import type { PublicThemeId } from '#/lib/site-settings'
 import { completeOnboarding } from '#/lib/wedding/onboarding'
+import { formatWeddingDate } from '#/lib/wedding/public-settings'
 import { Route as AdminRoute } from './route'
 
 export const Route = createFileRoute('/admin/onboarding')({
@@ -146,26 +146,13 @@ function AdminOnboardingPage() {
               />
             </Field.Control>
           </Field>
-          <Field>
-            <Field.Label>Public theme</Field.Label>
-            <Field.Control>
-              <Select
-                value={theme}
-                onChange={(event) =>
-                  setTheme(event.target.value as PublicThemeId)
-                }
-              >
-                {PUBLIC_THEMES.map((themeId) => (
-                  <option key={themeId} value={themeId}>
-                    {PUBLIC_THEME_META[themeId].name}
-                  </option>
-                ))}
-              </Select>
-            </Field.Control>
-            <Field.Description>
-              {PUBLIC_THEME_META[theme].description}
-            </Field.Description>
-          </Field>
+          <ThemePicker
+            value={theme}
+            onChange={setTheme}
+            groomName={groomName || 'Groom'}
+            brideName={brideName || 'Bride'}
+            weddingDateLabel={formatWeddingDate(weddingDate || null)}
+          />
         </div>
 
         <div className="flex flex-wrap gap-3">

@@ -12,6 +12,32 @@ export type AdminRole = 'super_admin' | 'admin'
 
 export type RsvpStatus = 'pending' | 'attending' | 'declined'
 
+export type FeedbackCategory = 'general' | 'bug' | 'idea' | 'praise'
+
+export type FeedbackStatus = 'new' | 'planned' | 'done' | 'dismissed'
+
+export type ProductFeedback = {
+  id: string
+  admin_profile_id: string
+  wedding_id: string | null
+  category: FeedbackCategory
+  message: string
+  page_path: string | null
+  status: FeedbackStatus
+  created_at: string
+  updated_at: string
+}
+
+export type DonationThanks = {
+  id: string
+  admin_profile_id: string
+  wedding_id: string | null
+  donor_name: string
+  donor_email: string
+  message: string | null
+  created_at: string
+}
+
 export type Wedding = {
   id: string
   groom_name: string
@@ -191,6 +217,31 @@ export type Database = {
         Update: Partial<
           Omit<Guest, 'id' | 'wedding_id' | 'created_at' | 'updated_at'>
         >
+      }
+      product_feedback: {
+        Row: ProductFeedback
+        Insert: {
+          admin_profile_id: string
+          wedding_id?: string | null
+          category?: FeedbackCategory
+          message: string
+          page_path?: string | null
+          status?: FeedbackStatus
+        }
+        Update: Partial<
+          Omit<ProductFeedback, 'id' | 'created_at' | 'updated_at'>
+        >
+      }
+      donation_thanks: {
+        Row: DonationThanks
+        Insert: {
+          admin_profile_id: string
+          wedding_id?: string | null
+          donor_name: string
+          donor_email: string
+          message?: string | null
+        }
+        Update: Partial<Omit<DonationThanks, 'id' | 'created_at'>>
       }
       media_assets: {
         Row: MediaAsset

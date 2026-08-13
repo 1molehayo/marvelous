@@ -30,13 +30,6 @@ export const getPublicHomeData = createServerFn({ method: 'GET' })
     return getPublicHomeDataHandler(data.slug)
   })
 
-export const getFeaturedWeddingSlug = createServerFn({ method: 'GET' }).handler(
-  async (): Promise<string | null> => {
-    const { getFeaturedWeddingSlugHandler } = await import('./settings.server')
-    return getFeaturedWeddingSlugHandler()
-  },
-)
-
 export const getSignedPhotoUrl = createServerFn({ method: 'POST' })
   .validator((data: { imagePath: string }) => {
     if (typeof data.imagePath !== 'string' || !data.imagePath.trim()) {

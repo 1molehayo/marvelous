@@ -80,15 +80,21 @@ html {
   --moss: #6f8b6a;
   --blush: #e8c4c4;
   --dusty-rose: #c99393;
-  --admin-ink: #2a2520;
-  --admin-sidebar: #1e1b18;
-  --admin-gold: #b08d57;
+  /* Admin console tokens — distinct from public wedding themes */
+  --admin-ink: #1c2430;
+  --admin-muted: #5c6674;
+  --admin-paper: #f4f6f8;
+  --admin-panel: #ffffff;
+  --admin-line: #d8dee6;
+  --admin-sidebar: #121820;
+  --admin-gold: #9a6b3f;
+  --admin-accent: #2f5d50;
 }
 
 /* Default / Celeste light */
 :root,
-html[data-theme='celeste'][data-mode='light'],
-html[data-theme='celeste']:not([data-mode]) {
+[data-theme='celeste'][data-mode='light'],
+[data-theme='celeste']:not([data-mode]) {
   --theme-background: var(--ivory);
   --theme-background-secondary: var(--cream);
   --theme-surface: #ffffff;
@@ -102,7 +108,7 @@ html[data-theme='celeste']:not([data-mode]) {
   --theme-sidebar-foreground: var(--ivory);
 }
 
-html[data-theme='celeste'][data-mode='dark'] {
+[data-theme='celeste'][data-mode='dark'] {
   --theme-background: var(--navy-deep);
   --theme-background-secondary: var(--navy);
   --theme-surface: color-mix(in oklab, var(--navy) 88%, black);
@@ -121,7 +127,7 @@ html[data-theme='celeste'][data-mode='dark'] {
 }
 
 /* Botanica */
-html[data-theme='botanica'][data-mode='light'] {
+[data-theme='botanica'][data-mode='light'] {
   --theme-background: #f7f5ef;
   --theme-background-secondary: #efe8d8;
   --theme-surface: #ffffff;
@@ -135,7 +141,7 @@ html[data-theme='botanica'][data-mode='light'] {
   --theme-sidebar-foreground: #f3f6f1;
 }
 
-html[data-theme='botanica'][data-mode='dark'] {
+[data-theme='botanica'][data-mode='dark'] {
   --theme-background: #141c16;
   --theme-background-secondary: #1d2820;
   --theme-surface: #1a231c;
@@ -150,7 +156,7 @@ html[data-theme='botanica'][data-mode='dark'] {
 }
 
 /* Rosewater */
-html[data-theme='rosewater'][data-mode='light'] {
+[data-theme='rosewater'][data-mode='light'] {
   --theme-background: #fbf7f4;
   --theme-background-secondary: #f3e8e3;
   --theme-surface: #ffffff;
@@ -164,7 +170,7 @@ html[data-theme='rosewater'][data-mode='light'] {
   --theme-sidebar-foreground: #faf4f2;
 }
 
-html[data-theme='rosewater'][data-mode='dark'] {
+[data-theme='rosewater'][data-mode='dark'] {
   --theme-background: #1a1214;
   --theme-background-secondary: #2a1c20;
   --theme-surface: #24181b;
@@ -179,7 +185,7 @@ html[data-theme='rosewater'][data-mode='dark'] {
 }
 
 /* Nocturne */
-html[data-theme='nocturne'][data-mode='light'] {
+[data-theme='nocturne'][data-mode='light'] {
   --theme-background: #f4f6fa;
   --theme-background-secondary: #e7ecf4;
   --theme-surface: #ffffff;
@@ -193,7 +199,7 @@ html[data-theme='nocturne'][data-mode='light'] {
   --theme-sidebar-foreground: var(--ivory);
 }
 
-html[data-theme='nocturne'][data-mode='dark'] {
+[data-theme='nocturne'][data-mode='dark'] {
   --theme-background: #0a0e16;
   --theme-background-secondary: #141b2a;
   --theme-surface: #121826;
@@ -207,20 +213,25 @@ html[data-theme='nocturne'][data-mode='dark'] {
   --theme-sidebar-foreground: #f3efe6;
 }
 
-/* Admin surface — Ournuptials-inspired, single mode */
+/* Admin console — fixed product UI, never follows public wedding themes */
 [data-surface='admin'] {
-  --theme-background: #faf8f4;
-  --theme-background-secondary: #f3efe6;
-  --theme-surface: #ffffff;
+  --theme-background: var(--admin-paper);
+  --theme-background-secondary: #e9eef3;
+  --theme-surface: var(--admin-panel);
   --theme-foreground: var(--admin-ink);
-  --theme-foreground-secondary: #6b625a;
-  --theme-accent: var(--admin-gold);
+  --theme-foreground-secondary: var(--admin-muted);
+  --theme-accent: var(--admin-accent);
   --theme-accent-foreground: #ffffff;
   --theme-highlight: var(--admin-gold);
-  --theme-border: #e8e0d0;
+  --theme-border: var(--admin-line);
   --theme-sidebar: var(--admin-sidebar);
-  --theme-sidebar-foreground: #f5efe6;
+  --theme-sidebar-foreground: #eef2f6;
   font-family: var(--font-ui);
+  scroll-behavior: auto;
+}
+
+[data-surface='admin'] .admin-topbar {
+  backdrop-filter: blur(8px);
 }
 
 /* prettier-ignore */

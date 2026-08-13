@@ -15,6 +15,7 @@ import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as DesignRouteImport } from './routes/design'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAdminsRouteImport } from './routes/admin/admins'
+import { Route as AdminFeedbackRouteImport } from './routes/admin/feedback'
 import { Route as AdminGuestsRouteImport } from './routes/admin/guests'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminMediaRouteImport } from './routes/admin/media'
@@ -56,6 +57,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const AdminAdminsRoute = AdminAdminsRouteImport.update({
   id: '/admins',
   path: '/admins',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminGuestsRoute = AdminGuestsRouteImport.update({
@@ -125,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/$weddingSlug': typeof WeddingSlugRoute
   '/design': typeof DesignRoute
   '/admin/admins': typeof AdminAdminsRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/media': typeof AdminMediaRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByTo {
   '/$weddingSlug': typeof WeddingSlugRoute
   '/design': typeof DesignRoute
   '/admin/admins': typeof AdminAdminsRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/media': typeof AdminMediaRoute
@@ -165,6 +173,7 @@ export interface FileRoutesById {
   '/$weddingSlug': typeof WeddingSlugRoute
   '/design': typeof DesignRoute
   '/admin/admins': typeof AdminAdminsRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/media': typeof AdminMediaRoute
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
     | '/$weddingSlug'
     | '/design'
     | '/admin/admins'
+    | '/admin/feedback'
     | '/admin/guests'
     | '/admin/login'
     | '/admin/media'
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/$weddingSlug'
     | '/design'
     | '/admin/admins'
+    | '/admin/feedback'
     | '/admin/guests'
     | '/admin/login'
     | '/admin/media'
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/$weddingSlug'
     | '/design'
     | '/admin/admins'
+    | '/admin/feedback'
     | '/admin/guests'
     | '/admin/login'
     | '/admin/media'
@@ -293,6 +305,13 @@ declare module '@tanstack/react-router' {
       path: '/admins'
       fullPath: '/admin/admins'
       preLoaderRoute: typeof AdminAdminsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/feedback': {
+      id: '/admin/feedback'
+      path: '/feedback'
+      fullPath: '/admin/feedback'
+      preLoaderRoute: typeof AdminFeedbackRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/guests': {
@@ -384,6 +403,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteRouteChildren {
   AdminAdminsRoute: typeof AdminAdminsRoute
+  AdminFeedbackRoute: typeof AdminFeedbackRoute
   AdminGuestsRoute: typeof AdminGuestsRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminMediaRoute: typeof AdminMediaRoute
@@ -398,6 +418,7 @@ interface AdminRouteRouteChildren {
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminAdminsRoute: AdminAdminsRoute,
+  AdminFeedbackRoute: AdminFeedbackRoute,
   AdminGuestsRoute: AdminGuestsRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminMediaRoute: AdminMediaRoute,

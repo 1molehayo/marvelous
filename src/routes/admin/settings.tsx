@@ -1,13 +1,13 @@
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { AddressSearchField } from '#/components/address-search-field'
+import { ThemePicker } from '#/components/admin/theme-picker'
 import { Button } from '#/components/ui/button'
 import { Field } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
 import { Select } from '#/components/ui/select'
 import { Textarea } from '#/components/ui/textarea'
 import { toast } from '#/components/ui/toaster'
-import { PUBLIC_THEME_META, PUBLIC_THEMES } from '#/lib/site-settings'
 import type { PublicThemeId } from '#/lib/site-settings'
 import type { Wedding, WeddingStatus } from '#/lib/supabase/types'
 import {
@@ -15,6 +15,7 @@ import {
   updateWedding,
 } from '#/lib/wedding/settings'
 import type { PublicSlugAvailability } from '#/lib/wedding/settings'
+import { formatWeddingDate } from '#/lib/wedding/public-settings'
 import {
   WEDDING_STATUS_LABELS,
   WEDDING_STATUSES,
@@ -343,34 +344,14 @@ function AdminWeddingSettingsPage() {
           </Field>
         </div>
 
-        <div className="bg-surface border-border space-y-4 rounded-xl border p-5">
-          <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
-            Public theme
-          </p>
-          <Field>
-            <Field.Label>Active theme</Field.Label>
-            <Field.Control>
-              <Select
-                value={form.active_public_theme}
-                onChange={(event) =>
-                  setField(
-                    'active_public_theme',
-                    event.target.value as PublicThemeId,
-                  )
-                }
-              >
-                {PUBLIC_THEMES.map((themeId) => (
-                  <option key={themeId} value={themeId}>
-                    {PUBLIC_THEME_META[themeId].name}
-                  </option>
-                ))}
-              </Select>
-            </Field.Control>
-            <Field.Description>
-              {PUBLIC_THEME_META[form.active_public_theme].description} Visitors
-              can still toggle light/dark.
-            </Field.Description>
-          </Field>
+        <div className="bg-surface border-border rounded-xl border p-5">
+          <ThemePicker
+            value={form.active_public_theme}
+            onChange={(theme) => setField('active_public_theme', theme)}
+            groomName={form.groom_name || 'Groom'}
+            brideName={form.bride_name || 'Bride'}
+            weddingDateLabel={formatWeddingDate(form.wedding_date || null)}
+          />
         </div>
 
         <Button

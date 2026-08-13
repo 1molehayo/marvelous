@@ -1,9 +1,20 @@
 import { useEffect, useId, useState } from 'react'
-import { Link } from '@tanstack/react-router'
-import { ArrowSquareOut, List, SignOut, X } from '@phosphor-icons/react'
+import { Link, useRouterState } from '@tanstack/react-router'
+import {
+  ArrowSquareOut,
+  Bell,
+  ChatTeardropText,
+  Heart,
+  List,
+  SignOut,
+  X,
+} from '@phosphor-icons/react'
+import { DonateModal } from '#/components/admin/donate-modal'
+import { FeedbackModal } from '#/components/admin/feedback-modal'
 import { NavigationProgress } from '#/components/navigation-progress'
 import { Button } from '#/components/ui/button'
-import { Toaster } from '#/components/ui/toaster'
+import { Toaster, toast } from '#/components/ui/toaster'
+import { adminBreadcrumbs } from '#/lib/admin/breadcrumbs'
 import { isSuperAdminProfile } from '#/lib/auth/roles'
 import type { AdminSession } from '#/lib/auth/types'
 import { adminFirstName } from '#/lib/auth/types'
@@ -14,6 +25,7 @@ import {
   formatCoupleNames,
   getAdminNavItems,
 } from '#/lib/constants'
+import { FALLBACK_PUBLIC_THEME } from '#/lib/site-settings'
 import { publicWeddingPath } from '#/lib/wedding/public-settings'
 import { cn } from '#/lib/utils'
 
@@ -61,12 +73,10 @@ function SidebarNav({
 
 function SidebarFooter({
   session,
-  onLogout,
-  isLoggingOut,
+  onDonate,
 }: {
   session: AdminSession
-  onLogout: () => void
-  isLoggingOut?: boolean
+  onDonate: () => void
 }) {
   const wedding = session.wedding
   const previewHref = publicWeddingPath(wedding?.public_slug)
@@ -125,16 +135,121 @@ function SidebarFooter({
         )
       ) : null}
       <Button
+        type="button"
         size="sm"
         variant="outline"
         className="border-white/20 bg-transparent text-sidebar-foreground hover:bg-white/10"
-        onClick={onLogout}
-        isLoading={isLoggingOut}
+        onClick={onDonate}
       >
-        <SignOut />
-        Sign out
+        <Heart />
+        Donate
       </Button>
     </div>
+  )
+}
+
+function AdminTopbar({
+  onOpenNav,
+  navOpen,
+  onLogout,
+  isLoggingOut,
+  onFeedback,
+}: {
+  onOpenNav: () => void
+  navOpen: boolean
+  onLogout: () => void
+  isLoggingOut?: boolean
+  onFeedback: () => void
+}) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const crumbs = adminBreadcrumbs(pathname)
+
+  return (
+    <header className="admin-topbar border-border bg-surface/95 sticky top-0 z-30 border-b">
+      <div className="flex items-center gap-3 px-4 py-3 md:px-8">
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          square
+          className="md:hidden"
+          aria-expanded={navOpen}
+          aria-controls="admin-mobile-nav"
+          aria-label={navOpen ? 'Close menu' : 'Open menu'}
+          onClick={onOpenNav}
+        >
+          {navOpen ? <X /> : <List />}
+        </Button>
+
+        <nav aria-label="Breadcrumb" className="min-w-0 flex-1">
+          <ol className="flex flex-wrap items-center gap-1.5 text-sm">
+            {crumbs.map((crumb, index) => {
+              const isLast = index === crumbs.length - 1
+              return (
+                <li key={`${crumb.label}-${index}`} className="flex items-center gap-1.5">
+                  {index > 0 ? (
+                    <span className="text-foreground-secondary" aria-hidden>
+                      /
+                    </span>
+                  ) : null}
+                  {crumb.to && !isLast ? (
+                    <Link
+                      to={crumb.to}
+                      className="text-foreground-secondary hover:text-foreground truncate transition"
+                    >
+                      {crumb.label}
+                    </Link>
+                  ) : (
+                    <span
+                      className={cn(
+                        'truncate',
+                        isLast ? 'font-medium' : 'text-foreground-secondary',
+                      )}
+                    >
+                      {crumb.label}
+                    </span>
+                  )}
+                </li>
+              )
+            })}
+          </ol>
+        </nav>
+
+        <div className="flex shrink-0 items-center gap-1.5">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={onFeedback}
+          >
+            <ChatTeardropText />
+            <span className="hidden sm:inline">Feedback</span>
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            square
+            aria-label="Notifications"
+            onClick={() =>
+              toast.message('Notifications are coming soon.')
+            }
+          >
+            <Bell />
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={onLogout}
+            isLoading={isLoggingOut}
+          >
+            <SignOut />
+            <span className="hidden sm:inline">Sign out</span>
+          </Button>
+        </div>
+      </div>
+    </header>
   )
 }
 
@@ -150,10 +265,26 @@ export function AdminShell({
   isLoggingOut?: boolean
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [donateOpen, setDonateOpen] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
   const titleId = useId()
   const navItems = getAdminNavItems(isSuperAdminProfile(session.profile), {
     hasWedding: Boolean(session.wedding),
   })
+
+  useEffect(() => {
+    const html = document.documentElement
+    const previousTheme = html.dataset.theme
+    const previousMode = html.dataset.mode
+    html.dataset.theme = FALLBACK_PUBLIC_THEME
+    html.dataset.mode = 'light'
+    return () => {
+      if (previousTheme) html.dataset.theme = previousTheme
+      else delete html.dataset.theme
+      if (previousMode) html.dataset.mode = previousMode
+      else delete html.dataset.mode
+    }
+  }, [])
 
   useEffect(() => {
     if (!mobileNavOpen) return
@@ -183,29 +314,8 @@ export function AdminShell({
     >
       <NavigationProgress />
       <Toaster />
-
-      <div className="border-border bg-surface sticky top-0 z-30 flex items-center gap-3 border-b px-4 py-3 md:hidden">
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          square
-          aria-expanded={mobileNavOpen}
-          aria-controls="admin-mobile-nav"
-          aria-label={mobileNavOpen ? 'Close menu' : 'Open menu'}
-          onClick={() => setMobileNavOpen((open) => !open)}
-        >
-          {mobileNavOpen ? <X /> : <List />}
-        </Button>
-        <div className="min-w-0">
-          <p className="font-serif truncate text-lg italic">
-            {PRODUCT_SHORT_NAME}
-          </p>
-          <p className="text-foreground-secondary truncate text-[0.65rem] tracking-[0.18em] uppercase">
-            {PRODUCT_TAGLINE}
-          </p>
-        </div>
-      </div>
+      <DonateModal open={donateOpen} onOpenChange={setDonateOpen} />
+      <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
 
       {mobileNavOpen ? (
         <button
@@ -231,8 +341,10 @@ export function AdminShell({
         <SidebarNav navItems={navItems} onNavigate={closeMobileNav} />
         <SidebarFooter
           session={session}
-          onLogout={onLogout}
-          isLoggingOut={isLoggingOut}
+          onDonate={() => {
+            closeMobileNav()
+            setDonateOpen(true)
+          }}
         />
       </aside>
 
@@ -242,12 +354,20 @@ export function AdminShell({
           <SidebarNav navItems={navItems} />
           <SidebarFooter
             session={session}
-            onLogout={onLogout}
-            isLoggingOut={isLoggingOut}
+            onDonate={() => setDonateOpen(true)}
           />
         </aside>
 
-        <div className="bg-background min-w-0 p-6 md:p-8">{children}</div>
+        <div className="bg-background flex min-w-0 flex-col">
+          <AdminTopbar
+            onOpenNav={() => setMobileNavOpen((open) => !open)}
+            navOpen={mobileNavOpen}
+            onLogout={onLogout}
+            isLoggingOut={isLoggingOut}
+            onFeedback={() => setFeedbackOpen(true)}
+          />
+          <div className="min-w-0 flex-1 p-6 md:p-8">{children}</div>
+        </div>
       </div>
     </div>
   )

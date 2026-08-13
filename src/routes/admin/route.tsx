@@ -32,6 +32,7 @@ export const Route = createFileRoute('/admin')({
     const isSuper = isSuperAdminProfile(session.profile)
     const isProfile = location.pathname === '/admin/profile'
     const isSupport = location.pathname === '/admin/support'
+    const isFeedback = location.pathname === '/admin/feedback'
     const isOnboarding = location.pathname === '/admin/onboarding'
     const hasName = hasCompleteAdminName(session.profile)
     const hasWedding = Boolean(session.wedding)
@@ -42,6 +43,10 @@ export const Route = createFileRoute('/admin')({
     }
 
     if (isSuper && isSupport) {
+      throw redirect({ to: '/admin' })
+    }
+
+    if (!isSuper && isFeedback) {
       throw redirect({ to: '/admin' })
     }
 
