@@ -21,7 +21,7 @@ export function HeroBlock({
   return (
     <section
       id={publicSectionId(block)}
-      className="public-hero relative isolate flex min-h-[calc(100dvh-5.5rem)] scroll-mt-28 items-center justify-center overflow-hidden px-6 py-20 text-foreground sm:min-h-[calc(100dvh-4.5rem)] sm:scroll-mt-24 md:py-24"
+      className="public-hero relative isolate -mt-(--public-header-height,5.5rem) flex min-h-dvh scroll-mt-28 items-center justify-center overflow-hidden px-6 pt-[calc(var(--public-header-height,5.5rem)+2.5rem)] pb-20 text-foreground sm:scroll-mt-24 md:pt-[calc(var(--public-header-height,5.5rem)+3rem)] md:pb-24"
     >
       {showPhoto && imageUrl ? (
         <>

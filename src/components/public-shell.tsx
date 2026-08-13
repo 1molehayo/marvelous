@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ColorModeToggle } from '#/components/color-mode-toggle'
 import { PublicRevealObserver } from '#/components/public-reveal-observer'
@@ -92,9 +92,40 @@ export function PublicShell({
   homePath?: string
 }) {
   const showSectionNav = sectionNav.length > 1
+  const headerRef = useRef<HTMLElement>(null)
   const [activeId, setActiveId] = useState<string | null>(
     sectionNav[0]?.id ?? null,
   )
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 8)
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    const header = headerRef.current
+    if (!header) return
+
+    const syncHeaderHeight = () => {
+      document.documentElement.style.setProperty(
+        '--public-header-height',
+        `${header.offsetHeight}px`,
+      )
+    }
+
+    syncHeaderHeight()
+    const observer = new ResizeObserver(syncHeaderHeight)
+    observer.observe(header)
+    return () => {
+      observer.disconnect()
+      document.documentElement.style.removeProperty('--public-header-height')
+    }
+  }, [showSectionNav])
 
   useEffect(() => {
     const hash = window.location.hash.replace(/^#/, '')
@@ -140,7 +171,15 @@ export function PublicShell({
       data-public-theme={theme}
     >
       <PublicRevealObserver />
-      <header className="sticky top-0 z-30 border-b border-border/40 bg-background/95 backdrop-blur-md">
+      <header
+        ref={headerRef}
+        className={cn(
+          'sticky top-0 z-30 transition-[background-color,border-color,backdrop-filter] duration-200',
+          scrolled
+            ? 'border-b border-border/40 bg-background/95 backdrop-blur-md'
+            : 'border-b border-transparent bg-transparent',
+        )}
+      >
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4 md:gap-4 md:px-6">
           <a
             href={homePath}
@@ -162,7 +201,12 @@ export function PublicShell({
           </div>
         </div>
         {showSectionNav ? (
-          <div className="border-border border-t px-4 py-2.5 sm:hidden">
+          <div
+            className={cn(
+              'px-4 py-2.5 sm:hidden',
+              scrolled ? 'border-border border-t' : 'border-t border-transparent',
+            )}
+          >
             <SectionNav
               items={sectionNav}
               ariaLabel="Page sections"
