@@ -62,3 +62,21 @@ export const updateWedding = createServerFn({ method: 'POST' })
     const { updateWeddingHandler } = await import('./settings.server')
     return updateWeddingHandler(data)
   })
+
+export type { PublishWeddingDateResult } from './settings.server'
+
+export const publishWeddingDate = createServerFn({ method: 'POST' })
+  .validator((data: { notifyGuests?: boolean }) => ({
+    notifyGuests: Boolean(data.notifyGuests),
+  }))
+  .handler(async ({ data }) => {
+    const { publishWeddingDateHandler } = await import('./settings.server')
+    return publishWeddingDateHandler(data)
+  })
+
+export const unpublishWeddingDate = createServerFn({
+  method: 'POST',
+}).handler(async (): Promise<Wedding> => {
+  const { unpublishWeddingDateHandler } = await import('./settings.server')
+  return unpublishWeddingDateHandler()
+})

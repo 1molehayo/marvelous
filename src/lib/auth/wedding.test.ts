@@ -8,6 +8,7 @@ describe('wedding date contract', () => {
       groom_name: 'Marvelous',
       bride_name: 'Lillian',
       wedding_date: null,
+      date_published_at: null,
       status: 'planning',
       venue_name: null,
       venue_location: 'Chicago',

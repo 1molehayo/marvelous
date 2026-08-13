@@ -103,6 +103,9 @@ function AdminMediaPage() {
   const [deleteGroupId, setDeleteGroupId] = useState<string | null>(null)
   const [isDeletingGroup, setIsDeletingGroup] = useState(false)
   const [emailingGroupId, setEmailingGroupId] = useState<string | null>(null)
+  const [emailShareConfirmId, setEmailShareConfirmId] = useState<string | null>(
+    null,
+  )
   const [showLibraryPicker, setShowLibraryPicker] = useState(false)
 
   useEffect(() => {
@@ -311,10 +314,14 @@ function AdminMediaPage() {
           }.`,
         )
       } else {
+        const failedSample = result.failed
+          .slice(0, 3)
+          .map((item) => item.email)
+          .join(', ')
         toast.error(
           `Sent ${result.sent}, failed ${result.failed.length}${
             result.skipped ? `, skipped ${result.skipped}` : ''
-          }.`,
+          }.${failedSample ? ` Failed: ${failedSample}` : ''}`,
         )
       }
     } catch (err) {
@@ -323,6 +330,7 @@ function AdminMediaPage() {
       )
     } finally {
       setEmailingGroupId(null)
+      setEmailShareConfirmId(null)
     }
   }
 
@@ -567,7 +575,7 @@ function AdminMediaPage() {
                     group.guestIds.length === 0 || emailingGroupId === group.id
                   }
                   isLoading={emailingGroupId === group.id}
-                  onClick={() => void emailShareGuests(group.id)}
+                  onClick={() => setEmailShareConfirmId(group.id)}
                 >
                   <EnvelopeSimple />
                   Email guests
@@ -920,6 +928,20 @@ function AdminMediaPage() {
           </Button>
         </SideDrawer.Footer>
       </SideDrawer>
+
+      <ConfirmDialog
+        open={Boolean(emailShareConfirmId)}
+        onOpenChange={(open) => {
+          if (!open && !emailingGroupId) setEmailShareConfirmId(null)
+        }}
+        title="Email photo share?"
+        description="Sends a themed private album link to every guest in this share who has an email address. Guests without email are skipped."
+        confirmLabel="Send emails"
+        isConfirming={Boolean(emailingGroupId)}
+        onConfirm={() => {
+          if (emailShareConfirmId) void emailShareGuests(emailShareConfirmId)
+        }}
+      />
 
       <ConfirmDialog
         open={Boolean(deleteAssetId)}

@@ -10,12 +10,18 @@ import { Textarea } from '#/components/ui/textarea'
 import { toast } from '#/components/ui/toaster'
 import type { PublicThemeId } from '#/lib/site-settings'
 import type { Wedding, WeddingStatus } from '#/lib/supabase/types'
+import { ConfirmDialog } from '#/components/ui/confirm-dialog'
 import {
   checkPublicSlugAvailable,
+  publishWeddingDate,
+  unpublishWeddingDate,
   updateWedding,
 } from '#/lib/wedding/settings'
 import type { PublicSlugAvailability } from '#/lib/wedding/settings'
-import { formatWeddingDate } from '#/lib/wedding/public-settings'
+import {
+  formatWeddingDate,
+  isWeddingDatePublished,
+} from '#/lib/wedding/public-settings'
 import {
   WEDDING_STATUS_LABELS,
   WEDDING_STATUSES,
@@ -89,6 +95,10 @@ function AdminWeddingSettingsPage() {
     null,
   )
   const [slugChecking, setSlugChecking] = useState(false)
+  const [publishConfirmOpen, setPublishConfirmOpen] = useState(false)
+  const [notifyOnPublish, setNotifyOnPublish] = useState(true)
+  const [isPublishing, setIsPublishing] = useState(false)
+  const [isUnpublishing, setIsUnpublishing] = useState(false)
 
   useEffect(() => {
     if (!wedding) return
@@ -146,6 +156,59 @@ function AdminWeddingSettingsPage() {
     slugChecking ||
     slugStatus?.status === 'taken' ||
     slugStatus?.status === 'invalid'
+  const dateIsPublished = isWeddingDatePublished(wedding)
+  const hasDraftDate = Boolean(form.wedding_date.trim())
+  const dateUnsaved =
+    (form.wedding_date.trim() || null) !== (wedding.wedding_date ?? null)
+
+  const onPublishDate = async () => {
+    setIsPublishing(true)
+    try {
+      const result = await publishWeddingDate({
+        data: { notifyGuests: notifyOnPublish },
+      })
+      setForm(weddingToForm(result.wedding))
+      if (!notifyOnPublish) {
+        toast.success('Wedding date is now public.')
+      } else if (result.failed.length === 0) {
+        toast.success(
+          `Date published.${
+            result.notified
+              ? ` Notified ${result.notified} invited guest${result.notified === 1 ? '' : 's'}.`
+              : ' No previously invited guests with email to notify.'
+          }`,
+        )
+      } else {
+        toast.error(
+          `Date published. Sent ${result.notified}, failed ${result.failed.length}.`,
+        )
+      }
+      setPublishConfirmOpen(false)
+      await router.invalidate()
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to publish wedding date.',
+      )
+    } finally {
+      setIsPublishing(false)
+    }
+  }
+
+  const onUnpublishDate = async () => {
+    setIsUnpublishing(true)
+    try {
+      const updated = await unpublishWeddingDate()
+      setForm(weddingToForm(updated))
+      toast.success('Date hidden from the public site (draft kept).')
+      await router.invalidate()
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to unpublish date.',
+      )
+    } finally {
+      setIsUnpublishing(false)
+    }
+  }
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -292,10 +355,56 @@ function AdminWeddingSettingsPage() {
               />
             </Field.Control>
             <Field.Description>
-              Leave empty for “date to be announced”. Never invent a placeholder
-              date.
+              Saving a date keeps it as a draft until you publish. Leave empty
+              for “date to be announced”. Never invent a placeholder date.
             </Field.Description>
           </Field>
+
+          <div className="border-border bg-background space-y-3 rounded-lg border px-3 py-3">
+            <p className="text-sm">
+              Public date:{' '}
+              <span className="font-medium">
+                {dateIsPublished
+                  ? formatWeddingDate(wedding.wedding_date)
+                  : 'Date to be announced'}
+              </span>
+              {hasDraftDate && !dateIsPublished ? (
+                <span className="text-foreground-secondary">
+                  {' '}
+                  · draft saved as {formatWeddingDate(form.wedding_date)}
+                </span>
+              ) : null}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                size="sm"
+                disabled={
+                  !hasDraftDate || dateIsPublished || dateUnsaved
+                }
+                onClick={() => setPublishConfirmOpen(true)}
+              >
+                Publish date
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={!dateIsPublished}
+                isLoading={isUnpublishing}
+                onClick={() => void onUnpublishDate()}
+              >
+                Hide from public
+              </Button>
+            </div>
+            <p className="text-foreground-secondary text-xs leading-relaxed">
+              Save settings first if you changed the date, then publish. Publish
+              makes the date visible on the website, RSVP pages, and emails.
+              Optionally notify guests who already received an invite email.
+              {dateUnsaved ? ' Save your date draft before publishing.' : ''}
+            </p>
+          </div>
+
           <Field>
             <Field.Label>Status</Field.Label>
             <Field.Control>
@@ -363,6 +472,33 @@ function AdminWeddingSettingsPage() {
           Save settings
         </Button>
       </form>
+
+      <ConfirmDialog
+        open={publishConfirmOpen}
+        onOpenChange={setPublishConfirmOpen}
+        title="Publish wedding date?"
+        description={
+          hasDraftDate
+            ? `Make ${formatWeddingDate(form.wedding_date)} public on the wedding website?`
+            : 'Save a wedding date first.'
+        }
+        confirmLabel="Publish"
+        isConfirming={isPublishing}
+        onConfirm={() => void onPublishDate()}
+      >
+        <label className="mt-4 flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={notifyOnPublish}
+            onChange={(event) => setNotifyOnPublish(event.target.checked)}
+          />
+          <span>
+            Email previously invited guests (those with an invite already sent)
+            that the date is announced.
+          </span>
+        </label>
+      </ConfirmDialog>
     </div>
   )
 }

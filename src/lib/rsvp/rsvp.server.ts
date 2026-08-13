@@ -12,10 +12,13 @@ import {
 } from '#/lib/rsvp/schema'
 import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
 import type { Guest, WeddingStatus } from '#/lib/supabase/types'
-import { formatWeddingDate } from '#/lib/wedding/public-settings'
+import {
+  formatWeddingDate,
+  resolvePublicWeddingDate,
+} from '#/lib/wedding/public-settings'
 
 const GUEST_RSVP_SELECT =
-  'id, wedding_id, first_name, last_name, email, phone, party_name, plus_ones, notes, admin_label, rsvp_token, rsvp_status, rsvp_responded_at, attending_count, dietary_notes, rsvp_message, allow_rsvp_update, created_at, updated_at'
+  'id, wedding_id, first_name, last_name, email, phone, party_name, plus_ones, notes, admin_label, rsvp_token, rsvp_status, rsvp_responded_at, attending_count, dietary_notes, rsvp_message, allow_rsvp_update, invite_emailed_at, created_at, updated_at'
 
 function guestCanEditRsvp(guest: {
   rsvp_status: Guest['rsvp_status']
@@ -56,7 +59,7 @@ export async function getRsvpByTokenHandler(
   const weddingResult = await admin
     .from('weddings')
     .select(
-      'groom_name, bride_name, wedding_date, venue_name, venue_location, active_public_theme, status',
+      'groom_name, bride_name, wedding_date, date_published_at, venue_name, venue_location, active_public_theme, status',
     )
     .eq('id', guest.wedding_id)
     .maybeSingle()
@@ -89,8 +92,8 @@ export async function getRsvpByTokenHandler(
       ? null
       : 'RSVP is closed for this wedding. Contact the couple if you need to update your response.',
     coupleLabel: formatCoupleNames(wedding.groom_name, wedding.bride_name),
-    weddingDate: wedding.wedding_date,
-    weddingDateLabel: formatWeddingDate(wedding.wedding_date),
+    weddingDate: resolvePublicWeddingDate(wedding),
+    weddingDateLabel: formatWeddingDate(resolvePublicWeddingDate(wedding)),
     venueName: wedding.venue_name,
     venueLocation: wedding.venue_location,
     theme: wedding.active_public_theme,

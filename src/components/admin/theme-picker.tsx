@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { CheckIcon } from '@phosphor-icons/react'
 import { Button } from '#/components/ui/button'
 import { formatCoupleNames } from '#/lib/constants'
+import { guestRsvpInviteEmailHtml } from '#/lib/email/templates'
 import { PUBLIC_THEME_META, PUBLIC_THEMES } from '#/lib/site-settings'
 import type { ColorMode, PublicThemeId } from '#/lib/site-settings'
 import { cn } from '#/lib/utils'
@@ -23,6 +24,21 @@ export function ThemePicker({
   const couple = formatCoupleNames(groomName, brideName)
   const meta = PUBLIC_THEME_META[value]
 
+  const emailPreviewHtml = useMemo(
+    () =>
+      guestRsvpInviteEmailHtml({
+        guestName: 'Guest',
+        coupleLabel: couple,
+        weddingDateLabel,
+        websiteUrl: null,
+        rsvpUrl: 'https://example.com/rsvp/preview',
+        photosUrl: null,
+        theme: value,
+        mode: previewMode,
+      }),
+    [couple, previewMode, value, weddingDateLabel],
+  )
+
   return (
     <div className="space-y-5">
       <div>
@@ -30,8 +46,8 @@ export function ThemePicker({
           Colour theme
         </p>
         <p className="text-foreground-secondary mt-1 text-sm">
-          Applies to your public wedding site. The admin console stays on its
-          own look.
+          Applies to your public wedding site and guest invitation emails. The
+          admin console stays on its own look.
         </p>
       </div>
 
@@ -85,7 +101,8 @@ export function ThemePicker({
               Preview: {meta.name}
             </p>
             <p className="text-foreground-secondary mt-1 text-xs">
-              Not live. Shows how guests and email may look.
+              Not live. Hero and RSVP email use this theme. Sent invites use the
+              light email palette.
             </p>
           </div>
           <div className="flex gap-1">
@@ -133,30 +150,13 @@ export function ThemePicker({
             <p className="text-foreground-secondary text-xs font-medium tracking-[0.14em] uppercase">
               RSVP email
             </p>
-            <div
-              data-theme={value}
-              data-mode={previewMode}
-              className="bg-background-secondary w-full overflow-hidden rounded-xl border border-black/10 shadow-sm"
-            >
-              <div className="bg-background text-foreground mx-3 my-3 rounded-lg border border-black/5 px-5 py-6 shadow-sm sm:mx-5 sm:my-5">
-                <p className="text-foreground-secondary text-[0.65rem] tracking-[0.16em] uppercase">
-                  You&apos;re invited
-                </p>
-                <p className="font-serif mt-2 text-2xl italic sm:text-3xl">
-                  {couple}
-                </p>
-                <p className="text-foreground-secondary mt-3 text-sm leading-relaxed">
-                  Please RSVP for {couple}. {weddingDateLabel}.
-                </p>
-                <div className="mt-5">
-                  <span className="bg-accent text-accent-foreground inline-block rounded-lg px-4 py-2 text-sm font-medium">
-                    Respond to RSVP
-                  </span>
-                </div>
-                <p className="text-foreground-secondary mt-4 text-xs">
-                  This is a preview of the invite email style.
-                </p>
-              </div>
+            <div className="w-full overflow-hidden rounded-xl border border-black/10 shadow-sm">
+              <iframe
+                title={`RSVP email preview · ${meta.name} · ${previewMode}`}
+                srcDoc={emailPreviewHtml}
+                className="block h-112 w-full border-0"
+                sandbox=""
+              />
             </div>
           </div>
         </div>

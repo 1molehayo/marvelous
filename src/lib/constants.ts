@@ -38,6 +38,7 @@ export type AdminNavItem = {
     | '/admin/pages'
     | '/admin/media'
     | '/admin/guests'
+    | '/admin/registry'
     | '/admin/admins'
     | '/admin/onboarding'
     | '/admin/profile'
@@ -53,6 +54,7 @@ export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
   { to: '/admin/pages', label: 'Page content', exact: false },
   { to: '/admin/media', label: 'Media', exact: false },
   { to: '/admin/guests', label: 'Guests', exact: false },
+  { to: '/admin/registry', label: 'Registry', exact: false },
 ]
 
 export const ADMIN_SUPER_NAV_ITEMS: readonly AdminNavItem[] = [

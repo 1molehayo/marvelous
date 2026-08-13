@@ -43,6 +43,8 @@ export type Wedding = {
   groom_name: string
   bride_name: string
   wedding_date: string | null
+  /** When set with wedding_date, the date is public. Null = TBA on the site. */
+  date_published_at: string | null
   status: WeddingStatus
   venue_name: string | null
   venue_location: string | null
@@ -52,6 +54,49 @@ export type Wedding = {
   page_blocks: PageBlock[]
   created_at: string
   updated_at: string
+}
+
+export type RegistryItemStatus = 'available' | 'reserved' | 'purchased'
+
+export type RegistryItem = {
+  id: string
+  wedding_id: string
+  title: string
+  description: string | null
+  store_url: string
+  price_label: string | null
+  desired_qty: number
+  claimed_qty: number
+  status: RegistryItemStatus
+  sort_order: number
+  is_visible: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type RegistryAccount = {
+  id: string
+  wedding_id: string
+  label: string
+  bank_name: string | null
+  currency: string
+  account_name: string
+  account_number: string
+  routing_number: string | null
+  notes: string | null
+  sort_order: number
+  is_enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type RegistryReservation = {
+  id: string
+  wedding_id: string
+  item_id: string
+  guest_name: string | null
+  quantity: number
+  created_at: string
 }
 
 export type AdminProfile = {
@@ -115,6 +160,7 @@ export type Guest = {
   dietary_notes: string | null
   rsvp_message: string | null
   allow_rsvp_update: boolean
+  invite_emailed_at: string | null
   created_at: string
   updated_at: string
 }

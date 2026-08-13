@@ -2,14 +2,19 @@ import { requireWeddingSession } from '#/lib/auth/session.server'
 import { getAppUrl } from '#/lib/app-url'
 import { formatCoupleNames } from '#/lib/constants'
 import { sendGuestRsvpInviteEmail } from '#/lib/email/resend.server'
+import { resolveEmailThemeId } from '#/lib/email/theme'
 import { guestNameKey } from '#/lib/guests/name-key'
 import type { GuestInput } from '#/lib/guests/schema'
 import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
 import type { Guest } from '#/lib/supabase/types'
-import { formatWeddingDate } from '#/lib/wedding/public-settings'
+import type { PublicThemeId } from '#/lib/site-settings'
+import {
+  formatWeddingDate,
+  resolvePublicWeddingDate,
+} from '#/lib/wedding/public-settings'
 
 const GUEST_SELECT =
-  'id, wedding_id, first_name, last_name, email, phone, party_name, plus_ones, notes, admin_label, rsvp_token, rsvp_status, rsvp_responded_at, attending_count, dietary_notes, rsvp_message, allow_rsvp_update, created_at, updated_at'
+  'id, wedding_id, first_name, last_name, email, phone, party_name, plus_ones, notes, admin_label, rsvp_token, rsvp_status, rsvp_responded_at, attending_count, dietary_notes, rsvp_message, allow_rsvp_update, invite_emailed_at, created_at, updated_at'
 
 export type GuestConflictMatch = {
   id: string
@@ -314,9 +319,12 @@ async function sendInviteForGuest(
     groom_name: string
     bride_name: string
     wedding_date: string | null
+    date_published_at?: string | null
     public_slug: string
+    active_public_theme: PublicThemeId
   },
   guest: Guest,
+  options?: { replyTo?: string | null },
 ): Promise<SendGuestInviteResult> {
   const email = guest.email?.trim().toLowerCase()
   if (!email) {
@@ -330,18 +338,33 @@ async function sendInviteForGuest(
     guest.id,
     guest.rsvp_token,
   )
+  const replyTo = options?.replyTo?.trim() || undefined
+  const publicDate = resolvePublicWeddingDate(wedding)
 
   await sendGuestRsvpInviteEmail({
     to: email,
     guestName: guest.first_name,
     coupleLabel,
-    weddingDateLabel: formatWeddingDate(wedding.wedding_date),
+    weddingDateLabel: formatWeddingDate(publicDate),
     websiteUrl: wedding.public_slug
       ? `${origin}/${wedding.public_slug}`
       : null,
     rsvpUrl: `${origin}/rsvp/${encodeURIComponent(guest.rsvp_token)}`,
     photosUrl,
+    theme: resolveEmailThemeId(wedding.active_public_theme),
+    replyTo,
   })
+
+  const admin = createAdminSupabaseClient()
+  const stamped = await admin
+    .from('guests')
+    .update({ invite_emailed_at: new Date().toISOString() })
+    .eq('id', guest.id)
+    .eq('wedding_id', wedding.id)
+
+  if (stamped.error) {
+    console.error('[guests] failed to stamp invite_emailed_at', stamped.error)
+  }
 
   return {
     ok: true as const,
@@ -367,7 +390,9 @@ export async function sendGuestInviteHandler(
   if (result.error) throw new Error(result.error.message)
   if (!result.data) throw new Error('Guest not found.')
 
-  return sendInviteForGuest(session.wedding, result.data)
+  return sendInviteForGuest(session.wedding, result.data, {
+    replyTo: session.user.email,
+  })
 }
 
 export async function sendGuestInvitesBulkHandler(input: {
@@ -395,6 +420,7 @@ export async function sendGuestInvitesBulkHandler(input: {
   let sent = 0
   let skipped = 0
   const failed: SendGuestInvitesBulkResult['failed'] = []
+  const replyTo = session.user.email
 
   for (const guest of guests) {
     if (!guest.email?.trim()) {
@@ -402,7 +428,7 @@ export async function sendGuestInvitesBulkHandler(input: {
       continue
     }
     try {
-      await sendInviteForGuest(session.wedding, guest)
+      await sendInviteForGuest(session.wedding, guest, { replyTo })
       sent += 1
     } catch (err) {
       failed.push({

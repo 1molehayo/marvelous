@@ -1,7 +1,14 @@
 import { requireWeddingSession } from '#/lib/auth/session.server'
+import { getAppUrl } from '#/lib/app-url'
+import { formatCoupleNames } from '#/lib/constants'
+import {
+  sendGuestDateAnnouncedEmail,
+} from '#/lib/email/resend.server'
+import { resolveEmailThemeId } from '#/lib/email/theme'
 import type { Wedding } from '#/lib/supabase/types'
 import {
   FALLBACK_PUBLIC_WEDDING,
+  formatWeddingDate,
   toPublicSettings,
 } from '#/lib/wedding/public-settings'
 import type { PublicWeddingSettings } from '#/lib/wedding/public-settings'
@@ -17,7 +24,7 @@ export async function getPublicWeddingSettingsHandler(
     let query = admin
       .from('weddings')
       .select(
-        'groom_name, bride_name, wedding_date, venue_name, venue_location, dress_code, active_public_theme, status, public_slug',
+        'groom_name, bride_name, wedding_date, date_published_at, venue_name, venue_location, dress_code, active_public_theme, status, public_slug',
       )
 
     if (weddingSlug) {
@@ -76,12 +83,26 @@ export async function updateWeddingHandler(
     throw new Error('That public URL is already in use.')
   }
 
+  const nextDate = data.wedding_date
+  let date_published_at = session.wedding.date_published_at ?? null
+
+  if (!nextDate) {
+    date_published_at = null
+  } else if (
+    session.wedding.wedding_date !== nextDate &&
+    !session.wedding.date_published_at
+  ) {
+    // New draft date stays unpublished until deliberate publish.
+    date_published_at = null
+  }
+
   const updated = await admin
     .from('weddings')
     .update({
       groom_name: data.groom_name,
       bride_name: data.bride_name,
-      wedding_date: data.wedding_date,
+      wedding_date: nextDate,
+      date_published_at,
       status: data.status,
       venue_name: data.venue_name,
       venue_location: data.venue_location,
@@ -102,4 +123,116 @@ export async function updateWeddingHandler(
   }
 
   return updated.data
+}
+
+export type PublishWeddingDateResult = {
+  wedding: Wedding
+  notified: number
+  skipped: number
+  failed: Array<{ guestId: string; email: string; error: string }>
+}
+
+export async function publishWeddingDateHandler(input: {
+  notifyGuests: boolean
+}): Promise<PublishWeddingDateResult> {
+  const session = await requireWeddingSession()
+  const admin = createAdminSupabaseClient()
+
+  if (!session.wedding.wedding_date) {
+    throw new Error('Save a wedding date before publishing it.')
+  }
+
+  const now = new Date().toISOString()
+  const nextStatus =
+    session.wedding.status === 'planning'
+      ? 'date_confirmed'
+      : session.wedding.status
+
+  const updated = await admin
+    .from('weddings')
+    .update({
+      date_published_at: now,
+      status: nextStatus,
+    })
+    .eq('id', session.wedding.id)
+    .select('*')
+    .single()
+
+  if (updated.error) throw new Error(updated.error.message)
+  if (!updated.data) throw new Error('Unable to publish wedding date.')
+
+  const wedding = updated.data as Wedding
+  const result: PublishWeddingDateResult = {
+    wedding,
+    notified: 0,
+    skipped: 0,
+    failed: [],
+  }
+
+  if (!input.notifyGuests) {
+    return result
+  }
+
+  const guests = await admin
+    .from('guests')
+    .select('id, first_name, email, invite_emailed_at, rsvp_token')
+    .eq('wedding_id', wedding.id)
+    .not('invite_emailed_at', 'is', null)
+    .order('last_name', { ascending: true })
+
+  if (guests.error) throw new Error(guests.error.message)
+
+  const coupleLabel = formatCoupleNames(wedding.groom_name, wedding.bride_name)
+  const weddingDateLabel = formatWeddingDate(wedding.wedding_date)
+  const websiteUrl = wedding.public_slug
+    ? `${getAppUrl()}/${wedding.public_slug}`
+    : null
+  const theme = resolveEmailThemeId(wedding.active_public_theme)
+  const replyTo = session.user.email ?? undefined
+
+  for (const guest of guests.data) {
+    const email = guest.email?.trim().toLowerCase()
+    if (!email) {
+      result.skipped += 1
+      continue
+    }
+    try {
+      await sendGuestDateAnnouncedEmail({
+        to: email,
+        guestName: guest.first_name,
+        coupleLabel,
+        weddingDateLabel,
+        websiteUrl,
+        rsvpUrl: `${getAppUrl()}/rsvp/${encodeURIComponent(guest.rsvp_token)}`,
+        theme,
+        replyTo,
+      })
+      result.notified += 1
+    } catch (err) {
+      result.failed.push({
+        guestId: guest.id,
+        email,
+        error: err instanceof Error ? err.message : 'Unable to send email.',
+      })
+    }
+  }
+
+  return result
+}
+
+export async function unpublishWeddingDateHandler(): Promise<Wedding> {
+  const session = await requireWeddingSession()
+  const admin = createAdminSupabaseClient()
+
+  const updated = await admin
+    .from('weddings')
+    .update({ date_published_at: null })
+    .eq('id', session.wedding.id)
+    .select('*')
+    .single()
+
+  if (updated.error) throw new Error(updated.error.message)
+  if (!updated.data) throw new Error('Unable to unpublish wedding date.')
+
+  return updated.data as Wedding
 }

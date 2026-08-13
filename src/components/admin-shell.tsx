@@ -80,14 +80,14 @@ function SidebarFooter({
 }) {
   const wedding = session.wedding
   const previewHref = publicWeddingPath(wedding?.public_slug)
-  const dateLabel = wedding?.wedding_date
-    ? new Date(`${wedding.wedding_date}T00:00:00`).toLocaleDateString(
-        undefined,
-        { dateStyle: 'long' },
-      )
-    : wedding
-      ? 'Date to be announced'
-      : 'Wedding not set up'
+  const dateLabel = !wedding
+    ? 'Wedding not set up'
+    : wedding.wedding_date
+      ? `${new Date(`${wedding.wedding_date}T00:00:00`).toLocaleDateString(
+          undefined,
+          { dateStyle: 'long' },
+        )}${wedding.date_published_at ? '' : ' · draft'}`
+      : 'Date to be announced'
 
   return (
     <div className="shrink-0 space-y-3 border-t border-white/10 pt-4">

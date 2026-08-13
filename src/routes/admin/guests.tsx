@@ -127,6 +127,9 @@ function AdminGuestsPage() {
   const [isEmailing, setIsEmailing] = useState(false)
   const [isBulkEmailing, setIsBulkEmailing] = useState(false)
   const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false)
+  const [resendConfirmGuest, setResendConfirmGuest] = useState<Guest | null>(
+    null,
+  )
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -423,12 +426,14 @@ function AdminGuestsPage() {
           ? `Invite emailed to ${result.email} (includes photo link).`
           : `Invite emailed to ${result.email}.`,
       )
+      await router.invalidate()
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Unable to send invite email.',
       )
     } finally {
       setIsEmailing(false)
+      setResendConfirmGuest(null)
     }
   }
 
@@ -453,12 +458,17 @@ function AdminGuestsPage() {
           }.`,
         )
       } else {
+        const failedSample = result.failed
+          .slice(0, 3)
+          .map((item) => item.email)
+          .join(', ')
         toast.error(
           `Sent ${result.sent}, failed ${result.failed.length}${
             result.skipped ? `, skipped ${result.skipped}` : ''
-          }.`,
+          }.${failedSample ? ` Failed: ${failedSample}` : ''}`,
         )
       }
+      await router.invalidate()
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Unable to send invite emails.',
@@ -467,6 +477,18 @@ function AdminGuestsPage() {
       setIsBulkEmailing(false)
       setBulkConfirmOpen(false)
     }
+  }
+
+  const requestEmailGuestInvite = (guest: Guest) => {
+    if (!guest.email?.trim()) {
+      toast.error('Add an email address before sending an invite.')
+      return
+    }
+    if (guest.invite_emailed_at) {
+      setResendConfirmGuest(guest)
+      return
+    }
+    void emailGuestInvite(guest)
   }
 
   const columns = useMemo<ColumnDef<Guest>[]>(
@@ -494,9 +516,17 @@ function AdminGuestsPage() {
         accessorFn: (row) => row.email ?? '',
         header: 'Email',
         cell: ({ row }) => (
-          <span className="text-foreground-secondary text-sm">
-            {row.original.email ?? '—'}
-          </span>
+          <div className="min-w-0">
+            <span className="text-foreground-secondary text-sm">
+              {row.original.email ?? '—'}
+            </span>
+            {row.original.invite_emailed_at ? (
+              <p className="text-foreground-secondary mt-0.5 text-2xs">
+                Emailed{' '}
+                {new Date(row.original.invite_emailed_at).toLocaleDateString()}
+              </p>
+            ) : null}
+          </div>
         ),
         meta: { minWidth: 160 },
       },
@@ -532,7 +562,7 @@ function AdminGuestsPage() {
               size="sm"
               variant="outline"
               disabled={!row.original.email?.trim() || isEmailing}
-              onClick={() => void emailGuestInvite(row.original)}
+              onClick={() => requestEmailGuestInvite(row.original)}
             >
               <EnvelopeSimple />
               Email
@@ -893,9 +923,23 @@ function AdminGuestsPage() {
             {!isCreating && selectedGuest ? (
               <div className="border-border space-y-4 border-t pt-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
-                    RSVP
-                  </p>
+                  <div className="min-w-0">
+                    <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
+                      RSVP
+                    </p>
+                    {selectedGuest.invite_emailed_at ? (
+                      <p className="text-foreground-secondary mt-1 text-xs">
+                        Last emailed{' '}
+                        {new Date(
+                          selectedGuest.invite_emailed_at,
+                        ).toLocaleString()}
+                      </p>
+                    ) : (
+                      <p className="text-foreground-secondary mt-1 text-xs">
+                        Invite not emailed yet
+                      </p>
+                    )}
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     <Button
                       type="button"
@@ -903,10 +947,12 @@ function AdminGuestsPage() {
                       variant="outline"
                       disabled={!selectedGuest.email?.trim() || isEmailing}
                       isLoading={isEmailing}
-                      onClick={() => void emailGuestInvite(selectedGuest)}
+                      onClick={() => requestEmailGuestInvite(selectedGuest)}
                     >
                       <EnvelopeSimple />
-                      Email invite
+                      {selectedGuest.invite_emailed_at
+                        ? 'Email again'
+                        : 'Email invite'}
                     </Button>
                     <Button
                       type="button"
@@ -1083,11 +1129,29 @@ function AdminGuestsPage() {
       <ConfirmDialog
         open={bulkConfirmOpen}
         title="Email pending guests?"
-        description="Sends an RSVP invite to every pending guest who has an email address. Guests without email are skipped. Private photo links are included when the guest is in a share group."
+        description="Sends a themed RSVP invite to every pending guest who has an email address. Guests already emailed are included again. Guests without email are skipped. Private photo links are included when the guest is in a share group."
         confirmLabel="Send emails"
         isConfirming={isBulkEmailing}
         onOpenChange={setBulkConfirmOpen}
         onConfirm={() => void emailPendingInvites()}
+      />
+
+      <ConfirmDialog
+        open={Boolean(resendConfirmGuest)}
+        title="Send invite again?"
+        description={
+          resendConfirmGuest?.invite_emailed_at
+            ? `This guest was already emailed on ${new Date(resendConfirmGuest.invite_emailed_at).toLocaleString()}. Send another themed invite to ${resendConfirmGuest.email}?`
+            : 'Send another themed invite to this guest?'
+        }
+        confirmLabel="Send again"
+        isConfirming={isEmailing}
+        onOpenChange={(open) => {
+          if (!open) setResendConfirmGuest(null)
+        }}
+        onConfirm={() => {
+          if (resendConfirmGuest) void emailGuestInvite(resendConfirmGuest)
+        }}
       />
 
       <ConfirmDialog

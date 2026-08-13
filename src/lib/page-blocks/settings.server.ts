@@ -2,6 +2,7 @@ import { requireWeddingSession } from '#/lib/auth/session.server'
 import { createDefaultPageBlocks } from '#/lib/page-blocks/types'
 import type { PageBlock } from '#/lib/page-blocks/types'
 import { parsePageBlocks } from '#/lib/page-blocks/validation'
+import type { PublicRegistryData } from '#/lib/registry/registry.server'
 import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
 import type { Wedding } from '#/lib/supabase/types'
 import { toPublicSettings } from '#/lib/wedding/public-settings'
@@ -13,6 +14,7 @@ export type PublicHomeData = PublicWeddingSettings & {
   imageUrls: Record<string, string>
   /** Storage path for OG/social image (use /api/photo?path=… for durable URL). */
   ogImagePath: string | null
+  registry: PublicRegistryData
 }
 
 function coercePageBlocks(value: unknown): PageBlock[] {
@@ -75,7 +77,7 @@ export async function getPublicHomeDataHandler(
   const result = await admin
     .from('weddings')
     .select(
-      'groom_name, bride_name, wedding_date, venue_name, venue_location, dress_code, active_public_theme, status, public_slug, page_blocks',
+      'id, groom_name, bride_name, wedding_date, date_published_at, venue_name, venue_location, dress_code, active_public_theme, status, public_slug, page_blocks',
     )
     .eq('public_slug', weddingSlug)
     .maybeSingle()
@@ -111,11 +113,17 @@ export async function getPublicHomeDataHandler(
     }),
   )
 
+  const { getPublicRegistryForWeddingId } = await import(
+    '#/lib/registry/registry.server'
+  )
+  const registry = await getPublicRegistryForWeddingId(result.data.id as string)
+
   return {
     ...toPublicSettings(result.data),
     page_blocks,
     imageUrls,
     ogImagePath,
+    registry,
   }
 }
 

@@ -145,10 +145,19 @@ function AdminOverviewPage() {
             Wedding date
           </p>
           <p className="font-serif mt-2 text-2xl italic">
-            {wedding.wedding_date ?? 'To be announced'}
+            {wedding.wedding_date
+              ? new Date(`${wedding.wedding_date}T00:00:00`).toLocaleDateString(
+                  undefined,
+                  { dateStyle: 'long' },
+                )
+              : 'To be announced'}
           </p>
           <p className="text-foreground-secondary mt-2 text-sm">
-            Nullable by design. No placeholder date is stored.
+            {wedding.wedding_date
+              ? wedding.date_published_at
+                ? 'Published on the public site.'
+                : 'Draft only — publish from Wedding settings to show guests.'
+              : 'Nullable by design. No placeholder date is stored.'}
           </p>
         </div>
         <div className="bg-surface border-border rounded-xl border p-5">

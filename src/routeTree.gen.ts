@@ -22,6 +22,7 @@ import { Route as AdminMediaRouteImport } from './routes/admin/media'
 import { Route as AdminOnboardingRouteImport } from './routes/admin/onboarding'
 import { Route as AdminPagesRouteImport } from './routes/admin/pages'
 import { Route as AdminProfileRouteImport } from './routes/admin/profile'
+import { Route as AdminRegistryRouteImport } from './routes/admin/registry'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminSupportRouteImport } from './routes/admin/support'
 import { Route as ApiPhotoRouteImport } from './routes/api/photo'
@@ -94,6 +95,11 @@ const AdminProfileRoute = AdminProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminRegistryRoute = AdminRegistryRouteImport.update({
+  id: '/registry',
+  path: '/registry',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/admin/onboarding': typeof AdminOnboardingRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/profile': typeof AdminProfileRoute
+  '/admin/registry': typeof AdminRegistryRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/support': typeof AdminSupportRoute
   '/api/photo': typeof ApiPhotoRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByTo {
   '/admin/onboarding': typeof AdminOnboardingRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/profile': typeof AdminProfileRoute
+  '/admin/registry': typeof AdminRegistryRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/support': typeof AdminSupportRoute
   '/api/photo': typeof ApiPhotoRoute
@@ -180,6 +188,7 @@ export interface FileRoutesById {
   '/admin/onboarding': typeof AdminOnboardingRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/profile': typeof AdminProfileRoute
+  '/admin/registry': typeof AdminRegistryRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/support': typeof AdminSupportRoute
   '/api/photo': typeof ApiPhotoRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
     | '/admin/onboarding'
     | '/admin/pages'
     | '/admin/profile'
+    | '/admin/registry'
     | '/admin/settings'
     | '/admin/support'
     | '/api/photo'
@@ -223,6 +233,7 @@ export interface FileRouteTypes {
     | '/admin/onboarding'
     | '/admin/pages'
     | '/admin/profile'
+    | '/admin/registry'
     | '/admin/settings'
     | '/admin/support'
     | '/api/photo'
@@ -244,6 +255,7 @@ export interface FileRouteTypes {
     | '/admin/onboarding'
     | '/admin/pages'
     | '/admin/profile'
+    | '/admin/registry'
     | '/admin/settings'
     | '/admin/support'
     | '/api/photo'
@@ -356,6 +368,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProfileRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/registry': {
+      id: '/admin/registry'
+      path: '/registry'
+      fullPath: '/admin/registry'
+      preLoaderRoute: typeof AdminRegistryRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/settings'
@@ -410,6 +429,7 @@ interface AdminRouteRouteChildren {
   AdminOnboardingRoute: typeof AdminOnboardingRoute
   AdminPagesRoute: typeof AdminPagesRoute
   AdminProfileRoute: typeof AdminProfileRoute
+  AdminRegistryRoute: typeof AdminRegistryRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -425,6 +445,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminOnboardingRoute: AdminOnboardingRoute,
   AdminPagesRoute: AdminPagesRoute,
   AdminProfileRoute: AdminProfileRoute,
+  AdminRegistryRoute: AdminRegistryRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminSupportRoute: AdminSupportRoute,
   AdminIndexRoute: AdminIndexRoute,

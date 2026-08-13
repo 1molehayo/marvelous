@@ -2,9 +2,13 @@ import { requireWeddingSession } from '#/lib/auth/session.server'
 import { getAppUrl } from '#/lib/app-url'
 import { formatCoupleNames } from '#/lib/constants'
 import { sendGuestPhotoShareEmail } from '#/lib/email/resend.server'
+import { resolveEmailThemeId } from '#/lib/email/theme'
 import { createPhotoSignedUrl } from '#/lib/page-blocks/storage.server'
 import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
-import { formatWeddingDate } from '#/lib/wedding/public-settings'
+import {
+  formatWeddingDate,
+  resolvePublicWeddingDate,
+} from '#/lib/wedding/public-settings'
 import type { PublicThemeId } from '#/lib/site-settings'
 
 function newShareToken() {
@@ -308,6 +312,8 @@ export async function sendPhotoShareEmailsHandler(
         coupleLabel,
         shareName: group.name,
         photosUrl: `${origin}/photos/${group.share_token}?g=${encodeURIComponent(guest.rsvp_token)}`,
+        theme: resolveEmailThemeId(session.wedding.active_public_theme),
+        replyTo: session.user.email,
       })
       sent += 1
     } catch (err) {
@@ -344,7 +350,7 @@ export async function getPhotoShareViewerHandler(input: {
   const weddingResult = await admin
     .from('weddings')
     .select(
-      'groom_name, bride_name, wedding_date, active_public_theme',
+      'groom_name, bride_name, wedding_date, date_published_at, active_public_theme',
     )
     .eq('id', group.wedding_id)
     .single()
@@ -426,10 +432,12 @@ export async function getPhotoShareViewerHandler(input: {
     weddingResult.data.bride_name,
   )
 
+  const publicDate = resolvePublicWeddingDate(weddingResult.data)
+
   return {
     coupleLabel,
-    weddingDate: weddingResult.data.wedding_date,
-    weddingDateLabel: formatWeddingDate(weddingResult.data.wedding_date),
+    weddingDate: publicDate,
+    weddingDateLabel: formatWeddingDate(publicDate),
     theme: weddingResult.data.active_public_theme,
     groupName: group.name,
     photos,

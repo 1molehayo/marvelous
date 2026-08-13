@@ -9,6 +9,7 @@ const EXACT_LABELS: Record<string, string> = {
   '/admin/pages': 'Page content',
   '/admin/media': 'Media',
   '/admin/guests': 'Guests',
+  '/admin/registry': 'Registry',
   '/admin/admins': 'Admins',
   '/admin/onboarding': 'Set up wedding',
   '/admin/profile': 'Profile',

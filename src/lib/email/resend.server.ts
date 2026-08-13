@@ -6,6 +6,8 @@ import {
 import { isLocalSupabase } from '#/lib/supabase/env'
 import { PRODUCT_NAME } from '#/lib/constants'
 import {
+  guestDateAnnouncedEmailHtml,
+  guestDateAnnouncedEmailText,
   guestPhotoShareEmailHtml,
   guestPhotoShareEmailText,
   guestRsvpInviteEmailHtml,
@@ -14,6 +16,7 @@ import {
   inviteEmailText,
 } from '#/lib/email/templates'
 import type {
+  GuestDateAnnouncedEmailInput,
   GuestPhotoShareEmailInput,
   GuestRsvpInviteEmailInput,
 } from '#/lib/email/templates'
@@ -30,7 +33,7 @@ function getResendClient() {
   const apiKey = getResendApiKey()
   if (!apiKey) {
     throw new Error(
-      'Email is not configured (missing RESEND_API_KEY). Add it to send admin mail.',
+      'Email is not configured (missing RESEND_API_KEY). Add it to send guest invites and other app email.',
     )
   }
   return new Resend(apiKey)
@@ -204,11 +207,12 @@ export async function sendAdminInviteEmail(input: {
 }
 
 export async function sendGuestRsvpInviteEmail(
-  input: GuestRsvpInviteEmailInput & { to: string },
+  input: GuestRsvpInviteEmailInput & { to: string; replyTo?: string },
 ) {
   const subject = `You’re invited: ${input.coupleLabel}`
   return sendResendEmail({
     to: input.to,
+    replyTo: input.replyTo,
     subject,
     text: guestRsvpInviteEmailText(input),
     html: guestRsvpInviteEmailHtml(input),
@@ -216,14 +220,28 @@ export async function sendGuestRsvpInviteEmail(
 }
 
 export async function sendGuestPhotoShareEmail(
-  input: GuestPhotoShareEmailInput & { to: string },
+  input: GuestPhotoShareEmailInput & { to: string; replyTo?: string },
 ) {
   const subject = `Private photos from ${input.coupleLabel}`
   return sendResendEmail({
     to: input.to,
+    replyTo: input.replyTo,
     subject,
     text: guestPhotoShareEmailText(input),
     html: guestPhotoShareEmailHtml(input),
+  })
+}
+
+export async function sendGuestDateAnnouncedEmail(
+  input: GuestDateAnnouncedEmailInput & { to: string; replyTo?: string },
+) {
+  const subject = `Wedding date announced: ${input.coupleLabel}`
+  return sendResendEmail({
+    to: input.to,
+    replyTo: input.replyTo,
+    subject,
+    text: guestDateAnnouncedEmailText(input),
+    html: guestDateAnnouncedEmailHtml(input),
   })
 }
 

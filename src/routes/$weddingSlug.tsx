@@ -1,5 +1,6 @@
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
 import { DynamicBlock } from '#/components/blocks/dynamic-block'
+import { RegistrySection } from '#/components/blocks/registry-section'
 import { PublicShell } from '#/components/public-shell'
 import { getAppUrl } from '#/lib/app-url'
 import { formatCoupleNames } from '#/lib/constants'
@@ -104,7 +105,12 @@ export const Route = createFileRoute('/$weddingSlug')({
 function WeddingPublicPage() {
   const home = Route.useLoaderData()
   const { weddingSlug } = Route.useParams()
-  const sectionNav = getPublicSectionNav(home.page_blocks)
+  const sectionNav = [
+    ...getPublicSectionNav(home.page_blocks),
+    ...(home.registry.hasContent
+      ? [{ id: 'registry', label: 'Registry' }]
+      : []),
+  ]
 
   return (
     <PublicShell
@@ -123,6 +129,7 @@ function WeddingPublicPage() {
             imageUrl={home.imageUrls[block.id]}
           />
         ))}
+        <RegistrySection initial={home.registry} />
       </main>
     </PublicShell>
   )

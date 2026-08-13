@@ -32,7 +32,8 @@ Useful routes:
 - `/admin` — protected overview
 - `/admin/settings` — wedding settings (groom, bride, date, venue, theme, public URL slug)
 - `/admin/pages` — page content blocks (hero, story, image, details)
-- `/admin/guests` — guest list + RSVP status (copy private `/rsvp/$token` links)
+- `/admin/guests` — guest list, RSVP status, themed invite email / WhatsApp / copy `/rsvp/$token`
+- `/admin/registry` — gift items (external links) + cash/bank accounts; soft guest reserve
 - `/rsvp/$token` — public guest RSVP form (tokenized; no login)
 - `/admin/admins` — invite/resend/cancel/delete admins; deletion requests (super admin only)
 - `/admin/invite/$token` — accept admin invite link from email
@@ -180,7 +181,10 @@ When reusing this product for another wedding:
 | `VITE_SUPABASE_URL`             | browser + server | Project URL                                                                                                             |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | browser + server | Publishable key (`sb_publishable_…`)                                                                                    |
 | `SUPABASE_SECRET_KEY`           | **server only**  | Secret key (`sb_secret_…`) for privileged ops (first-login admin profile)                                               |
-| `RESEND_API_KEY`                | optional / later | App transactional email (Phase 11+). Auth OTP uses Resend via **Supabase SMTP**, not this var, unless you wire it later |
+| `RESEND_API_KEY`                | server (required for guest/admin app mail) | App transactional email via Resend SDK: guest RSVP invites, photo-share links, admin invites, support. **Separate** from Auth OTP (that uses Resend as **Supabase custom SMTP**) |
+| `RESEND_FROM_EMAIL`             | server optional                            | From identity for app-sent mail (verified domain). Defaults to Resend onboarding sender for tests                                                                                 |
+| `APP_URL`                       | server                                     | Public origin for RSVP/photo/admin invite links in emails (defaults to `http://localhost:3000`)                                                                                   |
+| `EMAIL_DELIVERY_ENABLED`        | server optional                            | Set `false` to skip outbound app emails (logs instead)                                                                                                                            |
 
 Never put the secret key in a `VITE_` variable. Mark it Sensitive in Vercel.
 
@@ -264,7 +268,7 @@ Public UI copy stays friendly. Technical detail is only in logs (and never in th
 Admins edit structured facts at `/admin/settings`:
 
 - Groom and bride names
-- Optional wedding date (`null` = date to be announced)
+- Optional wedding date (`null` = date to be announced). Draft dates stay private until **Publish date** sets `date_published_at`
 - Status, venue name/location, dress code
 - Active public theme (Celeste / Botanica / Rosewater / Nocturne)
 
@@ -307,8 +311,15 @@ supabase/
 |    4b | Page blocks CMS                                                   |
 |     5 | Public wedding website polish                                     |
 |     6 | Guest list admin                                                  |
-|     7 | RSVP (current)                                                    |
-|  8–12 | Registry, date publish, guest email, launch                       |
+|     7 | RSVP                                                              |
+|     8 | Guest email (themed Resend invites + photo shares)                 |
+|     9 | Registry (gift links + bank accounts + soft reserve)              |
+|    10 | Date publish (draft date + publish + guest notify) — current      |
+|    11 | Motion / launch polish                                            |
+
+Guest invite, photo-share, and date-announced emails inherit the wedding’s active public theme (light palette for deliverability). Auth OTP templates remain separate (Supabase SMTP).
+
+**Date publish:** saving `wedding_date` alone does not show it publicly. Publish sets `date_published_at` and can email previously invited guests. Until then the public site stays “Date to be announced”.
 
 Do not start the next phase until the previous phase is merged and confirmed.
 
