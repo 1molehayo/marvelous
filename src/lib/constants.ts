@@ -57,8 +57,14 @@ export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
 
 export const ADMIN_SUPER_NAV_ITEMS: readonly AdminNavItem[] = [
   { to: '/admin/admins', label: 'Admins', exact: false },
-  { to: '/admin/feedback', label: 'Feedback', exact: false },
 ]
+
+/** Super-admin only; always rendered last in the sidebar. */
+export const ADMIN_BACKLOG_NAV_ITEM: AdminNavItem = {
+  to: '/admin/feedback',
+  label: 'Backlog',
+  exact: false,
+}
 
 export const ADMIN_ACCOUNT_NAV_ITEMS: readonly AdminNavItem[] = [
   { to: '/admin/profile', label: 'Profile', exact: false },
@@ -93,6 +99,11 @@ export function getAdminNavItems(
   }
 
   items.push(...ADMIN_ACCOUNT_NAV_ITEMS)
+
+  if (isSuperAdmin) {
+    items.push(ADMIN_BACKLOG_NAV_ITEM)
+  }
+
   return items
 }
 

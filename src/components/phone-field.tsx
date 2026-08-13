@@ -3,12 +3,10 @@ import { Field } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
 import { Select } from '#/components/ui/select'
 import {
-  defaultPhoneCountry,
   listPhoneCountries,
   sanitizeNationalNumber,
 } from '#/lib/auth/phone'
 import type { CountryCode } from '#/lib/auth/phone'
-import { getCountryCallingCode } from 'libphonenumber-js'
 
 export function PhoneField({
   country,
@@ -24,8 +22,6 @@ export function PhoneField({
   error?: string
 }) {
   const countries = useMemo(() => listPhoneCountries(), [])
-  const callingCode =
-    countries.find((item) => item.code === country)?.callingCode ?? ''
 
   return (
     <div className="grid gap-3 sm:grid-cols-[minmax(0,14rem)_1fr]">
@@ -52,24 +48,19 @@ export function PhoneField({
       <Field invalid={invalid}>
         <Field.Label>Phone number</Field.Label>
         <Field.Control>
-          <div className="flex gap-2">
-            <span className="border-border bg-background text-foreground-secondary inline-flex items-center rounded-xl border px-3 text-sm">
-              +{callingCode || getCountryCallingCode(defaultPhoneCountry())}
-            </span>
-            <Input
-              inputMode="numeric"
-              autoComplete="tel-national"
-              placeholder="Phone number"
-              value={nationalNumber}
-              invalid={invalid}
-              onChange={(event) => {
-                onChange({
-                  country,
-                  nationalNumber: sanitizeNationalNumber(event.target.value),
-                })
-              }}
-            />
-          </div>
+          <Input
+            inputMode="numeric"
+            autoComplete="tel-national"
+            placeholder="Phone number"
+            value={nationalNumber}
+            invalid={invalid}
+            onChange={(event) => {
+              onChange({
+                country,
+                nationalNumber: sanitizeNationalNumber(event.target.value),
+              })
+            }}
+          />
         </Field.Control>
         {error ? (
           <Field.Error>{error}</Field.Error>

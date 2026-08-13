@@ -70,9 +70,9 @@ function AdminFeedbackBacklogPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h1 className="admin-page-title">Feedback</h1>
+        <h1 className="admin-page-title">Backlog</h1>
         <p className="text-foreground-secondary mt-2 text-sm">
-          Product notes from admins. Use counts to prioritise v2 work.
+          Product feedback from admins. Use counts to prioritise v2 work.
         </p>
       </div>
 

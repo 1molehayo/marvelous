@@ -1,3 +1,4 @@
+import { CaretDown } from '@phosphor-icons/react'
 import type { VariantProps } from 'cva'
 import { inputStyle } from '#/components/ui/input'
 import { cn } from '#/lib/utils'
@@ -18,19 +19,23 @@ const Select = ({
   ...props
 }: SelectProps) => {
   return (
-    <select
-      ref={ref}
-      data-invalid={invalid || undefined}
-      aria-invalid={invalid || undefined}
-      className={cn(
-        inputStyle({ variant, size }),
-        'appearance-none bg-size-[1em] bg-position-[right_--spacing(2)_center] bg-no-repeat pr-10',
-        'bg-[url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2Ij48cGF0aCBmaWxsPSJibGFjayIgZD0iTTMuNyA1LjNsNC4zIDQuMyA0LjMtNC4zLjcuNy01IDUtNS01eiIvPjwvc3ZnPg==")]',
-        'dark:bg-[url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2Ij48cGF0aCBmaWxsPSJ3aGl0ZSIgZD0iTTMuNyA1LjNsNC4zIDQuMyA0LjMtNC4zLjcuNy01IDUtNS01eiIvPjwvc3ZnPg==")]',
-        className,
-      )}
-      {...props}
-    />
+    <div className="relative w-full">
+      <select
+        ref={ref}
+        data-invalid={invalid || undefined}
+        aria-invalid={invalid || undefined}
+        className={cn(
+          inputStyle({ variant, size }),
+          'appearance-none pr-10',
+          className,
+        )}
+        {...props}
+      />
+      <CaretDown
+        aria-hidden
+        className="text-foreground-secondary pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2"
+      />
+    </div>
   )
 }
 

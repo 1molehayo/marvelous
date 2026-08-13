@@ -13,7 +13,7 @@ const EXACT_LABELS: Record<string, string> = {
   '/admin/onboarding': 'Set up wedding',
   '/admin/profile': 'Profile',
   '/admin/support': 'Support',
-  '/admin/feedback': 'Feedback',
+  '/admin/feedback': 'Backlog',
 }
 
 export function adminBreadcrumbs(pathname: string): AdminBreadcrumb[] {
