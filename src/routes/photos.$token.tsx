@@ -51,7 +51,7 @@ export const Route = createFileRoute('/photos/$token')({
     return {
       meta: [
         {
-          title: `${loaderData.data.groupName} — ${loaderData.data.coupleLabel}`,
+          title: `${loaderData.data.groupName}: ${loaderData.data.coupleLabel}`,
         },
         {
           name: 'description',

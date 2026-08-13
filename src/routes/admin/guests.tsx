@@ -299,7 +299,7 @@ function AdminGuestsPage() {
           data: { ...pendingPayload, conflictResolution },
         })
         if (result.status === 'conflict') {
-          toast.error('Still conflicting — check labels and try again.')
+          toast.error('Still conflicting. Check labels and try again.')
           return
         }
         toast.success('Guest added with distinguishing labels.')
@@ -313,7 +313,7 @@ function AdminGuestsPage() {
           },
         })
         if (result.status === 'conflict') {
-          toast.error('Still conflicting — check labels and try again.')
+          toast.error('Still conflicting. Check labels and try again.')
           return
         }
         toast.success('Guest updated with distinguishing labels.')
@@ -875,7 +875,7 @@ function AdminGuestsPage() {
                     <Field.Control>
                       <Input
                         value={adminLabelDraft}
-                        placeholder="Optional — only you see this"
+                        placeholder="Optional. Only you see this"
                         onChange={(event) =>
                           setAdminLabelDraft(event.target.value)
                         }
@@ -1142,7 +1142,7 @@ function AdminGuestsPage() {
           disabled={isSaving}
           onClick={openExistingConflictMatch}
         >
-          It’s the same person — open existing
+          It’s the same person. Open existing
         </Button>
 
         {conflictNeedsLabels ? (

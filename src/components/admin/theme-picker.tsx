@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check } from '@phosphor-icons/react'
+import { CheckIcon } from '@phosphor-icons/react'
 import { Button } from '#/components/ui/button'
 import { formatCoupleNames } from '#/lib/constants'
 import { PUBLIC_THEME_META, PUBLIC_THEMES } from '#/lib/site-settings'
@@ -60,7 +60,7 @@ export function ThemePicker({
                 </div>
                 {selected ? (
                   <span className="bg-accent text-accent-foreground inline-flex size-6 items-center justify-center rounded-full">
-                    <Check className="size-3.5" weight="bold" />
+                    <CheckIcon className="size-3.5" weight="bold" />
                   </span>
                 ) : null}
               </div>
@@ -82,7 +82,7 @@ export function ThemePicker({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
-              Preview — {meta.name}
+              Preview: {meta.name}
             </p>
             <p className="text-foreground-secondary mt-1 text-xs">
               Not live. Shows how guests and email may look.

@@ -148,7 +148,7 @@ function AdminOverviewPage() {
             {wedding.wedding_date ?? 'To be announced'}
           </p>
           <p className="text-foreground-secondary mt-2 text-sm">
-            Nullable by design — no placeholder date is stored.
+            Nullable by design. No placeholder date is stored.
           </p>
         </div>
         <div className="bg-surface border-border rounded-xl border p-5">

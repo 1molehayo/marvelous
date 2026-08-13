@@ -105,7 +105,7 @@ export type SupportEmailInput = {
 }
 
 export async function sendSupportEmail(input: SupportEmailInput) {
-  const subject = `[${PRODUCT_NAME}] Support: ${input.categoryLabel} — ${input.adminName}`
+  const subject = `[${PRODUCT_NAME}] Support: ${input.categoryLabel} · ${input.adminName}`
 
   const text = [
     `Category: ${input.categoryLabel} (${input.category})`,
@@ -164,7 +164,7 @@ export type DeletionRequestEmailInput = {
 export async function sendDeletionRequestEmail(
   input: DeletionRequestEmailInput,
 ) {
-  const subject = `[${PRODUCT_NAME}] Account deletion request — ${input.adminName}`
+  const subject = `[${PRODUCT_NAME}] Account deletion request · ${input.adminName}`
 
   const text = [
     'An admin requested deletion of their account.',
@@ -206,7 +206,7 @@ export async function sendAdminInviteEmail(input: {
 export async function sendGuestRsvpInviteEmail(
   input: GuestRsvpInviteEmailInput & { to: string },
 ) {
-  const subject = `You’re invited — ${input.coupleLabel}`
+  const subject = `You’re invited: ${input.coupleLabel}`
   return sendResendEmail({
     to: input.to,
     subject,
@@ -232,7 +232,7 @@ export async function sendInviteAcceptedEmail(input: {
   adminEmail: string
   coupleLabel: string | null
 }) {
-  const subject = `[${PRODUCT_NAME}] Admin accepted invite — ${input.adminName}`
+  const subject = `[${PRODUCT_NAME}] Admin accepted invite · ${input.adminName}`
   const text = [
     'An invited admin accepted their invitation.',
     '',
@@ -278,7 +278,7 @@ export async function sendAdminRemovedConfirmationEmail(input: {
   removedAdminEmail: string
   coupleLabel: string | null
 }) {
-  const subject = `[${PRODUCT_NAME}] Admin removed — ${input.removedAdminName}`
+  const subject = `[${PRODUCT_NAME}] Admin removed · ${input.removedAdminName}`
   const text = [
     'You successfully removed an admin.',
     '',

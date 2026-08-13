@@ -75,7 +75,7 @@ export function PhoneField({
           <Field.Error>{error}</Field.Error>
         ) : (
           <Field.Description>
-            Optional. Digits only — country code comes from the dropdown.
+            Optional. Digits only; country code comes from the dropdown.
           </Field.Description>
         )}
       </Field>

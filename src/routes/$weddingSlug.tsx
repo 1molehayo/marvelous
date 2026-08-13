@@ -27,7 +27,7 @@ function buildPublicDescription(input: {
   }
 
   if (parts.length === 1) {
-    return `${input.coupleLabel} — wedding website.`
+    return `${input.coupleLabel} wedding website.`
   }
   return `${parts.join(' · ')}.`
 }
@@ -56,7 +56,7 @@ export const Route = createFileRoute('/$weddingSlug')({
           venueName: loaderData.venue_name,
           venueLocation: loaderData.venue_location,
         })
-      : `${coupleLabel} — wedding website.`
+      : `${coupleLabel} wedding website.`
 
     const origin = getAppUrl()
     const canonicalPath = `/${params.weddingSlug}`

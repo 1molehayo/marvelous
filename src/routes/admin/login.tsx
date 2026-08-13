@@ -51,7 +51,7 @@ function AdminLoginPage() {
       setStep('otp')
       toast.success(
         localAuth
-          ? 'Code sent. Open Mailpit at http://127.0.0.1:54324 — expires in 1 hour.'
+          ? 'Code sent. Open Mailpit at http://127.0.0.1:54324. Expires in 1 hour.'
           : 'Check your email for a one-time code. It expires in 1 hour.',
       )
     } catch (err) {
@@ -94,7 +94,7 @@ function AdminLoginPage() {
             request a code.
             {localAuth
               ? ' Local whitelist: superadmin@supabase.com or admin@supabase.com (OTP in Mailpit).'
-              : ' Using cloud Auth — enable Email provider in the Supabase Dashboard if codes fail.'}
+              : ' Using cloud Auth. Enable Email provider in the Supabase Dashboard if codes fail.'}
           </p>
         </div>
 

@@ -123,7 +123,7 @@ function AdminProfilePage() {
         <p className="text-foreground-secondary mt-2 text-sm">
           {needsName && !isSuper
             ? 'Add your first and last name to continue. This comes before wedding setup.'
-            : `Hi ${adminFirstName(session.profile)} — update how you appear in admin.`}
+            : `Hi ${adminFirstName(session.profile)}. Update how you appear in admin.`}
         </p>
       </div>
 

@@ -43,7 +43,7 @@ export const Route = createFileRoute('/rsvp/$token')({
     }
     return {
       meta: [
-        { title: `RSVP — ${loaderData.data.coupleLabel}` },
+        { title: `RSVP: ${loaderData.data.coupleLabel}` },
         {
           name: 'description',
           content: `RSVP for ${loaderData.data.coupleLabel}.`,
@@ -141,7 +141,7 @@ function RsvpFormView({ initial }: { initial: PublicRsvpPageData }) {
             plus_ones: updated.plusOnes,
           }),
         )
-        toast.success('Thank you — your RSVP was saved.')
+        toast.success('Thank you. Your RSVP was saved.')
       } catch (err) {
         toast.error(
           err instanceof Error ? err.message : 'Unable to save your RSVP.',

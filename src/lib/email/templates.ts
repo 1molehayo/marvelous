@@ -97,7 +97,7 @@ export function guestRsvpInviteEmailHtml(
     <p>
       You’re warmly invited to celebrate with
       <strong>${escapeHtml(input.coupleLabel)}</strong>
-      — ${escapeHtml(input.weddingDateLabel)}.
+      on ${escapeHtml(input.weddingDateLabel)}.
     </p>
     ${websiteBlock}
     <p>Please RSVP with your personal link:</p>
@@ -110,7 +110,7 @@ export function guestRsvpInviteEmailHtml(
       <a href="${escapeAttr(input.rsvpUrl)}">${escapeHtml(input.rsvpUrl)}</a>
     </p>
     ${photosBlock}
-    <p style="font-size: 13px; color: #777;">This link is just for you — please don’t share it widely.</p>
+    <p style="font-size: 13px; color: #777;">This link is just for you. Please don’t share it widely.</p>
   </body>
 </html>`
 }
@@ -121,7 +121,7 @@ export function guestRsvpInviteEmailText(
   const lines = [
     `Hi ${input.guestName},`,
     '',
-    `You’re warmly invited to celebrate with ${input.coupleLabel} — ${input.weddingDateLabel}.`,
+    `You’re warmly invited to celebrate with ${input.coupleLabel} on ${input.weddingDateLabel}.`,
     '',
   ]
 
@@ -139,7 +139,7 @@ export function guestRsvpInviteEmailText(
     )
   }
 
-  lines.push('This link is just for you — please don’t share it widely.')
+  lines.push('This link is just for you. Please don’t share it widely.')
   return lines.join('\n')
 }
 
@@ -170,7 +170,7 @@ export function guestPhotoShareEmailHtml(
     <p style="font-size: 14px; color: #555;">Or open this link:<br/>
       <a href="${escapeAttr(input.photosUrl)}">${escapeHtml(input.photosUrl)}</a>
     </p>
-    <p style="font-size: 13px; color: #777;">This album is private — please don’t share the link widely.</p>
+    <p style="font-size: 13px; color: #777;">This album is private. Please don’t share the link widely.</p>
   </body>
 </html>`
 }
@@ -186,7 +186,7 @@ export function guestPhotoShareEmailText(
     `View photos:`,
     input.photosUrl,
     '',
-    `This album is private — please don’t share the link widely.`,
+    `This album is private. Please don’t share the link widely.`,
   ].join('\n')
 }
 

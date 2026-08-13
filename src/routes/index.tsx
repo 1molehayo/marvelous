@@ -1,27 +1,24 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
-import { ColorModeToggle } from '#/components/color-mode-toggle'
-import { PublicRevealObserver } from '#/components/public-reveal-observer'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { ArrowUpRight } from '@phosphor-icons/react'
+
 import { Button } from '#/components/ui/button'
+import { PRODUCT_NAME, PRODUCT_TAGLINE } from '#/lib/constants'
 import { getAdminSession } from '#/lib/auth/session'
-import {
-  PRODUCT_NAME,
-  PRODUCT_TAGLINE,
-  productBuiltWithCredit,
-} from '#/lib/constants'
-import { FALLBACK_PUBLIC_THEME } from '#/lib/site-settings'
 
 export const Route = createFileRoute('/')({
   loader: async () => {
     const session = await getAdminSession()
-    return { isSignedIn: Boolean(session) }
+    return {
+      signedIn: Boolean(session),
+    }
   },
   head: () => ({
     meta: [
-      { title: `${PRODUCT_NAME} — ${PRODUCT_TAGLINE}` },
+      { title: `${PRODUCT_NAME} · ${PRODUCT_TAGLINE}` },
       {
         name: 'description',
         content:
-          'Create a beautiful wedding website for your celebration — invitations, details, and RSVPs in one place.',
+          'Create a beautiful wedding website for your celebration. Invitations, details, and RSVPs in one place.',
       },
     ],
   }),
@@ -29,63 +26,52 @@ export const Route = createFileRoute('/')({
 })
 
 function LandingPage() {
-  const { isSignedIn } = Route.useLoaderData()
+  const { signedIn } = Route.useLoaderData()
 
   return (
-    <div
-      className="public-shell flex min-h-dvh flex-col bg-background text-foreground"
-      data-public-theme={FALLBACK_PUBLIC_THEME}
-    >
-      <PublicRevealObserver />
-      <header className="relative z-10 mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-6 py-6">
-        <p className="font-serif text-xl italic md:text-2xl">{PRODUCT_NAME}</p>
-        <div className="flex items-center gap-3">
-          {isSignedIn ? (
-            <Link
-              to="/admin"
-              className="text-foreground-secondary hover:text-foreground text-xs tracking-[0.16em] uppercase transition"
-            >
-              Dashboard
-            </Link>
-          ) : (
-            <Link
-              to="/admin/login"
-              className="text-foreground-secondary hover:text-foreground text-xs tracking-[0.16em] uppercase transition"
-            >
-              Get started
-            </Link>
-          )}
-          <ColorModeToggle />
-        </div>
+    <div className="public-shell public-hero-atmosphere relative flex min-h-dvh flex-col text-foreground">
+      <header className="relative z-10 mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-6">
+        <p className="font-serif text-xl tracking-tight text-foreground italic md:text-2xl">
+          {PRODUCT_NAME}
+        </p>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="rounded-full"
+        >
+          <Link to={signedIn ? '/admin' : '/admin/login'}>
+            {signedIn ? 'Dashboard' : 'Get started'}
+            <ArrowUpRight data-icon="inline-end" className="size-4" />
+          </Link>
+        </Button>
       </header>
 
-      <main className="public-hero-atmosphere relative flex flex-1 flex-col items-center justify-center overflow-hidden px-6 py-20 text-center">
-        <p className="public-kicker public-reveal mb-8">{PRODUCT_TAGLINE}</p>
-        <h1 className="public-display public-reveal public-reveal-delay-1 text-[clamp(3.5rem,12vw,7rem)]">
+      <main className="relative z-10 mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-6 py-16 text-center">
+        <p className="text-foreground-secondary text-xs font-medium tracking-[0.22em] uppercase">
+          {PRODUCT_TAGLINE}
+        </p>
+        <h1 className="font-serif mt-5 text-5xl leading-tight tracking-tight text-foreground sm:text-6xl">
           {PRODUCT_NAME}
         </h1>
-        <p className="text-foreground-secondary public-reveal public-reveal-delay-2 mx-auto mt-6 max-w-md text-base leading-relaxed md:text-lg">
-          A calm, beautiful home for your wedding story — share details, welcome
+        <p className="text-foreground-secondary mt-5 max-w-xl text-base leading-relaxed sm:text-lg">
+          A calm, beautiful home for your wedding story. Share details, welcome
           guests, and celebrate together.
         </p>
-        <div className="public-reveal public-reveal-delay-3 mt-10 flex flex-wrap items-center justify-center gap-3">
-          <Button asChild size="md">
-            {isSignedIn ? (
-              <Link to="/admin">Build your wedding</Link>
-            ) : (
-              <Link to="/admin/login">Get started</Link>
-            )}
+        <div className="mt-10">
+          <Button asChild size="lg" className="rounded-full px-8">
+            <Link to={signedIn ? '/admin' : '/admin/login'}>
+              {signedIn ? 'Open your dashboard' : 'Create your wedding'}
+            </Link>
           </Button>
         </div>
       </main>
 
-      <footer className="border-border relative z-10 border-t px-6 py-8 text-center">
-        <p className="text-foreground-secondary text-xs tracking-[0.14em] uppercase">
+      <footer className="border-border/40 relative z-10 border-t px-6 py-8 text-center text-sm text-foreground-secondary">
+        <p>
           © {new Date().getFullYear()} {PRODUCT_NAME}
         </p>
-        <p className="text-foreground-secondary mt-2 text-sm">
-          {productBuiltWithCredit()}
-        </p>
+        <p className="mt-1 text-xs">Built with {PRODUCT_NAME}</p>
       </footer>
     </div>
   )

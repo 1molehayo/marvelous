@@ -80,7 +80,7 @@ export const Route = createRootRoute({
         { title },
         {
           name: 'description',
-          content: `${PRODUCT_NAME} — wedding websites.`,
+          content: `${PRODUCT_NAME} wedding websites.`,
         },
         { name: 'theme-color', content: '#faf8f4' },
       ],

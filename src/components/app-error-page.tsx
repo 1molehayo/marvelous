@@ -85,7 +85,6 @@ function actionsForCode(
     case 'FORBIDDEN':
       return [{ to: '/admin', label: 'Back to admin' }]
     case 'NOT_FOUND':
-      return [{ to: '/', label: 'Back home' }]
     case 'INTERNAL':
     default:
       return [
@@ -114,12 +113,21 @@ function contentFromRouteError(
 
 /** Unknown routes — same visual language as other access errors. */
 export function NotFoundPage() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const isAdminPath =
+    pathname.startsWith('/admin') && pathname !== '/admin/login'
+
   return (
     <AppErrorContent
       status={404}
       title="Page not found"
       message="That link doesn't match anything on this site."
-      actions={[{ to: '/', label: 'Back home' }]}
+      actions={[
+        {
+          to: isAdminPath ? '/admin' : '/',
+          label: isAdminPath ? 'Back to admin' : 'Back home',
+        },
+      ]}
     />
   )
 }

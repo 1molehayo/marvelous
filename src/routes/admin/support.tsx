@@ -77,8 +77,8 @@ function AdminSupportPage() {
       <div>
         <h1 className="admin-page-title">Support</h1>
         <p className="text-foreground-secondary mt-2 text-sm">
-          Send a message to the super admin. You&apos;ll get help by email —
-          there is no in-app ticket inbox yet.
+          Send a message to the super admin. You&apos;ll get help by email.
+          There is no in-app ticket inbox yet.
         </p>
       </div>
 
