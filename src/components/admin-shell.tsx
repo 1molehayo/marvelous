@@ -276,13 +276,16 @@ export function AdminShell({
     const html = document.documentElement
     const previousTheme = html.dataset.theme
     const previousMode = html.dataset.mode
+    const previousColorScheme = html.style.colorScheme
     html.dataset.theme = FALLBACK_PUBLIC_THEME
     html.dataset.mode = 'light'
+    html.style.colorScheme = 'light'
     return () => {
       if (previousTheme) html.dataset.theme = previousTheme
       else delete html.dataset.theme
       if (previousMode) html.dataset.mode = previousMode
       else delete html.dataset.mode
+      html.style.colorScheme = previousColorScheme
     }
   }, [])
 

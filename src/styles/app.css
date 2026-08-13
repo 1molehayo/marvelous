@@ -213,6 +213,35 @@ html {
   --theme-sidebar-foreground: #f3efe6;
 }
 
+/*
+  Re-bind Tailwind color aliases on themed subtrees.
+  :root resolves --color-* against its own --theme-*; without this, nested
+  [data-theme][data-mode] previews (e.g. in admin) inherit those resolved
+  values and ignore local --theme-* updates.
+*/
+[data-theme][data-mode] {
+  --color-background: var(--theme-background);
+  --color-background-secondary: var(--theme-background-secondary);
+  --color-foreground: var(--theme-foreground);
+  --color-foreground-secondary: var(--theme-foreground-secondary);
+  --color-accent: var(--theme-accent);
+  --color-accent-foreground: var(--theme-accent-foreground);
+  --color-border: var(--theme-border);
+  --color-ring: color-mix(in oklab, var(--theme-accent) 30%, transparent);
+  --color-highlight: var(--theme-highlight);
+  --color-surface: var(--theme-surface);
+  --color-sidebar: var(--theme-sidebar);
+  --color-sidebar-foreground: var(--theme-sidebar-foreground);
+}
+
+[data-theme][data-mode='light'] {
+  color-scheme: light;
+}
+
+[data-theme][data-mode='dark'] {
+  color-scheme: dark;
+}
+
 /* Admin console — fixed product UI, never follows public wedding themes */
 [data-surface='admin'] {
   --theme-background: var(--admin-paper);
@@ -226,6 +255,19 @@ html {
   --theme-border: var(--admin-line);
   --theme-sidebar: var(--admin-sidebar);
   --theme-sidebar-foreground: #eef2f6;
+  --color-background: var(--theme-background);
+  --color-background-secondary: var(--theme-background-secondary);
+  --color-foreground: var(--theme-foreground);
+  --color-foreground-secondary: var(--theme-foreground-secondary);
+  --color-accent: var(--theme-accent);
+  --color-accent-foreground: var(--theme-accent-foreground);
+  --color-border: var(--theme-border);
+  --color-ring: color-mix(in oklab, var(--theme-accent) 30%, transparent);
+  --color-highlight: var(--theme-highlight);
+  --color-surface: var(--theme-surface);
+  --color-sidebar: var(--theme-sidebar);
+  --color-sidebar-foreground: var(--theme-sidebar-foreground);
+  color-scheme: light;
   font-family: var(--font-ui);
   scroll-behavior: auto;
 }
@@ -351,36 +393,34 @@ body {
 
 /*
   Theme-colored wash over hero photos so themed text stays readable.
-  Edges blend into the atmosphere / page background (navy for Celeste dark),
-  not a near-black crush. Atmosphere stays under the photo in the hero markup.
+  Light mode keeps the photo visible; dark mode uses a stronger scrim.
+  Top/bottom stay closer to --color-background so nav + next section blend.
 */
 .public-hero-photo-overlay {
   background:
     linear-gradient(
       180deg,
-      var(--color-background-secondary) 0%,
-      color-mix(in oklab, var(--color-background) 78%, transparent) 14%,
-      color-mix(in oklab, var(--color-background) 52%, transparent) 46%,
-      color-mix(in oklab, var(--color-background) 72%, transparent) 78%,
+      var(--color-background) 0%,
+      color-mix(in oklab, var(--color-background) 82%, transparent) 12%,
+      color-mix(in oklab, var(--color-background) 58%, transparent) 44%,
+      color-mix(in oklab, var(--color-background) 70%, transparent) 76%,
       var(--color-background) 100%
     ),
-    color-mix(in oklab, var(--color-background-secondary) 38%, transparent);
+    color-mix(in oklab, var(--color-background) 42%, transparent);
   pointer-events: none;
 }
 
-[data-mode='dark'] .public-hero-photo-overlay {
+html[data-mode='dark'] .public-hero-photo-overlay {
   background:
     linear-gradient(
       180deg,
-      var(--color-background-secondary) 0%,
-      color-mix(in oklab, var(--color-background-secondary) 88%, transparent)
-        16%,
-      color-mix(in oklab, var(--color-background) 62%, transparent) 48%,
-      color-mix(in oklab, var(--color-background-secondary) 82%, transparent)
-        80%,
+      var(--color-background) 0%,
+      color-mix(in oklab, var(--color-background) 94%, transparent) 14%,
+      color-mix(in oklab, var(--color-background) 78%, transparent) 42%,
+      color-mix(in oklab, var(--color-background) 86%, transparent) 72%,
       var(--color-background) 100%
     ),
-    color-mix(in oklab, var(--color-background-secondary) 48%, transparent);
+    color-mix(in oklab, var(--color-background) 70%, transparent);
 }
 
 @keyframes public-reveal {

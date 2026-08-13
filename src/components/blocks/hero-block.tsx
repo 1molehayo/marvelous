@@ -23,10 +23,6 @@ export function HeroBlock({
       id={publicSectionId(block)}
       className="public-hero relative isolate -mt-(--public-header-height,5.5rem) flex min-h-dvh scroll-mt-28 items-center justify-center overflow-hidden px-6 pt-[calc(var(--public-header-height,5.5rem)+2.5rem)] pb-20 text-foreground sm:scroll-mt-24 md:pt-[calc(var(--public-header-height,5.5rem)+3rem)] md:pb-24"
     >
-      <div
-        className="public-hero-atmosphere absolute inset-0 z-0"
-        aria-hidden
-      />
       {showPhoto && imageUrl ? (
         <>
           <img
@@ -35,15 +31,20 @@ export function HeroBlock({
             fetchPriority="high"
             decoding="async"
             sizes="100vw"
-            className="absolute inset-0 z-1 h-full w-full object-cover"
+            className="absolute inset-0 z-0 h-full w-full object-cover"
             onError={() => setPhotoFailed(true)}
           />
           <div
-            className="public-hero-photo-overlay absolute inset-0 z-2"
+            className="public-hero-photo-overlay absolute inset-0 z-1"
             aria-hidden
           />
         </>
-      ) : null}
+      ) : (
+        <div
+          className="public-hero-atmosphere absolute inset-0 z-0"
+          aria-hidden
+        />
+      )}
       <div className="public-reveal relative z-10 mx-auto max-w-3xl text-center">
         {tagline ? <p className="public-kicker mb-8">{tagline}</p> : null}
         {title ? (

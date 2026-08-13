@@ -103,7 +103,7 @@ export function ThemePicker({
           </div>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="space-y-4">
           <div className="space-y-2">
             <p className="text-foreground-secondary text-xs font-medium tracking-[0.14em] uppercase">
               Hero
@@ -111,20 +111,20 @@ export function ThemePicker({
             <div
               data-theme={value}
               data-mode={previewMode}
-              className="bg-background text-foreground overflow-hidden rounded-xl border border-black/10 shadow-sm"
+              className="bg-background text-foreground w-full overflow-hidden rounded-xl border border-black/10 shadow-sm"
             >
-              <div className="public-hero-atmosphere relative flex min-h-52 flex-col items-center justify-center px-4 py-8 text-center">
+              <div className="public-hero-atmosphere relative flex min-h-80 w-full flex-col items-center justify-center px-6 py-12 text-center sm:min-h-96">
                 <p className="text-foreground-secondary text-[0.65rem] tracking-[0.18em] uppercase">
                   We&apos;re getting married
                 </p>
-                <p className="font-serif mt-3 text-3xl italic leading-tight">
+                <p className="font-serif mt-3 text-4xl italic leading-tight sm:text-5xl">
                   {groomName}
                   <br />
                   <span className="text-highlight">&amp;</span>
                   <br />
                   {brideName}
                 </p>
-                <p className="font-serif mt-4 text-sm">{weddingDateLabel}</p>
+                <p className="font-serif mt-4 text-base">{weddingDateLabel}</p>
               </div>
             </div>
           </div>
@@ -136,13 +136,15 @@ export function ThemePicker({
             <div
               data-theme={value}
               data-mode={previewMode}
-              className="bg-background-secondary overflow-hidden rounded-xl border border-black/10 shadow-sm"
+              className="bg-background-secondary w-full overflow-hidden rounded-xl border border-black/10 shadow-sm"
             >
-              <div className="bg-background text-foreground mx-3 my-3 rounded-lg border border-black/5 px-4 py-5 shadow-sm">
+              <div className="bg-background text-foreground mx-3 my-3 rounded-lg border border-black/5 px-5 py-6 shadow-sm sm:mx-5 sm:my-5">
                 <p className="text-foreground-secondary text-[0.65rem] tracking-[0.16em] uppercase">
                   You&apos;re invited
                 </p>
-                <p className="font-serif mt-2 text-2xl italic">{couple}</p>
+                <p className="font-serif mt-2 text-2xl italic sm:text-3xl">
+                  {couple}
+                </p>
                 <p className="text-foreground-secondary mt-3 text-sm leading-relaxed">
                   Please RSVP for {couple}. {weddingDateLabel}.
                 </p>
