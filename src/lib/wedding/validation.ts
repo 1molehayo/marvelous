@@ -112,6 +112,10 @@ export function parseUpdateWeddingInput(data: unknown): UpdateWeddingInput {
     venue_location: optionalText(input.venue_location, 'Venue location'),
     dress_code: optionalText(input.dress_code, 'Dress code'),
     active_public_theme: parseTheme(input.active_public_theme),
-    public_slug: parsePublicSlug(input.public_slug),
+    // Empty is allowed here; update handler restores the saved create-time slug.
+    public_slug:
+      typeof input.public_slug === 'string' && !input.public_slug.trim()
+        ? ''
+        : parsePublicSlug(input.public_slug),
   }
 }

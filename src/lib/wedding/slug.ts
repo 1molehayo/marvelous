@@ -50,7 +50,7 @@ export function yearForPublicSlug(input: {
   return String(new Date().getUTCFullYear())
 }
 
-/** bride-groom-year — stable suggestion for onboarding / seed. */
+/** bride-groom-year — create-time base format. */
 export function buildWeddingPublicSlug(input: {
   brideName: string
   groomName: string
@@ -67,6 +67,14 @@ export function buildWeddingPublicSlug(input: {
   ].join('-')
 }
 
+/** When bride-groom-year is taken: `{base}-{randomUUID}`. */
+export function withPublicSlugUuid(
+  baseSlug: string,
+  uuid: string = crypto.randomUUID(),
+): string {
+  return `${baseSlug}-${uuid}`
+}
+
 export function parsePublicSlug(value: unknown): string {
   if (typeof value !== 'string') {
     throw new Error('Public URL slug is required.')
@@ -81,8 +89,9 @@ export function parsePublicSlug(value: unknown): string {
   if (!slug) {
     throw new Error('Public URL slug is required.')
   }
-  if (slug.length > 80) {
-    throw new Error('Public URL slug must be 80 characters or fewer.')
+  // Room for bride-groom-year plus a full randomUUID suffix when needed.
+  if (slug.length > 160) {
+    throw new Error('Public URL slug must be 160 characters or fewer.')
   }
   if (RESERVED_PUBLIC_SLUGS.has(slug)) {
     throw new Error(`“${slug}” is reserved. Choose a different public URL.`)

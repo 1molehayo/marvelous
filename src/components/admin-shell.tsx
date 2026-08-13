@@ -100,18 +100,29 @@ function SidebarFooter({
           </p>
         ) : null}
       </div>
-      {previewHref ? (
-        <Button
-          asChild
-          size="sm"
-          variant="outline"
-          className="border-white/20 bg-transparent text-sidebar-foreground hover:bg-white/10"
-        >
-          <a href={previewHref} target="_blank" rel="noreferrer">
-            <ArrowSquareOut />
-            Preview site
-          </a>
-        </Button>
+      {wedding ? (
+        previewHref ? (
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="border-white/20 bg-transparent text-sidebar-foreground hover:bg-white/10"
+          >
+            <a href={previewHref} target="_blank" rel="noreferrer">
+              <ArrowSquareOut />
+              Preview site
+            </a>
+          </Button>
+        ) : (
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="border-white/20 bg-transparent text-sidebar-foreground hover:bg-white/10"
+          >
+            <Link to="/admin/settings">Set public URL</Link>
+          </Button>
+        )
       ) : null}
       <Button
         size="sm"

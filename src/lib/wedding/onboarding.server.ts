@@ -5,7 +5,7 @@ import type { Wedding } from '#/lib/supabase/types'
 import { FALLBACK_PUBLIC_THEME } from '#/lib/site-settings'
 import { parseOnboardingInput } from '#/lib/wedding/onboarding-validation'
 import type { OnboardingInput } from '#/lib/wedding/onboarding-validation'
-import { buildWeddingPublicSlug } from '#/lib/wedding/slug'
+import { allocateUniquePublicSlug } from '#/lib/wedding/slug.server'
 
 export async function completeOnboardingHandler(
   input: OnboardingInput,
@@ -40,24 +40,11 @@ export async function completeOnboardingHandler(
     return existing.data
   }
 
-  let publicSlug = buildWeddingPublicSlug({
+  const publicSlug = await allocateUniquePublicSlug({
     brideName: data.bride_name,
     groomName: data.groom_name,
     weddingDate: data.wedding_date,
   })
-
-  const slugClash = await admin
-    .from('weddings')
-    .select('id')
-    .eq('public_slug', publicSlug)
-    .maybeSingle()
-
-  if (slugClash.error) {
-    throw new Error(slugClash.error.message)
-  }
-  if (slugClash.data) {
-    publicSlug = `${publicSlug}-${crypto.randomUUID().slice(0, 6)}`
-  }
 
   const created = await admin
     .from('weddings')

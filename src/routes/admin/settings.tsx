@@ -1,5 +1,5 @@
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AddressSearchField } from '#/components/address-search-field'
 import { Button } from '#/components/ui/button'
 import { Field } from '#/components/ui/field'
@@ -10,7 +10,11 @@ import { toast } from '#/components/ui/toaster'
 import { PUBLIC_THEME_META, PUBLIC_THEMES } from '#/lib/site-settings'
 import type { PublicThemeId } from '#/lib/site-settings'
 import type { Wedding, WeddingStatus } from '#/lib/supabase/types'
-import { updateWedding } from '#/lib/wedding/settings'
+import {
+  checkPublicSlugAvailable,
+  updateWedding,
+} from '#/lib/wedding/settings'
+import type { PublicSlugAvailability } from '#/lib/wedding/settings'
 import {
   WEDDING_STATUS_LABELS,
   WEDDING_STATUSES,
@@ -48,36 +52,123 @@ function weddingToForm(wedding: Wedding): FormState {
     venue_location: wedding.venue_location ?? '',
     dress_code: wedding.dress_code ?? '',
     active_public_theme: wedding.active_public_theme,
-    public_slug: wedding.public_slug ?? '',
+    public_slug: wedding.public_slug,
+  }
+}
+
+function slugAvailabilityMessage(
+  status: PublicSlugAvailability | null,
+  checking: boolean,
+): string | null {
+  if (checking) return 'Checking availability…'
+  if (!status) return null
+  switch (status.status) {
+    case 'available':
+      return 'This public URL is available.'
+    case 'current':
+      return 'This is your current public URL.'
+    case 'taken':
+      return 'That public URL is already in use.'
+    case 'invalid':
+      return status.message
   }
 }
 
 function AdminWeddingSettingsPage() {
   const { session } = AdminRoute.useRouteContext()
   const router = useRouter()
+  const wedding = session?.wedding ?? null
+  const savedSlug = wedding ? wedding.public_slug.trim() : ''
 
-  if (!session?.wedding) {
-    return null
-  }
-
-  const [form, setForm] = useState<FormState>(() =>
-    weddingToForm(session.wedding!),
+  const [form, setForm] = useState<FormState | null>(() =>
+    wedding ? weddingToForm(wedding) : null,
   )
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [slugStatus, setSlugStatus] = useState<PublicSlugAvailability | null>(
+    null,
+  )
+  const [slugChecking, setSlugChecking] = useState(false)
+
+  useEffect(() => {
+    if (!wedding) return
+    setForm((current) => current ?? weddingToForm(wedding))
+  }, [wedding])
+
+  useEffect(() => {
+    if (!form) return
+
+    const slug = form.public_slug.trim() || savedSlug
+    if (!slug) {
+      setSlugStatus(null)
+      setSlugChecking(false)
+      return
+    }
+
+    setSlugChecking(true)
+    const timer = window.setTimeout(() => {
+      void checkPublicSlugAvailable({
+        data: { slug, currentSlug: savedSlug },
+      })
+        .then((result) => {
+          setSlugStatus(result)
+        })
+        .catch((err) => {
+          setSlugStatus({
+            status: 'invalid',
+            message:
+              err instanceof Error
+                ? err.message
+                : 'Unable to check public URL availability.',
+          })
+        })
+        .finally(() => {
+          setSlugChecking(false)
+        })
+    }, 350)
+
+    return () => window.clearTimeout(timer)
+  }, [form?.public_slug, savedSlug])
+
+  if (!wedding || !form) {
+    return null
+  }
 
   const setField = <TKey extends keyof FormState>(
     key: TKey,
     value: FormState[TKey],
   ) => {
-    setForm((current) => ({ ...current, [key]: value }))
+    setForm((current) => (current ? { ...current, [key]: value } : current))
   }
+
+  const slugMessage = slugAvailabilityMessage(slugStatus, slugChecking)
+  const slugBlocksSave =
+    slugChecking ||
+    slugStatus?.status === 'taken' ||
+    slugStatus?.status === 'invalid'
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
+
+    const publicSlug = form.public_slug.trim() || savedSlug
+    if (!publicSlug) {
+      toast.error('Public URL slug is required.')
+      return
+    }
+    if (slugBlocksSave) {
+      toast.error(
+        slugStatus?.status === 'taken'
+          ? 'That public URL is already in use.'
+          : slugStatus?.status === 'invalid'
+            ? slugStatus.message
+            : 'Choose an available public URL before saving.',
+      )
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
-      const wedding = await updateWedding({
+      const updated = await updateWedding({
         data: {
           groom_name: form.groom_name,
           bride_name: form.bride_name,
@@ -87,10 +178,10 @@ function AdminWeddingSettingsPage() {
           venue_location: form.venue_location || null,
           dress_code: form.dress_code || null,
           active_public_theme: form.active_public_theme,
-          public_slug: form.public_slug,
+          public_slug: publicSlug,
         },
       })
-      setForm(weddingToForm(wedding))
+      setForm(weddingToForm(updated))
       toast.success('Wedding settings saved.')
       await router.invalidate()
     } catch (err) {
@@ -143,7 +234,11 @@ function AdminWeddingSettingsPage() {
               </Field.Control>
             </Field>
           </div>
-          <Field>
+          <Field
+            invalid={
+              slugStatus?.status === 'taken' || slugStatus?.status === 'invalid'
+            }
+          >
             <Field.Label>Public URL slug</Field.Label>
             <Field.Control>
               <Input
@@ -151,17 +246,32 @@ function AdminWeddingSettingsPage() {
                 onChange={(event) =>
                   setField('public_slug', event.target.value)
                 }
+                onBlur={() => {
+                  if (!form.public_slug.trim() && savedSlug) {
+                    setField('public_slug', savedSlug)
+                  }
+                }}
                 required
-                placeholder="lillian-marvelous-2026"
+                placeholder={savedSlug || 'bride-groom-year'}
               />
             </Field.Control>
-            <Field.Description>
-              Guests open{' '}
-              <span className="text-foreground font-medium">
-                /{form.public_slug || '…'}
-              </span>
-              . Keep this stable — changing it breaks shared links.
-            </Field.Description>
+            {slugMessage ? (
+              slugStatus?.status === 'taken' ||
+              slugStatus?.status === 'invalid' ? (
+                <Field.Error>{slugMessage}</Field.Error>
+              ) : (
+                <Field.Description>{slugMessage}</Field.Description>
+              )
+            ) : (
+              <Field.Description>
+                Guests open{' '}
+                <span className="text-foreground font-medium">
+                  /{form.public_slug.trim() || savedSlug || '…'}
+                </span>
+                . Created as bride-groom-year. Clear the field to keep the
+                saved slug. Changing it breaks shared links.
+              </Field.Description>
+            )}
           </Field>
         </div>
 
@@ -263,7 +373,12 @@ function AdminWeddingSettingsPage() {
           </Field>
         </div>
 
-        <Button type="submit" size="md" isLoading={isSubmitting}>
+        <Button
+          type="submit"
+          size="md"
+          isLoading={isSubmitting}
+          disabled={slugBlocksSave}
+        >
           Save settings
         </Button>
       </form>

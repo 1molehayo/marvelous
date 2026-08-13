@@ -5,6 +5,7 @@ import {
   toPublicSettings,
 } from '#/lib/wedding/public-settings'
 import type { PublicWeddingSettings } from '#/lib/wedding/public-settings'
+import { isPublicSlugAvailable } from '#/lib/wedding/slug.server'
 import type { UpdateWeddingInput } from '#/lib/wedding/validation'
 import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
 
@@ -41,6 +42,18 @@ export async function getPublicWeddingSettingsHandler(
   }
 }
 
+export async function checkPublicSlugAvailableHandler(slug: string): Promise<{
+  available: boolean
+  slug: string
+}> {
+  const session = await requireWeddingSession()
+  const available = await isPublicSlugAvailable({
+    slug,
+    excludeWeddingId: session.wedding.id,
+  })
+  return { available, slug }
+}
+
 export async function updateWeddingHandler(
   data: UpdateWeddingInput,
 ): Promise<Wedding> {
@@ -48,17 +61,18 @@ export async function updateWeddingHandler(
 
   const admin = createAdminSupabaseClient()
 
-  const slugTaken = await admin
-    .from('weddings')
-    .select('id')
-    .eq('public_slug', data.public_slug)
-    .neq('id', session.wedding.id)
-    .maybeSingle()
-
-  if (slugTaken.error) {
-    throw new Error(slugTaken.error.message)
+  // Cleared slug → keep the one created at onboarding (never invent a new one here).
+  const publicSlug =
+    data.public_slug.trim() || session.wedding.public_slug.trim()
+  if (!publicSlug) {
+    throw new Error('Public URL slug is required.')
   }
-  if (slugTaken.data) {
+
+  const available = await isPublicSlugAvailable({
+    slug: publicSlug,
+    excludeWeddingId: session.wedding.id,
+  })
+  if (!available) {
     throw new Error('That public URL is already in use.')
   }
 
@@ -73,7 +87,7 @@ export async function updateWeddingHandler(
       venue_location: data.venue_location,
       dress_code: data.dress_code,
       active_public_theme: data.active_public_theme,
-      public_slug: data.public_slug,
+      public_slug: publicSlug,
     })
     .eq('id', session.wedding.id)
     .select('*')

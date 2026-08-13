@@ -394,8 +394,8 @@ function AdminGuestsPage() {
   }
 
   const openExistingConflictMatch = () => {
+    if (conflictMatches.length === 0) return
     const match = conflictMatches[0]
-    if (!match) return
     const guest = guests.find((item) => item.id === match.id)
     setConflictOpen(false)
     setPendingPayload(null)

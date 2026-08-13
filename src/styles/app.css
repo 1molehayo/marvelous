@@ -344,16 +344,17 @@ body {
   Top/bottom stay closer to --color-background so nav + next section blend.
 */
 .public-hero-photo-overlay {
+  /* Light mode: stronger wash so navy + champagne (&) stay clear over photos. */
   background:
     linear-gradient(
       180deg,
       var(--color-background) 0%,
-      color-mix(in oklab, var(--color-background) 68%, transparent) 12%,
-      color-mix(in oklab, var(--color-background) 32%, transparent) 44%,
-      color-mix(in oklab, var(--color-background) 48%, transparent) 76%,
+      color-mix(in oklab, var(--color-background) 82%, transparent) 12%,
+      color-mix(in oklab, var(--color-background) 58%, transparent) 44%,
+      color-mix(in oklab, var(--color-background) 70%, transparent) 76%,
       var(--color-background) 100%
     ),
-    color-mix(in oklab, var(--color-background) 22%, transparent);
+    color-mix(in oklab, var(--color-background) 42%, transparent);
   pointer-events: none;
 }
 
